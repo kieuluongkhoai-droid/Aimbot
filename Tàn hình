@@ -1,5 +1,5 @@
 -- =====================================================================
--- HỆ THỐNG SKY CLONE, FREE CAM & MICRO ANTI-KB TUYỆT ĐỐI
+-- HỆ THỐNG GHOST, FREE CAM BÓNG MA & POWERFUL ANTI-KB HOÀN CHỈNH
 -- =====================================================================
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -9,18 +9,18 @@ local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
 -- Xóa UI cũ nếu có
-if CoreGui:FindFirstChild("FreeCamSkyCloneUI") then
-    CoreGui.FreeCamSkyCloneUI:Destroy()
+if CoreGui:FindFirstChild("UltimateGhostSystemUI") then
+    CoreGui.UltimateGhostSystemUI:Destroy()
 end
 
 -- Tạo Giao Diện UI
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "FreeCamSkyCloneUI"
+screenGui.Name = "UltimateGhostSystemUI"
 screenGui.Parent = CoreGui
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 240, 0, 190)
+mainFrame.Size = UDim2.new(0, 240, 0, 220)
 mainFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
 mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 mainFrame.BorderSizePixel = 0
@@ -35,9 +35,9 @@ uiCorner.Parent = mainFrame
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, 0, 0, 35)
 titleLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-titleLabel.Text = "FREE CAM & SKY CLONE"
+titleLabel.Text = "ULTIMATE GHOST & POWERFUL ANTI-KB"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.TextSize = 11
+titleLabel.TextSize = 10
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.Parent = mainFrame
 
@@ -47,7 +47,7 @@ titleCorner.Parent = titleLabel
 
 local function createButton(posY, defaultText)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.9, 0, 0, 32)
+    btn.Size = UDim2.new(0.9, 0, 0, 30)
     btn.Position = UDim2.new(0.05, 0, 0, posY)
     btn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
     btn.Text = defaultText
@@ -63,28 +63,49 @@ local function createButton(posY, defaultText)
     return btn
 end
 
-local skyCloneBtn = createButton(45, "Bật Sky Clone & Free Cam: TẮT")
-local antiKBBtn = createButton(85, "Bật Micro Anti-KB (Siêu Nhạy): TẮT")
-local resetBtn = createButton(125, "Khôi Phục / Reset Nhân Vật")
+local ghostBtn = createButton(40, "Bật Tàng Hình & Clone: TẮT")
+local toggleCamBtn = createButton(75, "Đổi Camera: Đang ở CLONE")
+local antiKBBtn = createButton(110, "Bật Powerful Anti-KB: TẮT")
+local resetBtn = createButton(145, "Khôi Phục / Reset An Toàn")
+
+-- Ẩn nút đổi camera khi chưa bật tàng hình
+toggleCamBtn.Visible = false
 
 -- Biến trạng thái
-local skyActive = false
+local ghostActive = false
 local antiKBActive = false
+local cameraIsOnClone = true
 
 local cloneModel = nil
-local skyConnection = nil
+local ghostConnection = nil
 local antiKBConnection = nil
-local freeCamConnection = nil
 
 local lastSafeCFrame = nil
 local lastCheckTick = 0
-local freeCamCF = nil
+
+-- Hàm tàng hình toàn bộ đối tượng (bao gồm cả nhân vật, đồ trên tay, tool, phụ kiện)
+local function setModelInvisible(targetModel, transparencyValue)
+    if not targetModel then return end
+    for _, v in pairs(targetModel:GetDescendants()) do
+        if v:IsA("BasePart") then
+            v.Transparency = transparencyValue
+            if transparencyValue == 1 then
+                v.CanCollide = false
+            end
+        elseif v:IsA("Decal") then
+            v.Transparency = transparencyValue
+        elseif v:IsA("Accessory") then
+            local handle = v:FindFirstChild("Handle")
+            if handle then handle.Transparency = transparencyValue end
+        end
+    end
+end
 
 -- =====================================================================
--- PHẦN 1: SKY CLONE & TỰ ĐỘNG CHUYỂN CAMERA SANG CLONE / FREE CAM
+-- PHẦN 1: TÀNG HÌNH, SKY CLONE & CHUYỂN ĐỔI CAMERA (BÓNG MA)
 -- =====================================================================
-skyCloneBtn.MouseButton1Click:Connect(function()
-    skyActive = not skyActive
+ghostBtn.MouseButton1Click:Connect(function()
+    ghostActive = not ghostActive
     local char = player.Character
     if not char then return end
     local rootPart = char:FindFirstChild("HumanoidRootPart")
@@ -92,14 +113,14 @@ skyCloneBtn.MouseButton1Click:Connect(function()
     local head = char:FindFirstChild("Head")
     if not rootPart or not humanoid or not head then return end
     
-    if skyActive then
-        skyCloneBtn.Text = "Bật Sky Clone & Free Cam: BẬT"
-        skyCloneBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+    if ghostActive then
+        ghostBtn.Text = "Bật Tàng Hình & Clone: BẬT"
+        ghostBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+        toggleCamBtn.Visible = true
         
         lastSafeCFrame = rootPart.CFrame
-        freeCamCF = rootPart.CFrame
         
-        -- 1. Tạo bản sao giả lập (Clone) đặt ở trên trời cao (+15 mét)
+        -- Tạo bản sao giả lập (Clone) ở trên trời cao (+15 mét)
         char.Archivable = true
         cloneModel = char:Clone()
         cloneModel.Name = "SkyVisualClone"
@@ -110,46 +131,38 @@ skyCloneBtn.MouseButton1Click:Connect(function()
             end
         end
         
-        -- Tàng hình toàn bộ Clone (người khác hoàn toàn không thấy) nhưng giữ nguyên bộ phận tự nhiên
-        for _, v in pairs(cloneModel:GetDescendants()) do
-            if v:IsA("BasePart") then
-                v.Transparency = 1
-                v.CanCollide = false
-                v.Anchored = true
-            elseif v:IsA("Decal") then
-                v.Transparency = 1
-            elseif v:IsA("Accessory") then
-                local handle = v:FindFirstChild("Handle")
-                if handle then handle.Transparency = 1 end
-            end
+        -- Tàng hình toàn bộ Clone đối với người khác
+        setModelInvisible(cloneModel, 1)
+        for _, part in pairs(cloneModel:GetDescendants()) do
+            if part:IsA("BasePart") then part.Anchored = true end
         end
         cloneModel.Parent = workspace
         
-        -- 2. Tàng hình tuyệt đối nhân vật gốc (đảm bảo người khác không nhìn thấy nhân vật gốc)
-        for _, v in pairs(char:GetDescendants()) do
-            if v:IsA("BasePart") then
-                v.Transparency = 1
-                v.CanCollide = false
-            elseif v:IsA("Decal") then
-                v.Transparency = 1
-            end
-        end
+        -- Tàng hình toàn bộ nhân vật gốc (kể cả tool/vũ khí đang cầm trên tay)
+        setModelInvisible(char, 1)
         
-        -- 3. Chuyển Camera ngay lập tức sang đầu của Clone ở trên trời
+        -- Lắng nghe khi người chơi cầm vũ khí mới lên tay -> tự động tàng hình luôn vũ khí đó
+        char.ChildAdded:Connect(function(child)
+            if ghostActive and (child:IsA("Tool") or child:IsA("Model")) then
+                task.wait(0.05)
+                setModelInvisible(child, 1)
+            end
+        end)
+        
+        -- Khóa camera ban đầu vào đầu của Clone
+        cameraIsOnClone = true
+        toggleCamBtn.Text = "Đổi Camera: Đang ở CLONE"
         local cloneHead = cloneModel:FindFirstChild("Head")
         if cloneHead then
             camera.CameraSubject = cloneHead
-        else
-            camera.CameraSubject = humanoid
         end
         
-        -- 4. Vòng lặp đồng bộ Clone trên trời và biến cơ thể gốc thành Free Cam
-        skyConnection = RunService.RenderStepped:Connect(function()
+        -- Vòng lặp đồng bộ vị trí Clone trên trời khớp với nhân vật gốc dưới đất
+        ghostConnection = RunService.RenderStepped:Connect(function()
             if char and rootPart and cloneModel then
                 pcall(function()
                     local cloneRoot = cloneModel:FindFirstChild("HumanoidRootPart")
                     if cloneRoot then
-                        -- Đẩy Clone lên trời cao (+15 mét) so với vị trí gốc
                         cloneRoot.CFrame = rootPart.CFrame + Vector3.new(0, 15, 0)
                         
                         for _, realPart in pairs(char:GetChildren()) do
@@ -168,32 +181,58 @@ skyCloneBtn.MouseButton1Click:Connect(function()
             end
         end)
     else
-        skyCloneBtn.Text = "Bật Sky Clone & Free Cam: TẮT"
-        skyCloneBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+        ghostBtn.Text = "Bật Tàng Hình & Clone: TẮT"
+        ghostBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+        toggleCamBtn.Visible = false
         
-        if skyConnection then
-            skyConnection:Disconnect()
-            skyConnection = nil
+        if ghostConnection then
+            ghostConnection:Disconnect()
+            ghostConnection = nil
         end
         if cloneModel then
             cloneModel:Destroy()
             cloneModel = nil
         end
+        
+        -- Khôi phục hiện hình nhân vật và camera an toàn (Không gây chết)
+        if char then
+            setModelInvisible(char, 0)
+            if humanoid then
+                camera.CameraSubject = humanoid
+            end
+        end
+    end
+end)
+
+-- Nút bấm chuyển đổi camera linh hoạt giữa Clone và Cơ thể gốc (Bóng ma)
+toggleCamBtn.MouseButton1Click:Connect(function()
+    if not ghostActive or not cloneModel then return end
+    local char = player.Character
+    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+    local cloneHead = cloneModel:FindFirstChild("Head")
+    
+    cameraIsOnClone = not cameraIsOnClone
+    if cameraIsOnClone then
+        if cloneHead then
+            camera.CameraSubject = cloneHead
+            toggleCamBtn.Text = "Đổi Camera: Đang ở CLONE"
+        end
+    else
         if humanoid then
             camera.CameraSubject = humanoid
+            toggleCamBtn.Text = "Đổi Camera: GỐC (Bóng ma)"
         end
-        player.Character:BreakJoints()
     end
 end)
 
 -- =====================================================================
--- PHẦN 2: MICRO-SENSITIVE SMART ANTI-KB (SIÊU NHẠY CHO MỌI CHIÊU NHẸ)
+-- PHẦN 2: POWERFUL ANTI-KB (BẮT GỌN TỪ KB NHẸ ĐẾN KB RẤT MẠNH)
 -- =====================================================================
 antiKBBtn.MouseButton1Click:Connect(function()
     antiKBActive = not antiKBActive
     
     if antiKBActive then
-        antiKBBtn.Text = "Bật Micro Anti-KB (Siêu Nhạy): BẬT"
+        antiKBBtn.Text = "Bật Powerful Anti-KB: BẬT"
         antiKBBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
         
         local char = player.Character
@@ -211,8 +250,9 @@ antiKBBtn.MouseButton1Click:Connect(function()
                 local velocity = rootPart.AssemblyLinearVelocity
                 local floorMaterial = humanoid.FloorMaterial
                 
+                -- Phân biệt nhảy chủ động và trạng thái rơi tự do hợp pháp
                 local isJumpingOrIntentional = (humanoid:GetState() == Enum.HumanoidStateType.Jumping) or 
-                                               (humanoid:GetState() == Enum.HumanoidStateType.Freefall and velocity.Y > -15) or
+                                               (humanoid:GetState() == Enum.HumanoidStateType.Freefall and velocity.Y > -12) or
                                                (floorMaterial ~= Enum.Material.Air)
                 
                 if isJumpingOrIntentional then
@@ -220,17 +260,19 @@ antiKBBtn.MouseButton1Click:Connect(function()
                         lastSafeCFrame = rootPart.CFrame
                     end
                 else
+                    -- POWERFUL THRESHOLD: Bắt gọn cả KB nhẹ, đẩy lùi vừa và các cú văng cực mạnh
                     local horizontalSpeed = Vector3.new(velocity.X, 0, velocity.Z).Magnitude
-                    local isMicroKnockbacked = (horizontalSpeed > 18) or (velocity.Y < -25)
+                    local isKnockbacked = (horizontalSpeed > 12) or (velocity.Y < -20) or (math.abs(velocity.X) > 12) or (math.abs(velocity.Z) > 12)
                     
-                    if isMicroKnockbacked then
+                    if isKnockbacked then
+                        -- Ngay lập tức kéo giật ngược về vị trí an toàn trước đó, triệt tiêu hoàn toàn việc bị văng ra vực hoặc bay xa
                         if lastSafeCFrame then
                             rootPart.CFrame = lastSafeCFrame
                             rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                             rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
                         end
                     else
-                        if tick() - lastCheckTick > 0.3 then
+                        if tick() - lastCheckTick > 0.25 then
                             lastCheckTick = tick()
                             if floorMaterial ~= Enum.Material.Air then
                                 lastSafeCFrame = rootPart.CFrame
@@ -239,6 +281,7 @@ antiKBBtn.MouseButton1Click:Connect(function()
                     end
                 end
                 
+                -- Xóa triệt để các hiệu ứng lực văng do skill của đối thủ gán vào
                 for _, child in pairs(rootPart:GetChildren()) do
                     if child:IsA("BodyVelocity") or child:IsA("BodyPosition") or child:IsA("LinearVelocity") or child:IsA("VectorForce") then
                         child:Destroy()
@@ -247,7 +290,7 @@ antiKBBtn.MouseButton1Click:Connect(function()
             end)
         end)
     else
-        antiKBBtn.Text = "Bật Micro Anti-KB (Siêu Nhạy): TẮT"
+        antiKBBtn.Text = "Bật Powerful Anti-KB: TẮT"
         antiKBBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
         
         if antiKBConnection then
@@ -257,14 +300,17 @@ antiKBBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Nút Reset toàn bộ
+-- Nút Reset an toàn (Không làm kẹt game hay chết lỗi)
 resetBtn.MouseButton1Click:Connect(function()
-    if skyConnection then skyConnection:Disconnect() end
+    if ghostConnection then ghostConnection:Disconnect() end
     if antiKBConnection then antiKBConnection:Disconnect() end
     if cloneModel then cloneModel:Destroy() end
-    if player.Character then
-        player.Character:BreakJoints()
+    local char = player.Character
+    if char then
+        setModelInvisible(char, 0)
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if humanoid then camera.CameraSubject = humanoid end
     end
 end)
 
-print("Đã tải xong hệ thống Free Cam & Sky Clone hoàn chỉnh!")
+print("Đã tải xong toàn bộ hệ thống Ultimate Ghost & Powerful Anti-KB!")
