@@ -1,89 +1,146 @@
--- Khởi tạo dịch vụ và biến môi trường an toàn cho Executor
+-- Khởi tạo dịch vụ và biến môi trường an toàn
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
 local player = Players.LocalPlayer
 
--- Đảm bảo có UI hoặc tạo giao diện tự động
-local playerGui = player:WaitForChild("PlayerGui")
-local screenGui = playerGui:FindFirstChild("ScreenGui") or Instance.new("ScreenGui", playerGui)
-screenGui.Name = "MultiToolGUI"
-
--- 1. NÚT TÀN HÌNH (Invisibility Button)
-local invisBtn = screenGui:FindFirstChild("InvisBtn")
-if not invisBtn then
-    invisBtn = Instance.new("TextButton")
-    invisBtn.Name = "InvisBtn"
-    invisBtn.Size = UDim2.new(0, 200, 0, 45)
-    invisBtn.Position = UDim2.new(0, 50, 0, 50)
-    invisBtn.Text = "Tàn Hình: TẮT"
-    invisBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    invisBtn.TextColor3 = Color3.new(1, 1, 1)
-    invisBtn.Parent = screenGui
+-- Xóa UI cũ nếu có để tránh trùng lặp
+if CoreGui:FindFirstChild("ProInvisUI") then
+    CoreGui.ProInvisUI:Destroy()
 end
 
-local invisActive = false
-invisBtn.MouseButton1Click:Connect(function()
-    invisActive = not invisActive
-    local char = player.Character
-    if char then
-        if invisActive then
-            invisBtn.Text = "Tàn Hình: BẬT"
-            invisBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
-            -- Ẩn các bộ phận cơ thể (Transparency = 1) nhưng vẫn giữ va chạm và điều khiển
-            for _, v in pairs(char:GetDescendants()) do
-                if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then
-                    v.Transparency = 1
-                elseif v:IsA("Decal") then
-                    v.Transparency = 1
-                end
-            end
-        else
-            invisBtn.Text = "Tàn Hình: TẮT"
-            invisBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-            -- Hiện lại bình thường
-            for _, v in pairs(char:GetDescendants()) do
-                if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then
-                    v.Transparency = 0
-                elseif v:IsA("Decal") then
-                    v.Transparency = 0
-                end
-            end
+-- Tạo Giao Diện UI chính
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ProInvisUI"
+screenGui.Parent = CoreGui
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 220, 0, 180)
+mainFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true -- Cho phép kéo thả bảng UI trên màn hình
+mainFrame.Parent = screenGui
+
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0, 8)
+uiCorner.Parent = mainFrame
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0, 35)
+titleLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+titleLabel.Text = "MENU TÀN HÌNH PRO"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextSize = 13
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.Parent = mainFrame
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 8)
+titleCorner.Parent = titleLabel
+
+-- Nút Thu Nhỏ / Mở Rộng (-) ở góc phải tiêu đề
+local minBtn = Instance.new("TextButton")
+minBtn.Size = UDim2.new(0, 30, 0, 30)
+minBtn.Position = UDim2.new(1, -33, 0, 2)
+minBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+minBtn.Text = "-"
+minBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+minBtn.TextSize = 16
+minBtn.Font = Enum.Font.GothamBold
+minBtn.Parent = mainFrame
+
+local minCorner = Instance.new("UICorner")
+minCorner.CornerRadius = UDim.new(0, 6)
+minCorner.Parent = minBtn
+
+local function createButton(posY, defaultText)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.9, 0, 0, 35)
+    btn.Position = UDim2.new(0.05, 0, 0, posY)
+    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    btn.Text = defaultText
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 12
+    btn.Font = Enum.Font.GothamSemibold
+    btn.Parent = mainFrame
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
+    
+    return btn
+end
+
+local invisBtn = createButton(45, "Tàn Hình (Văng Tay): TẮT")
+local antiKBBtn = createButton(90, "Anti-KB Siêu Tốc: TẮT")
+local resetBtn = createButton(135, "Khôi Phục / Reset")
+
+-- Xử lý ẩn/hiện khi thu nhỏ UI
+local elementsToToggle = {invisBtn, antiKBBtn, resetBtn}
+local isMinimized = false
+
+minBtn.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    if isMinimized then
+        minBtn.Text = "+"
+        mainFrame.Size = UDim2.new(0, 220, 0, 35)
+        for _, elem in ipairs(elementsToToggle) do
+            elem.Visible = false
+        end
+    else
+        minBtn.Text = "-"
+        mainFrame.Size = UDim2.new(0, 220, 0, 180)
+        for _, elem in ipairs(elementsToToggle) do
+            elem.Visible = true
         end
     end
 end)
 
+-- 1. Tính năng Tàn Hình bằng cách làm "bay/văng các bộ phận ra xa" (Kể cả vũ khí)
+local invisActive = false
+invisBtn.MouseButton1Click:Connect(function()
+    invisActive = not invisActive
+    local char = player.Character
+    if not char then return end
+    
+    if invisActive then
+        invisBtn.Text = "Tàn Hình (Văng Tay): BẬT"
+        invisBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+        
+        -- Kỹ thuật bẻ gãy các khớp nối (Joints) của tay/chân để chúng văng đi nơi khác, giấu luôn vũ khí đang cầm
+        for _, v in pairs(char:GetDescendants()) do
+            if v:IsA("Motor6D") then
+                v.Part0 = nil -- Ngắt kết nối khớp nối để bộ phận rơi ra hoặc bay đi
+            end
+        end
+    else
+        invisBtn.Text = "Tàn Hình (Văng Tay): TẮT"
+        invisBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        player.Character:BreakJoints() -- Reset lại nhân vật về bình thường
+    end
+end)
 
--- 2. NÚT ANTI-KNOCKBACK / KHÓA VỊ TRÍ SIÊU NHẠY
-local lockPosBtn = screenGui:FindFirstChild("LockPosBtn")
-if not lockPosBtn then
-    lockPosBtn = Instance.new("TextButton")
-    lockPosBtn.Name = "LockPosBtn"
-    lockPosBtn.Size = UDim2.new(0, 200, 0, 45)
-    lockPosBtn.Position = UDim2.new(0, 50, 0, 105) -- Nằm ngay dưới nút tàn hình
-    lockPosBtn.Text = "Anti-Ragdoll: TẮT"
-    lockPosBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    lockPosBtn.TextColor3 = Color3.new(1, 1, 1)
-    lockPosBtn.Parent = screenGui
-end
-
-local lockPosActive = false
-local lockConnection = nil
+-- 2. Tính năng Anti-Knockback Siêu Tốc (Phản ứng tức thì, kéo về chỗ cũ siêu nhanh)
+local antiKBActive = false
+local kbConnection = nil
 local lastSafeCFrame = nil
 
-lockPosBtn.MouseButton1Click:Connect(function()
-    lockPosActive = not lockPosActive
+antiKBBtn.MouseButton1Click:Connect(function()
+    antiKBActive = not antiKBActive
     
-    if lockPosActive then
-        lockPosBtn.Text = "Anti-Ragdoll (Siêu Nhạy): BẬT"
-        lockPosBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+    if antiKBActive then
+        antiKBBtn.Text = "Anti-KB Siêu Tốc: BẬT"
+        antiKBBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
         
-        -- Cập nhật tọa độ an toàn ngay khi bật
         local char = player.Character
         if char and char:FindFirstChild("HumanoidRootPart") then
             lastSafeCFrame = char.HumanoidRootPart.CFrame
         end
         
-        lockConnection = RunService.RenderStepped:Connect(function()
+        kbConnection = RunService.RenderStepped:Connect(function()
             local character = player.Character
             if character then
                 local rootPart = character:FindFirstChild("HumanoidRootPart")
@@ -94,10 +151,10 @@ lockPosBtn.MouseButton1Click:Connect(function()
                     local isMoving = moveDirection.Magnitude > 0
                     
                     if not humanoid.PlatformStand and humanoid.Health > 0 then
-                        -- Kiểm tra nếu bị đẩy lệch > 2.5 mét khi đứng yên
+                        -- Ngưỡng siêu nhạy: Chỉ cần lệch trên 1.5 mét là kéo về ngay lập tức không chần chừ
                         if not isMoving and lastSafeCFrame then
                             local distance = (rootPart.Position - lastSafeCFrame.Position).Magnitude
-                            if distance > 2.5 then 
+                            if distance > 1.5 then 
                                 rootPart.CFrame = lastSafeCFrame
                                 pcall(function()
                                     rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
@@ -105,14 +162,14 @@ lockPosBtn.MouseButton1Click:Connect(function()
                             end
                         end
                         
-                        -- Cập nhật tọa độ an toàn khi di chuyển bình thường
-                        if isMoving or rootPart.AssemblyLinearVelocity.Magnitude < 20 then
+                        -- Cập nhật liên tục tọa độ an toàn khi đi lại bình thường
+                        if isMoving or rootPart.AssemblyLinearVelocity.Magnitude < 15 then
                             lastSafeCFrame = rootPart.CFrame
                         end
                     end
                     
-                    -- Chống hất tung mạnh / bay vút lên trời
-                    if (humanoid.PlatformStand or rootPart.AssemblyLinearVelocity.Y > 35) and lastSafeCFrame then
+                    -- Chống hất tung / bay lên trời ngay khi vừa có dấu hiệu văng
+                    if (humanoid.PlatformStand or rootPart.AssemblyLinearVelocity.Y > 20) and lastSafeCFrame then
                         rootPart.CFrame = lastSafeCFrame
                         pcall(function()
                             rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
@@ -123,11 +180,20 @@ lockPosBtn.MouseButton1Click:Connect(function()
             end
         end)
     else
-        lockPosBtn.Text = "Anti-Ragdoll: TẮT"
-        lockPosBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        if lockConnection then
-            lockConnection:Disconnect()
-            lockConnection = nil
+        antiKBBtn.Text = "Anti-KB Siêu Tốc: TẮT"
+        antiKBBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        if kbConnection then
+            kbConnection:Disconnect()
+            kbConnection = nil
         end
     end
 end)
+
+-- 3. Nút Reset nhanh
+resetBtn.MouseButton1Click:Connect(function()
+    if player.Character then
+        player.Character:BreakJoints()
+    end
+end)
+
+print("Đã tải xong Menu Pro tối ưu theo ý tưởng của bạn!")
