@@ -1,6 +1,6 @@
 --[[
-    Script Name: Element Magic Battle - Pro Aimbot (Auto-Rotate Character & Smooth Lock)
-    Features: Dynamic ESP, Smooth Continuous Aimbot, Auto-Face Target (No Shift-Lock needed)
+    Script Name: Element Magic Battle - Ultimate Pro Script
+    Features: Dynamic ESP, Smooth Auto-Face Aimbot, Minimize UI, Auto Collect (Souls & Gems)
 ]]--
 
 if not game:IsLoaded() then game.Loaded:Wait() end
@@ -9,7 +9,8 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
-local Camera = workspace.CurrentCamera
+local Workspace = game:GetService("Workspace")
+local Camera = Workspace.CurrentCamera
 
 local LocalPlayer = Players.LocalPlayer
 
@@ -20,13 +21,15 @@ getgenv().EMBSettings = {
     TextColor = Color3.fromRGB(255, 255, 255),
     
     AimbotEnabled = false,
-    AimKey = Enum.UserInputType.MouseButton2, -- Giữ chuột phải hoặc nút tương ứng để bật aim
-    Smoothness = 0.25, -- Độ mượt (0.1 = cực nhanh, 0.5 = chậm mượt, tùy chỉnh theo ý muốn)
-    AimbotPart = "HumanoidRootPart" -- Khóa vào thân hoặc "Head"
+    AimKey = Enum.UserInputType.MouseButton2,
+    Smoothness = 0.25,
+    AimbotPart = "HumanoidRootPart",
+    
+    AutoCollect = false -- Tính năng tự động nhặt Soul và Gems
 }
 
 --------------------------------------------------------------------------------
--- 1. GIAO DIỆN UI
+-- 1. GIAO DIỆN UI (CÓ NÚT THU NHỎ / MỞ RỘNG)
 --------------------------------------------------------------------------------
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "EMB_UltimateUI"
@@ -36,8 +39,8 @@ if not ScreenGui.Parent then
 end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 360, 0, 310)
-MainFrame.Position = UDim2.new(0.5, -180, 0.5, -155)
+MainFrame.Size = UDim2.new(0, 360, 0, 350) -- Tăng chiều cao để chứa thêm nút tính năng mới
+MainFrame.Position = UDim2.new(0.5, -180, 0.5, -175)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -51,7 +54,7 @@ UICorner.Parent = MainFrame
 local TitleBar = Instance.new("TextLabel")
 TitleBar.Size = UDim2.new(1, 0, 0, 40)
 TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
-TitleBar.Text = "  Element Magic Battle | Auto-Face Aimbot"
+TitleBar.Text = "  Element Magic Battle | Pro Menu"
 TitleBar.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleBar.TextSize = 13
 TitleBar.Font = Enum.Font.SourceSansBold
@@ -62,6 +65,7 @@ local TitleCorner = Instance.new("UICorner")
 TitleCorner.CornerRadius = UDim.new(0, 8)
 TitleCorner.Parent = TitleBar
 
+-- Nút Đóng (X)
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Size = UDim2.new(0, 40, 0, 40)
 CloseBtn.Position = UDim2.new(1, -40, 0, 0)
@@ -76,6 +80,38 @@ CloseBtn.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
+-- Nút Thu Nhỏ / Mở Rộng (-)
+local MinimizeBtn = Instance.new("TextButton")
+MinimizeBtn.Size = UDim2.new(0, 40, 0, 40)
+MinimizeBtn.Position = UDim2.new(1, -80, 0, 0)
+MinimizeBtn.BackgroundTransparency = 1
+MinimizeBtn.Text = "-"
+MinimizeBtn.TextColor3 = Color3.fromRGB(255, 200, 0)
+MinimizeBtn.TextSize = 18
+MinimizeBtn.Font = Enum.Font.SourceSansBold
+MinimizeBtn.Parent = TitleBar
+
+-- Container chứa các tính năng bên trong để ẩn/hiện khi thu nhỏ
+local Container = Instance.new("Frame")
+Container.Size = UDim2.new(1, 0, 1, -40)
+Container.Position = UDim2.new(0, 0, 0, 40)
+Container.BackgroundTransparency = 1
+Container.Parent = MainFrame
+
+local isMinimized = false
+MinimizeBtn.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    if isMinimized then
+        MainFrame.Size = UDim2.new(0, 360, 0, 40)
+        Container.Visible = false
+        MinimizeBtn.Text = "+"
+    else
+        MainFrame.Size = UDim2.new(0, 360, 0, 350)
+        Container.Visible = true
+        MinimizeBtn.Text = "-"
+    end
+end)
+
 local function CreateToggle(name, yPos, callback)
     local ToggleBtn = Instance.new("TextButton")
     ToggleBtn.Size = UDim2.new(0.9, 0, 0, 45)
@@ -86,7 +122,7 @@ local function CreateToggle(name, yPos, callback)
     ToggleBtn.TextSize = 14
     ToggleBtn.Font = Enum.Font.SourceSansSemibold
     ToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
-    ToggleBtn.Parent = MainFrame
+    ToggleBtn.Parent = Container
 
     local BtnCorner = Instance.new("UICorner")
     BtnCorner.CornerRadius = UDim.new(0, 6)
@@ -106,16 +142,20 @@ local function CreateToggle(name, yPos, callback)
     end)
 end
 
-CreateToggle("ESP (Box, Health, Distance)", 60, function(state)
+CreateToggle("ESP (Box, Health, Distance)", 15, function(state)
     getgenv().EMBSettings.ESPEnabled = state
 end)
 
-CreateToggle("Aimbot + Auto Face (Hold Key)", 120, function(state)
+CreateToggle("Aimbot + Auto Face (Hold Key)", 70, function(state)
     getgenv().EMBSettings.AimbotEnabled = state
 end)
 
+CreateToggle("Auto Collect Souls & Gems", 125, function(state)
+    getgenv().EMBSettings.AutoCollect = state
+end)
+
 --------------------------------------------------------------------------------
--- 2. HỆ THỐNG ESP DYNAMIC (TỰ CẬP NHẬT KHI CÓ NGƯỜI MỚI VÀO)
+-- 2. HỆ THỐNG ESP DYNAMIC
 --------------------------------------------------------------------------------
 local espCache = {}
 
@@ -199,7 +239,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 --------------------------------------------------------------------------------
--- 3. HỆ THỐNG AIMBOT & TỰ ĐỘNG XOAY NGƯỜI (GẦN NHẤT + LIÊN TỤC KHÔNG KHỰNG)
+-- 3. HỆ THỐNG AIMBOT & TỰ ĐỘNG XOAY NGƯỜI
 --------------------------------------------------------------------------------
 local function getClosestPlayerByDistance()
     local closestPlayer = nil
@@ -216,9 +256,7 @@ local function getClosestPlayerByDistance()
             local targetPart = character:FindFirstChild(getgenv().EMBSettings.AimbotPart)
             
             if humanoid and humanoid.Health > 0 and targetPart then
-                -- Tính khoảng cách thực tế trong không gian 3D để bắt người GẦN NHẤT chuẩn xác nhất
                 local distance = (targetPart.Position - myRootPos).Magnitude
-                
                 if distance < shortestDistance then
                     shortestDistance = distance
                     closestPlayer = player
@@ -242,14 +280,45 @@ RunService.RenderStepped:Connect(function(dt)
                 local myRoot = myCharacter and myCharacter:FindFirstChild("HumanoidRootPart")
                 
                 if targetPart and humanoid and humanoid.Health > 0 and myRoot then
-                    -- 1. Xoay Camera mượt mà hướng tới mục tiêu (Liên tục, không giật)
                     local currentCF = Camera.CFrame
                     local targetCamCF = CFrame.new(Camera.CFrame.Position, targetPart.Position)
                     Camera.CFrame = currentCF:Lerp(targetCamCF, math.clamp(dt * 15 * getgenv().EMBSettings.Smoothness, 0.1, 1))
                     
-                    -- 2. Tự động xoay cơ thể nhân vật hướng về phía kẻ địch (Thay thế Shift-Lock)
                     local lookAtPos = Vector3.new(targetPart.Position.X, myRoot.Position.Y, targetPart.Position.Z)
                     myRoot.CFrame = myRoot.CFrame:Lerp(CFrame.new(myRoot.Position, lookAtPos), math.clamp(dt * 15 * getgenv().EMBSettings.Smoothness, 0.1, 1))
+                end
+            end
+        end
+    end
+end)
+
+--------------------------------------------------------------------------------
+-- 4. TÍNH NĂNG AUTO COLLECT SOULS & GEMS
+--------------------------------------------------------------------------------
+RunService.Heartbeat:Connect(function()
+    if getgenv().EMBSettings.AutoCollect then
+        local myCharacter = LocalPlayer.Character
+        if not myCharacter or not myCharacter:FindFirstChild("HumanoidRootPart") then return end
+        local myRoot = myCharacter.HumanoidRootPart
+
+        -- Quét toàn bộ Workspace để tìm các vật phẩm Soul hoặc Gem (thường được lưu dưới dạng Part hoặc Model có tên liên quan)
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if obj:IsA("BasePart") or obj:IsA("Model") then
+                local name = string.lower(obj.Name)
+                -- Kiểm tra tên vật phẩm phổ biến trong game magic battle
+                if name:find("soul") or name:find("gem") or name:find("crystal") or name:find("coin") then
+                    local targetPart = obj:IsA("Model") and obj.PrimaryPart or obj
+                    if not targetPart then
+                        targetPart = obj:FindFirstChildWhichIsA("BasePart")
+                    end
+                    
+                    if targetPart then
+                        -- Tự động dịch chuyển nhân vật tới gần vật phẩm để nhặt (hoặc dịch chuyển vật phẩm về phía người chơi)
+                        -- Dùng phương pháp đưa nhân vật lại gần vị trí vật phẩm để game nhận diện va chạm nhặt item
+                        if (targetPart.Position - myRoot.Position).Magnitude < 100 then -- Chỉ nhặt item trong phạm vi bán kính 100 studs để tránh bị lag
+                            myRoot.CFrame = CFrame.new(targetPart.Position + Vector3.new(0, 2, 0))
+                        end
+                    end
                 end
             end
         end
