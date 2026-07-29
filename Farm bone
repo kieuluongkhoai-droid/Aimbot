@@ -1,0 +1,113 @@
+-- // Dịch vụ cơ bản
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local CoreGui = game:GetService("CoreGui")
+local LocalPlayer = Players.LocalPlayer
+
+-- // Cấu hình
+local BONE_NAME = "Bone" -- Thay đổi tên nếu item trong game khác
+getgenv().AutoFarmBone = false
+
+-- // Tạo Giao Diện (UI)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "BoneFarmUI"
+-- Sử dụng CoreGui nếu được phép, nếu không chuyển sang PlayerGui
+pcall(function()
+    ScreenGui.Parent = CoreGui
+end)
+if not ScreenGui.Parent then
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+end
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 220, 0, 110)
+MainFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true -- Cho phép kéo thả UI trên màn hình
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundTransparency = 1
+Title.Text = "Dead Rails - Auto Bone"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 14
+Title.Font = Enum.Font.GothamBold
+Title.Parent = MainFrame
+
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(0.9, 0, 0, 45)
+ToggleBtn.Position = UDim2.new(0.05, 0, 0.45, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+ToggleBtn.Text = "Trạng thái: TẮT"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.TextSize = 14
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.Parent = MainFrame
+
+local BtnCorner = Instance.new("UICorner")
+BtnCorner.CornerRadius = UDim.new(0, 6)
+BtnCorner.Parent = ToggleBtn
+
+-- // Logic Bật/Tắt UI
+ToggleBtn.MouseButton1Click:Connect(function()
+    getgenv().AutoFarmBone = not getgenv().AutoFarmBone
+    if getgenv().AutoFarmBone then
+        ToggleBtn.Text = "Trạng thái: BẬT"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+    else
+        ToggleBtn.Text = "Trạng thái: TẮT"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    end
+end)
+
+-- // Hàm lấy HumanoidRootPart của người chơi
+local function getRootPart()
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    return character:FindFirstChild("HumanoidRootPart")
+end
+
+-- // Vòng lặp chính: Kéo bone về vị trí nhân vật
+task.spawn(function()
+    while true do
+        task.wait(0.3)
+        if getgenv().AutoFarmBone then
+            pcall(function()
+                local rootPart = getRootPart()
+                if not rootPart then return end
+                
+                -- Duyệt qua Workspace để tìm kiếm các Bone
+                for _, obj in ipairs(Workspace:GetDescendants()) do
+                    if not getgenv().AutoFarmBone then break end
+                    
+                    if obj.Name == BONE_NAME then
+                        local targetPart = nil
+                        
+                        if obj:IsA("Model") then
+                            targetPart = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+                        elseif obj:IsA("BasePart") then
+                            targetPart = obj
+                        end
+                        
+                        if targetPart then
+                            -- Dịch chuyển bone về vị trí nhân vật (ngay tầm tay)
+                            targetPart.CFrame = rootPart.CFrame + Vector3.new(0, 1, 0)
+                            
+                            -- Tự động kích hoạt ProximityPrompt nếu item có hỗ trợ tương tác
+                            local prompt = obj:FindFirstChildWhichIsA("ProximityPrompt", true)
+                            if prompt then
+                                fireproximityprompt(prompt)
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
