@@ -1,0 +1,154 @@
+-- Script Tàn Hình + Anti-Knockback + UI (Client-side)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local player = Players.LocalPlayer
+
+-- Xóa UI cũ nếu có để tránh bị trùng lặp
+if CoreGui:FindFirstChild("RobloxInvisUI") then
+    CoreGui.RobloxInvisUI:Destroy()
+end
+
+-- Tạo ScreenGui chứa giao diện
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "RobloxInvisUI"
+screenGui.Parent = CoreGui
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- Tạo khung chính (Main Frame)
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 220, 0, 180)
+mainFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true -- Cho phép kéo thả bảng UI trên màn hình
+mainFrame.Parent = screenGui
+
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0, 8)
+uiCorner.Parent = mainFrame
+
+-- Tiêu đề UI
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0, 35)
+titleLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+titleLabel.Text = "MENU TÀN HÌNH"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextSize = 14
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.Parent = mainFrame
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 8)
+titleCorner.Parent = titleLabel
+
+-- Trạng thái tính năng
+local isInvisible = false
+local isAntiKBActive = false
+local antiKBConnection = nil
+
+-- Hàm tạo nút bấm (Button)
+local function createButton(name, posY, defaultText)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.9, 0, 0, 35)
+    btn.Position = UDim2.new(0.05, 0, 0, posY)
+    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    btn.Text = defaultText
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 13
+    btn.Font = Enum.Font.GothamSemibold
+    btn.Parent = mainFrame
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
+    
+    return btn
+end
+
+local invisBtn = createButton("InvisBtn", 45, "Tàn Hình: TẮT")
+local antiKBBtn = createButton("AntiKBBtn", 90, "Anti-Knockback: TẮT")
+local resetBtn = createButton("ResetBtn", 135, "Khôi Phục / Reset")
+
+-- 1. Xử lý nút Tàn Hình
+invisBtn.MouseButton1Click:Connect(function()
+    local character = player.Character
+    if not character then return end
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    
+    if not rootPart or not humanoid then return end
+
+    isInvisible = not isInvisible
+    
+    if isInvisible then
+        invisBtn.Text = "Tàn Hình: BẬT"
+        invisBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+        
+        -- Đưa xuống dưới đất ẩn thân
+        local originalCFrame = rootPart.CFrame
+        rootPart.Anchored = true
+        rootPart.CFrame = CFrame.new(originalCFrame.X, -500, originalCFrame.Z)
+        task.wait(0.2)
+        rootPart.Anchored = false
+        
+        -- Làm trong suốt
+        for _, v in pairs(character:GetDescendants()) do
+            if v:IsA("BasePart") or v:IsA("MeshPart") then
+                v.Transparency = 1
+                v.CastShadow = false
+            elseif v:IsA("Accessory") then
+                local handle = v:FindFirstChild("Handle")
+                if handle then handle.Transparency = 1 end
+            elseif v:IsA("BillboardGui") or v:IsA("SurfaceGui") then
+                v.Enabled = false
+            end
+        end
+        humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+    else
+        invisBtn.Text = "Tàn Hình: TẮT"
+        invisBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        player.Character:BreakJoints() -- Reset nhân vật để về lại bình thường
+    end
+end)
+
+-- 2. Xử lý nút Anti-Knockback
+antiKBBtn.MouseButton1Click:Connect(function()
+    isAntiKBActive = not isAntiKBActive
+    
+    if isAntiKBActive then
+        antiKBBtn.Text = "Anti-Knockback: BẬT"
+        antiKBBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+        
+        antiKBConnection = RunService.Stepped:Connect(function()
+            local character = player.Character
+            if character then
+                local rootPart = character:FindFirstChild("HumanoidRootPart")
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if rootPart and humanoid then
+                    local vel = rootPart.AssemblyLinearVelocity
+                    if vel.Magnitude > 50 and not humanoid.PlatformStand then
+                        rootPart.AssemblyLinearVelocity = Vector3.new(0, vel.Y, 0)
+                    end
+                end
+            end
+        end)
+    else
+        antiKBBtn.Text = "Anti-Knockback: TẮT"
+        antiKBBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        if antiKBConnection then
+            antiKBConnection:Disconnect()
+            antiKBConnection = nil
+        end
+    end
+end)
+
+-- 3. Xử lý nút Reset nhân vật nhanh
+resetBtn.MouseButton1Click:Connect(function()
+    if player.Character then
+        player.Character:BreakJoints()
+    end
+end)
+
+print("Đã tải xong UI Tàn Hình thành công!")
