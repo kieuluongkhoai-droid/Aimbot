@@ -6,13 +6,13 @@ local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
 -- Xóa UI cũ nếu có
-if CoreGui:FindFirstChild("PerfectGhostUI") then
-    CoreGui.PerfectGhostUI:Destroy()
+if CoreGui:FindFirstChild("UltimateAntiKBUI") then
+    CoreGui.UltimateAntiKBUI:Destroy()
 end
 
 -- Tạo Giao Diện UI chính
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "PerfectGhostUI"
+screenGui.Name = "UltimateAntiKBUI"
 screenGui.Parent = CoreGui
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
@@ -32,7 +32,7 @@ uiCorner.Parent = mainFrame
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, 0, 0, 35)
 titleLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-titleLabel.Text = "MENU BÓNG MA HOÀN HẢO"
+titleLabel.Text = "MENU BẤT TỬ & ANTI-KB"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextSize = 12
 titleLabel.Font = Enum.Font.GothamBold
@@ -71,10 +71,10 @@ local function createButton(posY, defaultText)
     return btn
 end
 
-local ghostBtn = createButton(45, "Bóng Ma Hoàn Hảo: TẮT")
+local antiKBBtn = createButton(45, "Anti-KB & Ghost: TẮT")
 local resetBtn = createButton(95, "Khôi Phục / Reset")
 
-local elementsToToggle = {ghostBtn, resetBtn}
+local elementsToToggle = {antiKBBtn, resetBtn}
 local isMinimized = false
 
 minBtn.MouseButton1Click:Connect(function()
@@ -94,38 +94,33 @@ minBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-local ghostActive = false
+local active = false
 local cloneModel = nil
 local connection = nil
 
-ghostBtn.MouseButton1Click:Connect(function()
-    ghostActive = not ghostActive
+antiKBBtn.MouseButton1Click:Connect(function()
+    active = not active
     local char = player.Character
     if not char then return end
     local rootPart = char:FindFirstChild("HumanoidRootPart")
     local humanoid = char:FindFirstChildOfClass("Humanoid")
     if not rootPart or not humanoid then return end
     
-    if ghostActive then
-        ghostBtn.Text = "Bóng Ma Hoàn Hảo: BẬT"
-        ghostBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+    if active then
+        antiKBBtn.Text = "Anti-KB & Ghost: BẬT"
+        antiKBBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
         
-        -- 1. Lưu lại đối tượng camera hiện tại để không bị lỗi góc nhìn
-        local originalCameraSubject = camera.CameraSubject
-        
-        -- 2. Tạo một bản sao hình ảnh (Visual Clone) đặt ngay tại chỗ đứng để lừa mắt đối thủ
+        -- 1. Tạo bản sao hình ảnh giả lập ngay dưới đất để lừa mắt địch
         char.Archivable = true
         cloneModel = char:Clone()
-        cloneModel.Name = "VisualGhostClone"
+        cloneModel.Name = "AntiKBFakeClone"
         
-        -- Xóa các script phụ bên trong bản sao để nó đứng im làm "vật phẩm tàng hình/tượng"
         for _, scriptChild in pairs(cloneModel:GetDescendants()) do
             if scriptChild:IsA("Script") or scriptChild:IsA("LocalScript") then
                 scriptChild:Destroy()
             end
         end
         
-        -- Làm tàng hình bản sao và vô hiệu hóa va chạm hoàn toàn
         for _, v in pairs(cloneModel:GetDescendants()) do
             if v:IsA("BasePart") then
                 v.Transparency = 1
@@ -135,14 +130,12 @@ ghostBtn.MouseButton1Click:Connect(function()
                 v.Transparency = 1
             elseif v:IsA("Accessory") then
                 local handle = v:FindFirstChild("Handle")
-                if handle then
-                    handle.Transparency = 1
-                end
+                if handle then handle.Transparency = 1 end
             end
         end
         cloneModel.Parent = workspace
         
-        -- 3. Ẩn nhân vật thật đi (chỉ để bạn thao tác ngầm) và đưa lên cao an toàn khỏi tầm đánh
+        -- 2. Tàng hình nhân vật thật
         for _, v in pairs(char:GetDescendants()) do
             if v:IsA("BasePart") then
                 v.Transparency = 1
@@ -151,25 +144,32 @@ ghostBtn.MouseButton1Click:Connect(function()
             end
         end
         
-        -- 4. Vòng lặp đồng bộ vị trí: Cố định hitbox thật ở trên cao (+6 mét so với bản sao giả lập), đồng thời giữ camera mượt mà
-        connection = RunService.RenderStepped:Connect(function()
+        -- 3. Vòng lặp khóa chặt lực vật lý để triệt tiêu hoàn toàn Knockback và ghim vị trí an toàn
+        connection = RunService.Stepped:Connect(function()
             if char and rootPart and cloneModel then
                 pcall(function()
-                    -- Cập nhật vị trí bản sao giả lập khớp với di chuyển của bạn để đánh lừa thị giác người khác
+                    -- Đồng bộ vị trí bản sao dưới đất theo hướng nhìn/di chuyển của bạn
                     local cloneRoot = cloneModel:FindFirstChild("HumanoidRootPart")
                     if cloneRoot then
-                        cloneRoot.CFrame = rootPart.CFrame - Vector3.new(0, 6, 0) -- Bản sao ở dưới đất, nhân vật thật ở trên cao +6m
+                        cloneRoot.CFrame = rootPart.CFrame - Vector3.new(0, 6, 0)
                     end
                     
-                    -- Khóa vận tốc nhân vật thật để không bị đẩy văng hay rơi rớt
+                    -- TRIỆT TIÊU HOÀN TOÀN KHỐI LƯỢNG VÀ LỰC TÁC ĐỘNG (Chặn đứng Knockback)
                     rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                     rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                    
+                    -- Xóa bỏ các thể loại lực lạ do skill địch gán vào người (như BodyVelocity, LinearVelocity bay người)
+                    for _, child in pairs(rootPart:GetChildren()) do
+                        if child:IsA("BodyVelocity") or child:IsA("BodyPosition") or child:IsA("LinearVelocity") or child:IsA("VectorForce") then
+                            child:Destroy()
+                        end
+                    end
                 end)
             end
         end)
     else
-        ghostBtn.Text = "Bóng Ma Hoàn Hảo: TẮT"
-        ghostBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        antiKBBtn.Text = "Anti-KB & Ghost: TẮT"
+        antiKBBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
         
         if connection then
             connection:Disconnect()
@@ -193,4 +193,4 @@ resetBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-print("Đã tải xong Script Bóng Ma Hoàn Hảo!")
+print("Đã tải xong Script Anti-Knockback tối ưu!")
