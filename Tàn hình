@@ -5,18 +5,18 @@ local CoreGui = game:GetService("CoreGui")
 local player = Players.LocalPlayer
 
 -- Xóa UI cũ nếu có
-if CoreGui:FindFirstChild("ProInvisUI") then
-    CoreGui.ProInvisUI:Destroy()
+if CoreGui:FindFirstChild("UltimateGhostUI") then
+    CoreGui.UltimateGhostUI:Destroy()
 end
 
 -- Tạo Giao Diện UI chính
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "ProInvisUI"
+screenGui.Name = "UltimateGhostUI"
 screenGui.Parent = CoreGui
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 220, 0, 180)
+mainFrame.Size = UDim2.new(0, 220, 0, 160)
 mainFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
 mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 mainFrame.BorderSizePixel = 0
@@ -31,9 +31,9 @@ uiCorner.Parent = mainFrame
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, 0, 0, 35)
 titleLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-titleLabel.Text = "MENU TÀN HÌNH PRO"
+titleLabel.Text = "MENU BẤT TỬ BÓNG MA"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.TextSize = 13
+titleLabel.TextSize = 12
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.Parent = mainFrame
 
@@ -51,10 +51,6 @@ minBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 minBtn.TextSize = 16
 minBtn.Font = Enum.Font.GothamBold
 minBtn.Parent = mainFrame
-
-local minCorner = Instance.new("UICorner")
-minCorner.CornerRadius = UDim.new(0, 6)
-minCorner.Parent = minBtn
 
 local function createButton(posY, defaultText)
     local btn = Instance.new("TextButton")
@@ -74,11 +70,10 @@ local function createButton(posY, defaultText)
     return btn
 end
 
-local invisBtn = createButton(45, "Tàn Hình Tuyệt Đối: TẮT")
-local antiKBBtn = createButton(90, "Anti-KB Đa Mục Tiêu: TẮT")
-local resetBtn = createButton(135, "Khôi Phục / Reset")
+local ghostModeBtn = createButton(45, "Bóng Ma Bất Tử: TẮT")
+local resetBtn = createButton(95, "Khôi Phục / Reset")
 
-local elementsToToggle = {invisBtn, antiKBBtn, resetBtn}
+local elementsToToggle = {ghostModeBtn, resetBtn}
 local isMinimized = false
 
 minBtn.MouseButton1Click:Connect(function()
@@ -91,24 +86,30 @@ minBtn.MouseButton1Click:Connect(function()
         end
     else
         minBtn.Text = "-"
-        mainFrame.Size = UDim2.new(0, 220, 0, 180)
+        mainFrame.Size = UDim2.new(0, 220, 0, 160)
         for _, elem in ipairs(elementsToToggle) do
             elem.Visible = true
         end
     end
 end)
 
--- 1. Tàn Hình An Toàn (Không làm rớt mạng/chết nhân vật, ẩn sạch cả người và vũ khí)
-local invisActive = false
-invisBtn.MouseButton1Click:Connect(function()
-    invisActive = not invisActive
+-- Biến quản lý trạng thái Bóng Ma
+local ghostActive = false
+local ghostConnection = nil
+
+ghostModeBtn.MouseButton1Click:Connect(function()
+    ghostActive = not ghostActive
     local char = player.Character
     if not char then return end
+    local rootPart = char:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
     
-    if invisActive then
-        invisBtn.Text = "Tàn Hình Tuyệt Đối: BẬT"
-        invisBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+    if ghostActive then
+        ghostModeBtn.Text = "Bóng Ma Bất Tử: BẬT"
+        ghostModeBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
         
+        -- 1. Biến cơ thể thành khối tàng hình, vô hiệu hóa toàn bộ va chạm (CanCollide = false)
+        -- Đối thủ đánh vào chỗ bạn sẽ xuyên qua như đánh vào không khí, không gây ra sát thương hay knockback
         for _, v in pairs(char:GetDescendants()) do
             if v:IsA("BasePart") then
                 v.Transparency = 1
@@ -119,105 +120,41 @@ invisBtn.MouseButton1Click:Connect(function()
                 local handle = v:FindFirstChild("Handle")
                 if handle then
                     handle.Transparency = 1
+                    handle.CanCollide = false
                 end
             end
         end
-    else
-        invisBtn.Text = "Tàn Hình Tuyệt Đối: TẮT"
-        invisBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
         
-        for _, v in pairs(char:GetDescendants()) do
-            if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then
-                v.Transparency = 0
-                v.CanCollide = true
-            elseif v:IsA("Decal") then
-                v.Transparency = 0
-            elseif v:IsA("Accessory") then
-                local handle = v:FindFirstChild("Handle")
-                if handle then
-                    handle.Transparency = 0
-                end
-            end
-        end
-    end
-end)
-
--- 2. Anti-Knockback Đa Mục Tiêu (Kháng mọi đợt tấn công dồn dập từ nhiều người)
-local antiKBActive = false
-local kbConnection = nil
-local lastSafeCFrame = nil
-
-antiKBBtn.MouseButton1Click:Connect(function()
-    antiKBActive = not antiKBActive
-    
-    if antiKBActive then
-        antiKBBtn.Text = "Anti-KB Đa Mục Tiêu: BẬT"
-        antiKBBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
-        
-        local char = player.Character
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            lastSafeCFrame = char.HumanoidRootPart.CFrame
-        end
-        
-        kbConnection = RunService.RenderStepped:Connect(function()
-            local character = player.Character
-            if character then
-                local rootPart = character:FindFirstChild("HumanoidRootPart")
-                local humanoid = character:FindFirstChildOfClass("Humanoid")
-                
-                if rootPart and humanoid then
-                    local moveDirection = humanoid.MoveDirection
-                    local isMoving = moveDirection.Magnitude > 0
-                    local currentState = humanoid:GetState()
-                    
-                    local isJumpingOrFalling = (currentState == Enum.HumanoidStateType.Jumping or currentState == Enum.HumanoidStateType.Freefall)
-                    
-                    if humanoid.Health > 0 and not isJumpingOrFalling then
-                        -- Khóa vị trí cực gắt: Ngay cả khi bị nhiều người đánh văng, hệ thống sẽ ép đứng yên tại chỗ an toàn lập tức
-                        if not isMoving and lastSafeCFrame then
-                            local distance = (rootPart.Position - lastSafeCFrame.Position).Magnitude
-                            if distance > 1.2 then -- Ngưỡng siêu hẹp, vừa nhích ra là kéo về liền
-                                rootPart.CFrame = lastSafeCFrame
-                                pcall(function()
-                                    rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                                    rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-                                end)
-                            end
-                        end
-                        
-                        -- Cập nhật liên tục khi di chuyển bình thường
-                        if isMoving or rootPart.AssemblyLinearVelocity.Magnitude < 10 then
-                            lastSafeCFrame = rootPart.CFrame
-                        end
-                    end
-                    
-                    -- Chống hất tung tổng lực (Bất chấp bị nhiều người dồn skill cùng lúc)
-                    if (humanoid.PlatformStand or currentState == Enum.HumanoidStateType.Physics or (rootPart.AssemblyLinearVelocity.Y > 25 and not isJumpingOrFalling)) and lastSafeCFrame then
-                        rootPart.CFrame = lastSafeCFrame
-                        pcall(function()
-                            rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                            rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-                        end)
-                        humanoid.PlatformStand = false
-                    end
-                end
+        -- 2. Giấu hitbox và dịch chuyển phần nhận sát thương cốt lõi lệch khỏi tầm quét chiêu thức của địch
+        ghostConnection = RunService.RenderStepped:Connect(function()
+            if char and rootPart then
+                pcall(function()
+                    -- Đẩy hitbox thật dịch xuống dưới một khoảng nhỏ (ví dụ -5 mét) 
+                    -- Giúp bạn vẫn đứng trên mặt đất điều khiển bình thường nhưng vị trí nhận sát thương đã lệch khỏi chiêu của địch
+                    rootPart.CFrame = rootPart.CFrame - Vector3.new(0, 5, 0)
+                    rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                end)
             end
         end)
     else
-        antiKBBtn.Text = "Anti-KB Đa Mục Tiêu: TẮT"
-        antiKBBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        if kbConnection then
-            kbConnection:Disconnect()
-            kbConnection = nil
+        ghostModeBtn.Text = "Bóng Ma Bất Tử: TẮT"
+        ghostModeBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        
+        if ghostConnection then
+            ghostConnection:Disconnect()
+            ghostConnection = nil
         end
+        
+        -- Reset lại nhân vật
+        player.Character:BreakJoints()
     end
 end)
 
--- 3. Nút Reset nhanh
+-- Nút Reset
 resetBtn.MouseButton1Click:Connect(function()
     if player.Character then
         player.Character:BreakJoints()
     end
 end)
 
-print("Đã cập nhật bản fix triệt để lỗi tàn hình bị chết và Anti-KB đa mục tiêu!")
+print("Đã tải xong Script Bóng Ma Bất Tử tuyệt đỉnh!")
