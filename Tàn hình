@@ -5,13 +5,13 @@ local CoreGui = game:GetService("CoreGui")
 local player = Players.LocalPlayer
 
 -- Xóa UI cũ nếu có
-if CoreGui:FindFirstChild("UltimateGhostUI") then
-    CoreGui.UltimateGhostUI:Destroy()
+if CoreGui:FindFirstChild("UpGhostUI") then
+    CoreGui.UpGhostUI:Destroy()
 end
 
 -- Tạo Giao Diện UI chính
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "UltimateGhostUI"
+screenGui.Name = "UpGhostUI"
 screenGui.Parent = CoreGui
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
@@ -31,7 +31,7 @@ uiCorner.Parent = mainFrame
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, 0, 0, 35)
 titleLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-titleLabel.Text = "MENU BẤT TỬ BÓNG MA"
+titleLabel.Text = "MENU BÓNG MA ĐẨY CAO"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextSize = 12
 titleLabel.Font = Enum.Font.GothamBold
@@ -70,10 +70,10 @@ local function createButton(posY, defaultText)
     return btn
 end
 
-local ghostModeBtn = createButton(45, "Bóng Ma Bất Tử: TẮT")
+local upGhostBtn = createButton(45, "Bóng Ma Đẩy Cao: TẮT")
 local resetBtn = createButton(95, "Khôi Phục / Reset")
 
-local elementsToToggle = {ghostModeBtn, resetBtn}
+local elementsToToggle = {upGhostBtn, resetBtn}
 local isMinimized = false
 
 minBtn.MouseButton1Click:Connect(function()
@@ -93,23 +93,21 @@ minBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Biến quản lý trạng thái Bóng Ma
-local ghostActive = false
-local ghostConnection = nil
+local upGhostActive = false
+local upConnection = nil
 
-ghostModeBtn.MouseButton1Click:Connect(function()
-    ghostActive = not ghostActive
+upGhostBtn.MouseButton1Click:Connect(function()
+    upGhostActive = not upGhostActive
     local char = player.Character
     if not char then return end
     local rootPart = char:FindFirstChild("HumanoidRootPart")
     if not rootPart then return end
     
-    if ghostActive then
-        ghostModeBtn.Text = "Bóng Ma Bất Tử: BẬT"
-        ghostModeBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+    if upGhostActive then
+        upGhostBtn.Text = "Bóng Ma Đẩy Cao: BẬT"
+        upGhostBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
         
-        -- 1. Biến cơ thể thành khối tàng hình, vô hiệu hóa toàn bộ va chạm (CanCollide = false)
-        -- Đối thủ đánh vào chỗ bạn sẽ xuyên qua như đánh vào không khí, không gây ra sát thương hay knockback
+        -- 1. Biến nhân vật thành tàng hình và tắt va chạm hoàn toàn
         for _, v in pairs(char:GetDescendants()) do
             if v:IsA("BasePart") then
                 v.Transparency = 1
@@ -125,27 +123,25 @@ ghostModeBtn.MouseButton1Click:Connect(function()
             end
         end
         
-        -- 2. Giấu hitbox và dịch chuyển phần nhận sát thương cốt lõi lệch khỏi tầm quét chiêu thức của địch
-        ghostConnection = RunService.RenderStepped:Connect(function()
+        -- 2. Đẩy hitbox lệch lên phía trên không trung một khoảng nhỏ (ví dụ +4 mét)
+        upConnection = RunService.RenderStepped:Connect(function()
             if char and rootPart then
                 pcall(function()
-                    -- Đẩy hitbox thật dịch xuống dưới một khoảng nhỏ (ví dụ -5 mét) 
-                    -- Giúp bạn vẫn đứng trên mặt đất điều khiển bình thường nhưng vị trí nhận sát thương đã lệch khỏi chiêu của địch
-                    rootPart.CFrame = rootPart.CFrame - Vector3.new(0, 5, 0)
+                    -- Dịch chuyển tâm nhận sát thương lên cao hơn vị trí hiển thị thật
+                    rootPart.CFrame = rootPart.CFrame + Vector3.new(0, 4, 0)
                     rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                 end)
             end
         end)
     else
-        ghostModeBtn.Text = "Bóng Ma Bất Tử: TẮT"
-        ghostModeBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        upGhostBtn.Text = "Bóng Ma Đẩy Cao: TẮT"
+        upGhostBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
         
-        if ghostConnection then
-            ghostConnection:Disconnect()
-            ghostConnection = nil
+        if upConnection then
+            upConnection:Disconnect()
+            upConnection = nil
         end
         
-        -- Reset lại nhân vật
         player.Character:BreakJoints()
     end
 end)
@@ -157,4 +153,4 @@ resetBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-print("Đã tải xong Script Bóng Ma Bất Tử tuyệt đỉnh!")
+print("Đã tải xong Script gambler_chance invisible immortal !")
