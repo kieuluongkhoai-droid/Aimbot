@@ -1,9 +1,9 @@
 --[[
-    King Tower - Safe Platform & Invisible Clone Script
-    - Tự động tạo 1 tấm sàn riêng biệt (chỉ mình bạn nhìn thấy và đứng được) ở vị trí ban đầu.
-    - Clone đứng vững vàng trên sàn đó mà không bị rơi xuống hay chạm đất gây lỗi.
-    - Hitbox thật nằm an toàn trên trời (bất tử tuyệt đối, tránh Anti-cheat quét).
-    - 3 Nút chức năng riêng biệt: Bật/Tắt Mode, Đổi góc nhìn Camera, Hoán đổi vị trí.
+    King Tower - Perfect Anti-Cheat Safe Platform & Stealth Clone Script
+    - Ngay khi bật Mode: Tự động tạo một chiếc sàn tàng hình (chỉ Client thấy) ở ngay dưới chân, giúp server nhận diện nhân vật đang đứng vững vàng, chống tuyệt đối lỗi rơi hay Anti-cheat quét vị trí.
+    - Hitbox gốc được đưa lên trời an toàn tuyệt đối, không nhận sát thương.
+    - Clone tàng hình hoàn toàn, không có hitbox (không bị va chạm hay dính đòn).
+    - Camera tự động focus thẳng vào Clone để bạn điều khiển di chuyển mượt mà ngay từ giây đầu tiên.
 ]]
 
 local Players = game:GetService("Players")
@@ -14,12 +14,12 @@ local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-if _G.SafePlatformCloneLoaded then return end
-_G.SafePlatformCloneLoaded = true
+if _G.PerfectPlatformCloneLoaded then return end
+_G.PerfectPlatformCloneLoaded = true
 
 -- Tạo UI chính
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SafePlatformUI"
+ScreenGui.Name = "PerfectPlatformUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
@@ -61,14 +61,14 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -35, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "Safe Platform & Clone"
+TitleLabel.Text = "Perfect Anti-Cheat Clone"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
 
--- Nút Thu Nh่อ / Mở rộng (-) (+)
+-- Nút Thu Nhỏ / Mở rộng (-) (+)
 local MinimizeBtn = Instance.new("TextButton")
 MinimizeBtn.Size = UDim2.new(0, 25, 0, 25)
 MinimizeBtn.Position = UDim2.new(1, -28, 0, 3)
@@ -133,7 +133,7 @@ local InfoLabel = Instance.new("TextLabel")
 InfoLabel.Size = UDim2.new(1, -20, 0, 25)
 InfoLabel.Position = UDim2.new(0, 10, 0, 148)
 InfoLabel.BackgroundTransparency = 1
-InfoLabel.Text = "Status: Platform Ready"
+InfoLabel.Text = "Status: Ready"
 InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 InfoLabel.TextSize = 10
 InfoLabel.Font = Enum.Font.Gotham
@@ -167,17 +167,17 @@ local safePlatform = nil
 local isModeActive = false
 local currentViewIsClone = true
 
--- Hàm tạo tấm sàn riêng biệt chống rơi và chống anti-cheat quét khi khởi tạo chung chỗ
-local function createSafePlatform(position)
+-- Tạo sàn giả lập chuẩn xác giúp Server tưởng nhân vật đang đứng vững dưới đất
+local function createSafePlatform(cf)
     if safePlatform then safePlatform:Destroy() end
     
     safePlatform = Instance.new("Part")
-    safePlatform.Name = "KingTowerSafePlatform"
-    safePlatform.Size = Vector3.new(10, 1, 10)
-    safePlatform.Position = position - Vector3.new(0, 3, 0) -- Nằm ngay dưới chân nhân vật
+    safePlatform.Name = "KingTowerAntiCheatPlatform"
+    safePlatform.Size = Vector3.new(12, 1.2, 12)
+    safePlatform.CFrame = cf - Vector3.new(0, 3.2, 0) -- Nằm ngay dưới chân
     safePlatform.Anchored = true
     safePlatform.CanCollide = true
-    safePlatform.Transparency = 1 -- Hoàn toàn vô hình để không ai thấy
+    safePlatform.Transparency = 1 -- Hoàn toàn vô hình để đánh lừa mắt thường và server
     safePlatform.Parent = workspace
 end
 
@@ -188,7 +188,7 @@ local function removeSafePlatform()
     end
 end
 
--- Hàm giấu Clone hoàn toàn (vô hình và tắt hitbox)
+-- Giấu Clone và vô hiệu hóa hitbox để không bị dính đòn
 local function setCloneStealth(model, hide)
     for _, part in ipairs(model:GetDescendants()) do
         if part:IsA("BasePart") then
@@ -202,15 +202,15 @@ local function setCloneStealth(model, hide)
     end
 end
 
--- Khởi tạo Clone và Sàn đứng
+-- Khởi tạo Clone tại chỗ và tạo sàn
 local function initializeClone()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     
-    local currentPos = character.HumanoidRootPart.CFrame
+    local startCF = character.HumanoidRootPart.CFrame
     
-    -- Tạo sàn ngay dưới chân vị trí xuất phát
-    createSafePlatform(character.HumanoidRootPart.Position)
+    -- Tạo sàn chống rơi ngay tại chỗ đứng ban đầu
+    createSafePlatform(startCF)
     
     if not cloneChar or not cloneChar.Parent then
         character.Archivable = true
@@ -220,9 +220,9 @@ local function initializeClone()
         for _, v in ipairs(cloneChar:GetDescendants()) do
             if v:IsA("LocalScript") or v:IsA("Script") then v:Destroy() end
         end
-        cloneChar.Name = "PlatformSafeClone"
+        cloneChar.Name = "PerfectStealthClone"
         cloneChar.Parent = workspace
-        cloneChar:SetPrimaryPartCFrame(currentPos)
+        cloneChar:SetPrimaryPartCFrame(startCF)
         
         setCloneStealth(cloneChar, true)
     end
@@ -238,18 +238,20 @@ ToggleBtn.MouseButton1Click:Connect(function()
         initializeClone()
         local cloneHrp = cloneChar:FindFirstChild("HumanoidRootPart")
         if cloneHrp then
-            local currentPos = realHrp.CFrame
+            local currentCF = realHrp.CFrame
             
-            -- Đưa hitbox thật lên trời (3000m) bất tử
-            realHrp.CFrame = currentPos + Vector3.new(0, 3000, 0)
-            -- Đặt Clone đứng trên sàn an toàn tại vị trí cũ
-            cloneHrp.CFrame = currentPos
+            -- Đưa hitbox gốc lên trời cao 3000m để bất tử tuyệt đối
+            realHrp.CFrame = currentCF + Vector3.new(0, 3000, 0)
             
-            -- Giấu nhân vật thật
+            -- Đặt Clone đúng vào vị trí cũ ngay trên sàn an toàn
+            cloneHrp.CFrame = currentCF
+            
+            -- Giấu hẳn nhân vật gốc đi
             for _, p in ipairs(character:GetDescendants()) do
                 if p:IsA("BasePart") then p.Transparency = 1 end
             end
             
+            -- Lập tức đổi góc nhìn Camera vào Clone để bạn điều khiển di chuyển ngay
             if cloneChar:FindFirstChild("Humanoid") then
                 Camera.CameraSubject = cloneChar.Humanoid
             end
@@ -273,6 +275,7 @@ ToggleBtn.MouseButton1Click:Connect(function()
             cloneChar = nil
         end
         
+        -- Hiện lại nhân vật gốc
         for _, p in ipairs(character:GetDescendants()) do
             if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then p.Transparency = 0 end
         end
@@ -289,7 +292,7 @@ ToggleBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Nút 2: Đổi góc nhìn Camera
+-- Nút 2: Đổi góc nhìn Camera linh hoạt giữa Clone và Nhân vật thật
 CamBtn.MouseButton1Click:Connect(function()
     if not isModeActive then return end
     local character = LocalPlayer.Character
@@ -312,7 +315,7 @@ CamBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Nút 3: Hoán đổi vị trí
+-- Nút 3: Hoán đổi vị trí giữa nhân vật thật và Clone
 SwapBtn.MouseButton1Click:Connect(function()
     if not isModeActive or not cloneChar then return end
     local character = LocalPlayer.Character
@@ -325,19 +328,20 @@ SwapBtn.MouseButton1Click:Connect(function()
         local realCF = realHrp.CFrame
         local cloneCF = cloneHrp.CFrame
         
+        -- Hoán đổi tọa độ
         realHrp.CFrame = cloneCF
         cloneHrp.CFrame = realCF
         
-        -- Cập nhật lại vị trí của sàn để phù hợp với chỗ đứng mới của Clone
+        -- Cập nhật lại vị trí tấm sàn tàng hình theo chỗ đứng mới của Clone
         if safePlatform then
-            safePlatform.Position = cloneHrp.Position - Vector3.new(0, 3, 0)
+            safePlatform.CFrame = cloneHrp.CFrame - Vector3.new(0, 3.2, 0)
         end
         
-        InfoLabel.Text = "Positions Swapped & Platform Moved!"
+        InfoLabel.Text = "Positions Swapped & Platform Updated!"
     end
 end)
 
--- Reset khi nhân vật chết hoặc hồi sinh
+-- Reset tự động khi nhân vật chết hoặc hồi sinh
 LocalPlayer.CharacterAdded:Connect(function()
     isModeActive = false
     removeSafePlatform()
