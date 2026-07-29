@@ -1,9 +1,8 @@
 --[[
-    King Tower - Infinite ForceField & Sky Hitbox Script
-    - Kéo dài thời gian khiên bảo vệ (ForceField) là vô hạn (Vĩnh cửu).
-    - Đưa Hitbox thật lên trời để bất tử, né toàn bộ đòn đánh/đẩy trên tháp.
-    - Tạo hình nộm hiển thị dưới tháp để tung chiêu mượt mà.
-    - Giao diện UI viền cầu vồng (RGB) + Nút thu nhỏ linh hoạt.
+    King Tower - Precise Soul Transfer Script
+    - Bấm lần 1: Nhập hồn sang Clone, Clone đến chỗ nhân vật gốc, nhân vật gốc về chỗ Clone cũ.
+    - Bấm lần 2: Nhập hồn về nhân vật gốc, nhân vật gốc đến chỗ Clone hiện tại, Clone về chỗ nhân vật gốc cũ.
+    - Giao diện UI viền cầu vồng + Nút thu nhỏ linh hoạt.
 ]]
 
 local Players = game:GetService("Players")
@@ -14,18 +13,18 @@ local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-if _G.KingTowerInfiniteShield then return end
-_G.KingTowerInfiniteShield = true
+if _G.KingTowerPreciseSwapLoaded then return end
+_G.KingTowerPreciseSwapLoaded = true
 
 -- Tạo UI chính
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "KingTowerInfiniteUI"
+ScreenGui.Name = "PreciseSoulSwapUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 210, 0, 95)
+MainFrame.Size = UDim2.new(0, 220, 0, 95)
 MainFrame.Position = UDim2.new(0, 50, 0, 150)
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
 MainFrame.BorderSizePixel = 0
@@ -61,7 +60,7 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -35, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "King Tower - Infinite Shield"
+TitleLabel.Text = "Precise Soul Swap"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 12
 TitleLabel.Font = Enum.Font.GothamBold
@@ -83,140 +82,110 @@ local UICornerMin = Instance.new("UICorner")
 UICornerMin.CornerRadius = UDim.new(0, 6)
 UICornerMin.Parent = MinimizeBtn
 
--- Nút Bật/Tắt chính
-local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Size = UDim2.new(1, -20, 0, 40)
-ToggleBtn.Position = UDim2.new(0, 10, 0, 42)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
-ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-ToggleBtn.TextSize = 13
-ToggleBtn.Font = Enum.Font.GothamBold
-ToggleBtn.Text = "Status: OFF (Infinite)"
-ToggleBtn.Parent = MainFrame
+-- Nút Hoán Đổi Chính
+local SwapBtn = Instance.new("TextButton")
+SwapBtn.Size = UDim2.new(1, -20, 0, 40)
+SwapBtn.Position = UDim2.new(0, 10, 0, 42)
+SwapBtn.BackgroundColor3 = Color3.fromRGB(40, 30, 60)
+SwapBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+SwapBtn.TextSize = 13
+SwapBtn.Font = Enum.Font.GothamBold
+SwapBtn.Text = "👻 Control: Original Body"
+SwapBtn.Parent = MainFrame
 
 local UICornerBtn = Instance.new("UICorner")
 UICornerBtn.CornerRadius = UDim.new(0, 8)
-UICornerBtn.Parent = ToggleBtn
+UICornerBtn.Parent = SwapBtn
 
--- Logic ẩn/hiện bảng điều khiển
+-- Logic thu nhỏ UI
 local isMinimized = false
 MinimizeBtn.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
     if isMinimized then
         MinimizeBtn.Text = "+"
-        ToggleBtn.Visible = false
-        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 210, 0, 35)}):Play()
+        SwapBtn.Visible = false
+        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 220, 0, 35)}):Play()
     else
         MinimizeBtn.Text = "-"
-        ToggleBtn.Visible = true
-        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 210, 0, 95)}):Play()
+        SwapBtn.Visible = true
+        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 220, 0, 95)}):Play()
     end
 end)
 
--- Biến trạng thái
-local isInfiniteActive = false
-local visualDummy = nil
-local shieldConnection = nil
+-- Biến lưu trữ trạng thái
+local cloneChar = nil
+local isControllingClone = false
 
-local function toggleInfiniteShield(state)
+-- Hàm khởi tạo Clone tại vị trí ban đầu của nhân vật
+local function initializeClone()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-    local hrp = character.HumanoidRootPart
-
-    if state then
-        -- 1. Tạo hình nộm để bạn nhìn và đánh nhau dưới tháp
+    
+    if not cloneChar or not cloneChar.Parent then
         character.Archivable = true
-        visualDummy = character:Clone()
+        cloneChar = character:Clone()
         character.Archivable = false
         
-        for _, v in ipairs(visualDummy:GetDescendants()) do
+        for _, v in ipairs(cloneChar:GetDescendants()) do
             if v:IsA("LocalScript") or v:IsA("Script") then v:Destroy() end
         end
-        visualDummy.Name = "InfiniteShieldDummy"
-        visualDummy.Parent = workspace
-        
-        -- 2. Đưa hitbox thật lên trời cao
-        hrp.CFrame = hrp.CFrame + Vector3.new(0, 4000, 0)
-        
-        -- 3. Tạo vòng lặp vô hạn (Infinite Loop) liên tục duy trì hoặc tái tạo ForceField trên client
-        shieldConnection = RunService.Heartbeat:Connect(function()
-            local char = LocalPlayer.Character
-            if char then
-                local hasShield = false
-                for _, v in ipairs(char:GetChildren()) do
-                    if v:IsA("ForceField") then
-                        hasShield = true
-                        break
-                    end
-                end
-                -- Nếu game tự động xóa khiên theo thời gian, script sẽ tự động tạo lại cái mới ngay lập tức
-                if not hasShield then
-                    local newShield = Instance.new("ForceField")
-                    newShield.Visible = true
-                    newShield.Parent = char
-                end
-            end
-        end)
-
-        ToggleBtn.Text = "Status: ON (Infinite Shield)"
-        ToggleBtn.TextColor3 = Color3.fromRGB(255, 60, 60)
-        isInfiniteActive = true
-    else
-        -- Tắt: Ngắt kết nối duy trì khiên, xóa hình nộm và đưa hitbox về chỗ cũ
-        if shieldConnection then
-            shieldConnection:Disconnect()
-            shieldConnection = nil
-        end
-        
-        if visualDummy then
-            if visualDummy:FindFirstChild("HumanoidRootPart") then
-                hrp.CFrame = visualDummy.HumanoidRootPart.CFrame
-            end
-            visualDummy:Destroy()
-            visualDummy = nil
-        end
-        
-        for _, v in ipairs(character:GetChildren()) do
-            if v:IsA("ForceField") then
-                v:Destroy()
-            end
-        end
-
-        ToggleBtn.Text = "Status: OFF (Infinite)"
-        ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-        isInfiniteActive = false
+        cloneChar.Name = "PreciseSoulClone"
+        cloneChar.Parent = workspace
+        cloneChar:SetPrimaryPartCFrame(character.HumanoidRootPart.CFrame)
     end
 end
 
-ToggleBtn.MouseButton1Click:Connect(function()
-    toggleInfiniteShield(not isInfiniteActive)
-end)
-
--- Đồng bộ Camera bám sát hình nộm dưới tháp
-RunService.RenderStepped:Connect(function()
-    if isInfiniteActive and visualDummy and visualDummy:FindFirstChild("Humanoid") then
-        pcall(function()
-            Camera.CameraSubject = visualDummy.Humanoid
-        end)
-    else
-        local char = LocalPlayer.Character
-        if char and char:FindFirstChild("Humanoid") then
-            Camera.CameraSubject = char.Humanoid
+-- Xử lý nút bấm hoán đổi vị trí và quyền điều khiển
+SwapBtn.MouseButton1Click:Connect(function()
+    local character = LocalPlayer.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+    
+    initializeClone()
+    
+    local realHrp = character.HumanoidRootPart
+    local cloneHrp = cloneChar:FindFirstChild("HumanoidRootPart")
+    
+    if cloneHrp then
+        local realCF = realHrp.CFrame
+        local cloneCF = cloneHrp.CFrame
+        
+        if not isControllingClone then
+            -- Bấm lần 1: Đưa nhân vật gốc đến chỗ Clone, đồng thời đưa Clone đến chỗ nhân vật gốc cũ
+            realHrp.CFrame = cloneCF
+            cloneHrp.CFrame = realCF
+            
+            -- Chuyển Camera sang nhìn Clone (đang đứng ở vị trí nhân vật gốc cũ)
+            if cloneChar:FindFirstChild("Humanoid") then
+                Camera.CameraSubject = cloneChar.Humanoid
+            end
+            
+            isControllingClone = true
+            SwapBtn.Text = "👻 Control: Clone"
+            SwapBtn.TextColor3 = Color3.fromRGB(255, 150, 0)
+        else
+            -- Bấm lần 2: Nhập hồn về nhân vật gốc, nhân vật gốc di chuyển đến chỗ Clone hiện tại, Clone về lại chỗ cũ
+            realHrp.CFrame = cloneCF
+            cloneHrp.CFrame = realCF
+            
+            -- Chuyển Camera về lại nhân vật gốc
+            if character:FindFirstChild("Humanoid") then
+                Camera.CameraSubject = character.Humanoid
+            end
+            
+            isControllingClone = false
+            SwapBtn.Text = "👻 Control: Original Body"
+            SwapBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
         end
     end
 end)
 
--- Reset khi hồi sinh nhân vật mới
-LocalPlayer.CharacterAdded:Connect(function()
-    isInfiniteActive = false
-    if shieldConnection then
-        shieldConnection:Disconnect()
-        shieldConnection = nil
+-- Reset khi nhân vật chết hoặc hồi sinh
+LocalPlayer.CharacterAdded:Connect(function(newChar)
+    if cloneChar then
+        cloneChar:Destroy()
+        cloneChar = nil
     end
-    if visualDummy then
-        visualDummy:Destroy()
-        visualDummy = nil
-    end
-    ToggleBtn.Text = "Status: OFF (Infinite)"
-    ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+    isControllingClone = false
+    SwapBtn.Text = "👻 Control: Original Body"
+    SwapBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
 end)
