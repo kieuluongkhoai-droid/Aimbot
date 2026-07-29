@@ -1,30 +1,33 @@
 --[[
-    King Tower - Final Perfect Pathfinding Clone & Sky Core Script
-    - Khắc phục triệt để lỗi Clone không đi lại được: Gán lại NetworkOwner chuẩn xác, bật đầy đủ Humanoid state và cấu hình HumanoidRootPart để nhận input di chuyển từ người chơi.
-    - Đảm bảo cơ thể chính nằm CHÍNH XÁC trên bề mặt tấm bìa ở trên trời (không bị lọt xuống dưới hay ở giữa tấm bìa).
-    - Nút Swap / Mang cơ thể chính xuống hoạt động mượt mà, sử dụng được nhiều lần không giới hạn.
+    King Tower - Advanced Multi-Tab Controller Script with Godmode Clone
+    (Hướng dẫn chi tiết cách sử dụng và giải thích từng chức năng ở bên ngoài script)
 ]]
 
+-- SERVICES: Load core Roblox services required for players, frame rendering, GUI, tween animations, and user inputs.
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
+-- PLAYERS & CAMERA: Define local player reference and active workspace camera.
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-if _G.FinalCoreDummyLoaded then return end
-_G.FinalCoreDummyLoaded = true
+-- PREVENT MULTIPLE EXECUTIONS: Stop script if already running to avoid duplicate UI and loops.
+if _G.AdvancedTabbedCoreLoaded then return end
+_G.AdvancedTabbedCoreLoaded = true
 
--- Tạo UI chính
+-- MAIN UI SETUP: Create the main ScreenGui container and parent it safely to CoreGui or PlayerGui.
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "FinalCoreDummyUI"
+ScreenGui.Name = "AdvancedTabbedUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
+-- MAIN FRAME: Create the draggable main control panel window.
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 230, 0, 185)
+MainFrame.Size = UDim2.new(0, 260, 0, 260)
 MainFrame.Position = UDim2.new(0, 50, 0, 150)
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
 MainFrame.BorderSizePixel = 0
@@ -32,11 +35,11 @@ MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
+-- CORNER & STYLING: Apply rounded corners and a dynamic rainbow glowing border to the main window.
 local UICornerMain = Instance.new("UICorner")
 UICornerMain.CornerRadius = UDim.new(0, 12)
 UICornerMain.Parent = MainFrame
 
--- Hiệu ứng viền cầu vồng (Rainbow Border)
 local UIStroke = Instance.new("UIStroke")
 UIStroke.Thickness = 3
 UIStroke.Parent = MainFrame
@@ -50,7 +53,7 @@ task.spawn(function()
     end
 end)
 
--- Thanh tiêu đề
+-- TOP BAR: Create the title header and minimize button.
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 30)
 TopBar.BackgroundTransparency = 1
@@ -60,14 +63,13 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -35, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "Ultimate Tower Core & Clone"
+TitleLabel.Text = "Tower Core & Clone Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
 
--- Nút Thu Nhỏ / Mở rộng (-) (+)
 local MinimizeBtn = Instance.new("TextButton")
 MinimizeBtn.Size = UDim2.new(0, 25, 0, 25)
 MinimizeBtn.Position = UDim2.new(1, -28, 0, 3)
@@ -82,105 +84,223 @@ local UICornerMin = Instance.new("UICorner")
 UICornerMin.CornerRadius = UDim.new(0, 6)
 UICornerMin.Parent = MinimizeBtn
 
--- Nút 1: Bật/Tắt chế độ
-local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Size = UDim2.new(1, -20, 0, 30)
-ToggleBtn.Position = UDim2.new(0, 10, 0, 38)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
-ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-ToggleBtn.TextSize = 11
-ToggleBtn.Font = Enum.Font.GothamBold
-ToggleBtn.Text = "🛡️ Mode: OFF (Normal)"
-ToggleBtn.Parent = MainFrame
+-- TAB BAR: Create navigation buttons to switch between Real Body and Clone panels.
+local TabBar = Instance.new("Frame")
+TabBar.Size = UDim2.new(1, -20, 0, 28)
+TabBar.Position = UDim2.new(0, 10, 0, 35)
+TabBar.BackgroundTransparency = 1
+TabBar.Parent = MainFrame
 
-local UICornerBtn1 = Instance.new("UICorner")
-UICornerBtn1.CornerRadius = UDim.new(0, 6)
-UICornerBtn1.Parent = ToggleBtn
+local RealTabBtn = Instance.new("TextButton")
+RealTabBtn.Size = UDim2.new(0.5, -2, 1, 0)
+RealTabBtn.Position = UDim2.new(0, 0, 0, 0)
+RealTabBtn.BackgroundColor3 = Color3.fromRGB(50, 40, 70)
+RealTabBtn.TextColor3 = Color3.fromRGB(255, 200, 100)
+RealTabBtn.TextSize = 11
+RealTabBtn.Font = Enum.Font.GothamBold
+RealTabBtn.Text = "👑 Real Body"
+RealTabBtn.Parent = TabBar
 
--- Nút 2: Đổi góc nhìn Camera
-local CamBtn = Instance.new("TextButton")
-CamBtn.Size = UDim2.new(1, -20, 0, 30)
-CamBtn.Position = UDim2.new(0, 10, 0, 74)
-CamBtn.BackgroundColor3 = Color3.fromRGB(30, 40, 50)
-CamBtn.TextColor3 = Color3.fromRGB(0, 200, 255)
-CamBtn.TextSize = 11
-CamBtn.Font = Enum.Font.GothamBold
-CamBtn.Text = "👁️ View: Clone (Dummy)"
-CamBtn.Parent = MainFrame
+local UICornerRealTab = Instance.new("UICorner")
+UICornerRealTab.CornerRadius = UDim.new(0, 6)
+UICornerRealTab.Parent = RealTabBtn
 
-local UICornerBtn2 = Instance.new("UICorner")
-UICornerBtn2.CornerRadius = UDim.new(0, 6)
-UICornerBtn2.Parent = CamBtn
+local CloneTabBtn = Instance.new("TextButton")
+CloneTabBtn.Size = UDim2.new(0.5, -2, 1, 0)
+CloneTabBtn.Position = UDim2.new(0.5, 2, 0, 0)
+CloneTabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+CloneTabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+CloneTabBtn.TextSize = 11
+CloneTabBtn.Font = Enum.Font.GothamBold
+CloneTabBtn.Text = "👤 Clone Hub"
+CloneTabBtn.Parent = TabBar
 
--- Nút 3: Hoán đổi / Mang cơ thể chính xuống (Dùng được nhiều lần)
-local SwapBtn = Instance.new("TextButton")
-SwapBtn.Size = UDim2.new(1, -20, 0, 30)
-SwapBtn.Position = UDim2.new(0, 10, 0, 110)
-SwapBtn.BackgroundColor3 = Color3.fromRGB(60, 30, 30)
-SwapBtn.TextColor3 = Color3.fromRGB(255, 150, 0)
-SwapBtn.TextSize = 11
-SwapBtn.Font = Enum.Font.GothamBold
-SwapBtn.Text = "🔄 Swap / Bring Core Here"
-SwapBtn.Parent = MainFrame
+local UICornerCloneTab = Instance.new("UICorner")
+UICornerCloneTab.CornerRadius = UDim.new(0, 6)
+UICornerCloneTab.Parent = CloneTabBtn
 
-local UICornerBtn3 = Instance.new("UICorner")
-UICornerBtn3.CornerRadius = UDim.new(0, 6)
-UICornerBtn3.Parent = SwapBtn
+-- CONTAINERS: Create separate UI containers for each tab's elements.
+local RealContainer = Instance.new("Frame")
+RealContainer.Size = UDim2.new(1, -20, 0, 155)
+RealContainer.Position = UDim2.new(0, 10, 0, 68)
+RealContainer.BackgroundTransparency = 1
+RealContainer.Visible = true
+RealContainer.Parent = MainFrame
 
--- Nhãn trạng thái
+local CloneContainer = Instance.new("Frame")
+CloneContainer.Size = UDim2.new(1, -20, 0, 155)
+CloneContainer.Position = UDim2.new(0, 10, 0, 68)
+CloneContainer.BackgroundTransparency = 1
+CloneContainer.Visible = false
+CloneContainer.Parent = MainFrame
+
+-- STATUS LABEL: Bottom text label to display system statuses and messages.
 local InfoLabel = Instance.new("TextLabel")
-InfoLabel.Size = UDim2.new(1, -20, 0, 25)
-InfoLabel.Position = UDim2.new(0, 10, 0, 148)
+InfoLabel.Size = UDim2.new(1, -20, 0, 20)
+InfoLabel.Position = UDim2.new(0, 10, 0, 230)
 InfoLabel.BackgroundTransparency = 1
-InfoLabel.Text = "Status: Ready"
+InfoLabel.Text = "Status: System Ready"
 InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 InfoLabel.TextSize = 10
 InfoLabel.Font = Enum.Font.Gotham
 InfoLabel.TextXAlignment = Enum.TextXAlignment.Center
 InfoLabel.Parent = MainFrame
 
--- Logic thu nhỏ UI
+-- ==================== REAL BODY TAB CONTROLS ====================
+
+local MakePlatformBtn = Instance.new("TextButton")
+MakePlatformBtn.Size = UDim2.new(1, 0, 0, 32)
+MakePlatformBtn.Position = UDim2.new(0, 0, 0, 0)
+MakePlatformBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+MakePlatformBtn.TextColor3 = Color3.fromRGB(0, 255, 180)
+MakePlatformBtn.TextSize = 11
+MakePlatformBtn.Font = Enum.Font.GothamBold
+MakePlatformBtn.Text = "🏗️ Spawn Thick Sky Platform"
+MakePlatformBtn.Parent = RealContainer
+
+local UIC_P1 = Instance.new("UICorner") UIC_P1.CornerRadius = UDim.new(0, 6) UIC_P1.Parent = MakePlatformBtn
+
+local TpSkyBtn = Instance.new("TextButton")
+TpSkyBtn.Size = UDim2.new(1, 0, 0, 32)
+TpSkyBtn.Position = UDim2.new(0, 0, 0, 38)
+TpSkyBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+TpSkyBtn.TextColor3 = Color3.fromRGB(0, 200, 255)
+TpSkyBtn.TextSize = 11
+TpSkyBtn.Font = Enum.Font.GothamBold
+TpSkyBtn.Text = "⬆️ Teleport Real Body to Sky"
+TpSkyBtn.Parent = RealContainer
+
+local UIC_P2 = Instance.new("UICorner") UIC_P2.CornerRadius = UDim.new(0, 6) UIC_P2.Parent = TpSkyBtn
+
+local LockRealBtn = Instance.new("TextButton")
+LockRealBtn.Size = UDim2.new(1, 0, 0, 32)
+LockRealBtn.Position = UDim2.new(0, 0, 0, 76)
+LockRealBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+LockRealBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+LockRealBtn.TextSize = 11
+LockRealBtn.Font = Enum.Font.GothamBold
+LockRealBtn.Text = "🔒 Lock Real Body Move: OFF"
+LockRealBtn.Parent = RealContainer
+
+local UIC_P3 = Instance.new("UICorner") UIC_P3.CornerRadius = UDim.new(0, 6) UIC_P3.Parent = LockRealBtn
+
+local SwapPositionsBtn = Instance.new("TextButton")
+SwapPositionsBtn.Size = UDim2.new(1, 0, 0, 32)
+SwapPositionsBtn.Position = UDim2.new(0, 0, 0, 114)
+SwapPositionsBtn.BackgroundColor3 = Color3.fromRGB(60, 30, 40)
+SwapPositionsBtn.TextColor3 = Color3.fromRGB(255, 150, 0)
+SwapPositionsBtn.TextSize = 11
+SwapPositionsBtn.Font = Enum.Font.GothamBold
+SwapPositionsBtn.Text = "🔄 Swap Real Body <-> Clone"
+SwapPositionsBtn.Parent = RealContainer
+
+local UIC_P4 = Instance.new("UICorner") UIC_P4.CornerRadius = UDim.new(0, 6) UIC_P4.Parent = SwapPositionsBtn
+
+-- ==================== CLONE TAB CONTROLS ====================
+
+local SpawnCloneBtn = Instance.new("TextButton")
+SpawnCloneBtn.Size = UDim2.new(1, 0, 0, 35)
+SpawnCloneBtn.Position = UDim2.new(0, 0, 0, 0)
+SpawnCloneBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+SpawnCloneBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+SpawnCloneBtn.TextSize = 11
+SpawnCloneBtn.Font = Enum.Font.GothamBold
+SpawnCloneBtn.Text = "👤 Create & Activate Clone"
+SpawnCloneBtn.Parent = CloneContainer
+
+local UIC_C1 = Instance.new("UICorner") UIC_C1.CornerRadius = UDim.new(0, 6) UIC_C1.Parent = SpawnCloneBtn
+
+local CamCloneBtn = Instance.new("TextButton")
+CamCloneBtn.Size = UDim2.new(1, 0, 0, 35)
+CamCloneBtn.Position = UDim2.new(0, 0, 0, 40)
+CamCloneBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+CamCloneBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
+CamCloneBtn.TextSize = 11
+CamCloneBtn.Font = Enum.Font.GothamBold
+CamCloneBtn.Text = "👁️ Focus Camera on Clone"
+CamCloneBtn.Parent = CloneContainer
+
+local UIC_C2 = Instance.new("UICorner") UIC_C2.CornerRadius = UDim.new(0, 6) UIC_C2.Parent = CamCloneBtn
+
+local LockCloneBtn = Instance.new("TextButton")
+LockCloneBtn.Size = UDim2.new(1, 0, 0, 35)
+LockCloneBtn.Position = UDim2.new(0, 0, 0, 80)
+LockCloneBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+LockCloneBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+LockCloneBtn.TextSize = 11
+LockCloneBtn.Font = Enum.Font.GothamBold
+LockCloneBtn.Text = "🔒 Lock Clone Move: OFF"
+LockCloneBtn.Parent = CloneContainer
+
+local UIC_C3 = Instance.new("UICorner") UIC_C3.CornerRadius = UDim.new(0, 6) UIC_C3.Parent = LockCloneBtn
+
+-- TAB SWITCHING: Handle tab button interactions and visibility toggles.
+RealTabBtn.MouseButton1Click:Connect(function()
+    RealContainer.Visible = true
+    CloneContainer.Visible = false
+    RealTabBtn.BackgroundColor3 = Color3.fromRGB(50, 40, 70)
+    RealTabBtn.TextColor3 = Color3.fromRGB(255, 200, 100)
+    CloneTabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    CloneTabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+end)
+
+CloneTabBtn.MouseButton1Click:Connect(function()
+    RealContainer.Visible = false
+    CloneContainer.Visible = true
+    CloneTabBtn.BackgroundColor3 = Color3.fromRGB(50, 40, 70)
+    CloneTabBtn.TextColor3 = Color3.fromRGB(255, 200, 100)
+    RealTabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    RealTabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+end)
+
+-- MINIMIZE LOGIC: Collapse or expand the main UI window smoothly using TweenService.
 local isMinimized = false
 MinimizeBtn.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
     if isMinimized then
         MinimizeBtn.Text = "+"
-        ToggleBtn.Visible = false
-        CamBtn.Visible = false
-        SwapBtn.Visible = false
+        TabBar.Visible = false
+        RealContainer.Visible = false
+        CloneContainer.Visible = false
         InfoLabel.Visible = false
-        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 230, 0, 35)}):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 260, 0, 35)}):Play()
     else
         MinimizeBtn.Text = "-"
-        ToggleBtn.Visible = true
-        CamBtn.Visible = true
-        SwapBtn.Visible = true
+        TabBar.Visible = true
+        if RealTabBtn.BackgroundColor3 == Color3.fromRGB(50, 40, 70) then
+            RealContainer.Visible = true
+        else
+            CloneContainer.Visible = true
+        end
         InfoLabel.Visible = true
-        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 230, 0, 185)}):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 260, 0, 260)}):Play()
     end
 end)
 
--- Biến trạng thái
+-- VARIABLES: State variables for tracking characters, platforms, locks, and loops.
 local cloneChar = nil
 local skyPlatform = nil
-local isModeActive = false
-local currentViewIsClone = true
-local isCoreDown = false
+local isRealLocked = false
+local isCloneLocked = false
+local cloneMoveConnection = nil
+local antiTpConnection = nil
+local targetSkyCFrame = nil
 
--- Tạo tấm sàn trên trời và đặt chiều cao chuẩn xác để chân cơ thể đứng BÊN TRÊN bề mặt tấm bìa
-local function createSkyPlatform(basePos)
+-- PLATFORM CREATOR: Spawns an extra thick sky platform to prevent falling through.
+local function createThickSkyPlatform(basePos)
     if skyPlatform then skyPlatform:Destroy() end
     
     skyPlatform = Instance.new("Part")
-    skyPlatform.Name = "TowerSkyPlatform"
-    skyPlatform.Size = Vector3.new(50, 2, 50) -- Độ dày tấm bìa là 2 đơn vị
-    -- Đặt vị trí Y cao hơn 3000 mét
+    skyPlatform.Name = "TowerThickSkyPlatform"
+    skyPlatform.Size = Vector3.new(80, 6, 80) -- Extra thick platform blocks
     skyPlatform.CFrame = CFrame.new(basePos.X, basePos.Y + 3000, basePos.Z)
     skyPlatform.Anchored = true
     skyPlatform.CanCollide = true
     skyPlatform.Transparency = 0.2
     skyPlatform.BrickColor = BrickColor.new("Dark stone grey")
     skyPlatform.Parent = workspace
+    
+    return CFrame.new(basePos.X, basePos.Y + 3005, basePos.Z)
 end
 
 local function removeSkyPlatform()
@@ -190,185 +310,222 @@ local function removeSkyPlatform()
     end
 end
 
--- Nút 1: Bật/Tắt chế độ
-ToggleBtn.MouseButton1Click:Connect(function()
+-- EVENT: Create Thick Sky Platform button functionality.
+MakePlatformBtn.MouseButton1Click:Connect(function()
+    local character = LocalPlayer.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+    targetSkyCFrame = createThickSkyPlatform(character.HumanoidRootPart.CFrame.Position)
+    InfoLabel.Text = "Status: Thick Sky Platform Created!"
+end)
+
+-- EVENT: Teleport Real Body button functionality with anti-TP protection loop.
+TpSkyBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     local realHrp = character.HumanoidRootPart
-    local realHumanoid = character:FindFirstChildOfClass("Humanoid")
-
-    if not isModeActive then
-        local startCF = realHrp.CFrame
-        
-        -- 1. Tạo sàn trên trời
-        createSkyPlatform(startCF.Position)
-        
-        -- 2. Đặt cơ thể chính đứng BÊN TRÊN bề mặt tấm bìa (Tính toán nửa chiều cao character + nửa độ dày tấm bìa để chân đứng chuẩn xác)
-        local platformY = startCF.Y + 3000
-        local surfaceY = platformY + 1 + 3 -- 1 (nửa độ dày tấm bìa) + 3 (khoảng cách chân tới tâm HumanoidRootPart)
-        realHrp.CFrame = CFrame.new(startCF.X, surfaceY, startCF.Z)
-        
-        if realHumanoid then
-            realHumanoid.PlatformStand = true -- Khóa cử động cơ thể gốc để chống anti-cheat
-        end
-        
-        -- 3. Tạo Clone dưới đất để mở đường (Đảm bảo bật đầy đủ tính năng di chuyển và giữ nguyên trạng thái đi lại)
-        if not cloneChar or not cloneChar.Parent then
-            character.Archivable = true
-            cloneChar = character:Clone()
-            character.Archivable = false
-            
-            for _, v in ipairs(cloneChar:GetDescendants()) do
-                if v:IsA("LocalScript") or v:IsA("Script") then v:Destroy() end
-            end
-            cloneChar.Name = "MovablePathfinderClone"
-            cloneChar.Parent = workspace
-            cloneChar:SetPrimaryPartCFrame(startCF)
-            
-            -- Cho phép Clone di chuyển tự do, không bị khóa trạng thái
-            local cloneHumanoid = cloneChar:FindFirstChildOfClass("Humanoid")
-            if cloneHumanoid then
-                cloneHumanoid.PlatformStand = false
-                cloneHumanoid.AutoRotate = true
-            end
-            
-            -- Đảm bảo các phần thân của Clone không cản trở sát thương nhưng vẫn giữ va chạm đất để đi lại bình thường
-            for _, part in ipairs(cloneChar:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = true -- Giữ CanCollide để Clone đứng vững trên mặt đất của game
-                    part.CanTouch = false  -- Không nhận tương tác sát thương tấn công từ quái/người khác
-                    part.CanQuery = false
-                end
-            end
-        end
-        
-        -- 4. Chuyển Camera sang Clone ngay lập tức để điều khiển mượt mà
-        if cloneChar:FindFirstChild("Humanoid") then
-            Camera.CameraSubject = cloneChar.Humanoid
-        end
-        
-        isModeActive = true
-        currentViewIsClone = true
-        isCoreDown = false
-        ToggleBtn.Text = "🛡️ Mode: ON (Protected)"
-        ToggleBtn.TextColor3 = Color3.fromRGB(255, 60, 60)
-        CamBtn.Text = "👁️ View: Clone (Dummy)"
-        SwapBtn.Text = "🔄 Swap / Bring Core Here"
-        InfoLabel.Text = "Status: Core Safe on Top of Sky Platform"
-    else
-        -- Tắt Mode
-        if cloneChar and cloneChar:FindFirstChild("HumanoidRootPart") then
-            realHrp.CFrame = cloneChar.HumanoidRootPart.CFrame
-        end
-        
-        if realHumanoid then
-            realHumanoid.PlatformStand = false
-        end
-        
-        removeSkyPlatform()
-        if cloneChar then
-            cloneChar:Destroy()
-            cloneChar = nil
-        end
-        
-        if realHumanoid then
-            Camera.CameraSubject = realHumanoid
-        end
-        
-        isModeActive = false
-        isCoreDown = false
-        ToggleBtn.Text = "🛡️ Mode: OFF (Normal)"
-        ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-        CamBtn.Text = "👁️ View: Normal"
-        SwapBtn.Text = "🔄 Swap / Bring Core Here"
-        InfoLabel.Text = "Status: Normal Mode"
+    
+    if not skyPlatform then
+        targetSkyCFrame = createThickSkyPlatform(realHrp.CFrame.Position)
     end
+    
+    realHrp.CFrame = targetSkyCFrame
+    
+    if antiTpConnection then antiTpConnection:Disconnect() end
+    antiTpConnection = RunService.Heartbeat:Connect(function()
+        if skyPlatform and character and realHrp then
+            if realHrp.Position.Y < (skyPlatform.Position.Y - 10) then
+                realHrp.CFrame = targetSkyCFrame
+                realHrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+            end
+        end
+    end)
+    
+    InfoLabel.Text = "Status: Real Body Teleported to Sky Safely!"
 end)
 
--- Nút 2: Đổi góc nhìn Camera linh hoạt
-CamBtn.MouseButton1Click:Connect(function()
-    if not isModeActive then return end
+-- EVENT: Lock/Unlock Real Body movement using PlatformStand.
+LockRealBtn.MouseButton1Click:Connect(function()
+    isRealLocked = not isRealLocked
     local character = LocalPlayer.Character
-    if not character then return end
-    local realHumanoid = character:FindFirstChildOfClass("Humanoid")
-    
-    currentViewIsClone = not currentViewIsClone
-    
-    if currentViewIsClone then
-        if cloneChar and cloneChar:FindFirstChild("Humanoid") then
-            Camera.CameraSubject = cloneChar.Humanoid
-            CamBtn.Text = "👁️ View: Clone (Dummy)"
-            InfoLabel.Text = "Camera on Clone"
+    if character then
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.PlatformStand = isRealLocked
         end
+    end
+    
+    if isRealLocked then
+        LockRealBtn.Text = "🔒 Lock Real Body Move: ON"
+        LockRealBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+        InfoLabel.Text = "Status: Real Body Movement Locked"
     else
-        if realHumanoid then
-            Camera.CameraSubject = realHumanoid
-            CamBtn.Text = "👁️ View: Real Body (Sky)"
-            InfoLabel.Text = "Camera on Real Body (Sky)"
-        end
+        LockRealBtn.Text = "🔒 Lock Real Body Move: OFF"
+        LockRealBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+        InfoLabel.Text = "Status: Real Body Movement Unlocked"
     end
 end)
 
--- Nút 3: Hoán đổi / Mang cơ thể chính xuống (Dùng nhiều lần thoải mái)
-SwapBtn.MouseButton1Click:Connect(function()
-    if not isModeActive or not cloneChar then return end
+-- EVENT: Create and activate clone with custom movement physics loop and collision hitbox support (Godmode enabled).
+SpawnCloneBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-    local realHrp = character.HumanoidRootPart
-    local realHumanoid = character:FindFirstChildOfClass("Humanoid")
+    local startCF = character.HumanoidRootPart.CFrame
+    
+    if cloneChar and cloneChar.Parent then
+        cloneChar:Destroy()
+        cloneChar = nil
+    end
+    
+    character.Archivable = true
+    cloneChar = character:Clone()
+    character.Archivable = false
+    
+    for _, v in ipairs(cloneChar:GetDescendants()) do
+        if v:IsA("LocalScript") or v:IsA("Script") then v:Destroy() end
+    end
+    cloneChar.Name = "MovablePathfinderClone"
+    cloneChar.Parent = workspace
+    cloneChar:SetPrimaryPartCFrame(startCF)
+    
+    local cloneHumanoid = cloneChar:FindFirstChildOfClass("Humanoid")
     local cloneHrp = cloneChar:FindFirstChild("HumanoidRootPart")
     
-    if not cloneHrp then return end
-    
-    isCoreDown = not isCoreDown
-    
-    if isCoreDown then
-        -- Mang cơ thể chính xuống vị trí hiện tại của Clone
-        realHrp.CFrame = cloneHrp.CFrame
-        if realHumanoid then
-            realHumanoid.PlatformStand = false -- Mở khóa để chiến đấu
-        end
+    if cloneHumanoid then
+        cloneHumanoid.PlatformStand = false
+        cloneHumanoid.AutoRotate = true
+        Camera.CameraSubject = cloneHumanoid
         
-        if realHumanoid then
-            Camera.CameraSubject = realHumanoid
+        -- GODMODE FEATURE: Lock health and prevent taking damage permanently
+        cloneHumanoid.MaxHealth = math.huge
+        cloneHumanoid.Health = math.huge
+        cloneHumanoid.HealthChanged:Connect(function()
+            if cloneHumanoid and cloneHumanoid.Health < cloneHumanoid.MaxHealth then
+                cloneHumanoid.Health = cloneHumanoid.MaxHealth
+            end
+        end)
+    end
+    
+    for _, part in ipairs(cloneChar:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = true
+            part.CanTouch = false
+            part.CanQuery = false
         end
-        
-        SwapBtn.Text = "🔄 Send Core Back to Sky"
-        InfoLabel.Text = "Status: Real Body is HERE (Fighting)"
+    end
+    
+    if cloneMoveConnection then cloneMoveConnection:Disconnect() end
+    cloneMoveConnection = RunService.RenderStepped:Connect(function()
+        if cloneChar and cloneChar.Parent and cloneHumanoid and cloneHrp and not isCloneLocked then
+            local moveDir = Vector3.zero
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.Up) then
+                moveDir = moveDir + Vector3.new(0, 0, -1)
+            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.Down) then
+                moveDir = moveDir + Vector3.new(0, 0, 1)
+            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.Left) then
+                moveDir = moveDir + Vector3.new(-1, 0, 0)
+            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) or UserInputService:IsKeyDown(Enum.KeyCode.Right) then
+                moveDir = moveDir + Vector3.new(1, 0, 0)
+            end
+            
+            if moveDir.Magnitude > 0 then
+                local camLook = Camera.CFrame.LookVector
+                camLook = Vector3.new(camLook.X, 0, camLook.Z).Unit
+                local camRight = Camera.CFrame.RightVector
+                camRight = Vector3.new(camRight.X, 0, camRight.Z).Unit
+                
+                local worldDir = (camRight * moveDir.X + camLook * -moveDir.Z).Unit
+                cloneHumanoid:Move(worldDir, false)
+            end
+        end
+    end)
+    
+    InfoLabel.Text = "Status: Clone Spawned with Godmode!"
+end)
+
+-- EVENT: Focus camera view onto the clone.
+CamCloneBtn.MouseButton1Click:Connect(function()
+    if cloneChar and cloneChar:FindFirstChild("Humanoid") then
+        Camera.CameraSubject = cloneChar.Humanoid
+        InfoLabel.Text = "Status: Camera Focused on Clone"
     else
-        -- Đưa cơ thể chính trở lại chuẩn xác BÊN TRÊN bề mặt tấm bìa trên trời
-        if skyPlatform then
-            local skyPos = skyPlatform.Position
-            realHrp.CFrame = CFrame.new(skyPos.X, skyPos.Y + 4, skyPos.Z)
-        else
-            realHrp.CFrame = cloneHrp.CFrame + Vector3.new(0, 3004, 0)
-        end
-        
-        if realHumanoid then
-            realHumanoid.PlatformStand = true -- Khóa lại an toàn
-        end
-        
-        if cloneChar:FindFirstChild("Humanoid") then
-            Camera.CameraSubject = cloneChar.Humanoid
-        end
-        
-        SwapBtn.Text = "🔄 Swap / Bring Core Here"
-        InfoLabel.Text = "Status: Real Body safely back on Sky Platform"
+        InfoLabel.Text = "Status: Clone not found!"
     end
 end)
 
--- Reset khi nhân vật chết hoặc hồi sinh
+-- EVENT: Lock/Unlock clone movement.
+LockCloneBtn.MouseButton1Click:Connect(function()
+    isCloneLocked = not isCloneLocked
+    if cloneChar then
+        local humanoid = cloneChar:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.PlatformStand = isCloneLocked
+        end
+    end
+    
+    if isCloneLocked then
+        LockCloneBtn.Text = "🔒 Lock Clone Move: ON"
+        LockCloneBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+        InfoLabel.Text = "Status: Clone Movement Locked"
+    else
+        LockCloneBtn.Text = "🔒 Lock Clone Move: OFF"
+        LockCloneBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+        InfoLabel.Text = "Status: Lock Clone Move: OFF"
+    end
+end)
+
+-- EVENT: Swap positions directly between the real body and clone.
+SwapPositionsBtn.MouseButton1Click:Connect(function()
+    local character = LocalPlayer.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") or not cloneChar or not cloneChar:FindFirstChild("HumanoidRootPart") then
+        InfoLabel.Text = "Status: Cannot swap, clone or real body missing!"
+        return
+    end
+    
+    local realHrp = character.HumanoidRootPart
+    local realHumanoid = character:FindFirstChildOfClass("Humanoid")
+    local cloneHrp = cloneChar.HumanoidRootPart
+    local cloneHumanoid = cloneChar:FindFirstChildOfClass("Humanoid")
+    
+    local realCF = realHrp.CFrame
+    local cloneCF = cloneHrp.CFrame
+    
+    if antiTpConnection then antiTpConnection:Disconnect() end
+    
+    realHrp.CFrame = cloneCF
+    cloneHrp.CFrame = realCF
+    
+    if realHrp.Position.Y < 1000 then
+        if realHumanoid then realHumanoid.PlatformStand = false end
+        if realHumanoid then Camera.CameraSubject = realHumanoid end
+        InfoLabel.Text = "Status: Real Body Swapped to Ground!"
+    else
+        if realHumanoid then realHumanoid.PlatformStand = true end
+        if cloneHumanoid then Camera.CameraSubject = cloneHumanoid end
+        InfoLabel.Text = "Status: Real Body Swapped back to Sky!"
+        
+        targetSkyCFrame = realHrp.CFrame
+        antiTpConnection = RunService.Heartbeat:Connect(function()
+            if skyPlatform and character and realHrp then
+                if realHrp.Position.Y > 1000 and realHrp.Position.Y < (skyPlatform.Position.Y - 10) then
+                    realHrp.CFrame = targetSkyCFrame
+                    realHrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                end
+            end
+        end)
+    end
+end)
+
+-- CLEANUP: Automatically clean up connections and platforms on player character respawn.
 LocalPlayer.CharacterAdded:Connect(function()
-    isModeActive = false
-    isCoreDown = false
+    if antiTpConnection then antiTpConnection:Disconnect() antiTpConnection = nil end
+    if cloneMoveConnection then cloneMoveConnection:Disconnect() cloneMoveConnection = nil end
     removeSkyPlatform()
     if cloneChar then
         cloneChar:Destroy()
         cloneChar = nil
     end
-    ToggleBtn.Text = "🛡️ Mode: OFF (Normal)"
-    ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-    CamBtn.Text = "👁️ View: Clone (Dummy)"
-    SwapBtn.Text = "🔄 Swap / Bring Core Here"
-    InfoLabel.Text = "Status: Normal Mode"
+    InfoLabel.Text = "Status: Character Reset - Normal Mode"
 end)
