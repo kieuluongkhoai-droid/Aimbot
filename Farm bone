@@ -4,28 +4,28 @@ local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
 
--- // Cấu hình mặc định với tên "bonds"
-local TARGET_NAME = "bonds"
-getgenv().AutoFarmBone = false
+-- // Trạng thái tính năng
+getgenv().AutoTeleportToBonds = false
+getgenv().AutoBringBonds = false
 
 -- // Xóa UI cũ nếu có để tránh bị trùng lặp
-if CoreGui:FindFirstChild("BoneFarmUI") then
-    CoreGui.BoneFarmUI:Destroy()
+if CoreGui:FindFirstChild("BondsManagerUI") then
+    CoreGui.BondsManagerUI:Destroy()
 end
 
 -- // Tạo Giao Diện (UI)
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "BoneFarmUI"
+ScreenGui.Name = "BondsManagerUI"
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 230, 0, 130)
+MainFrame.Size = UDim2.new(0, 240, 0, 160)
 MainFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
-MainFrame.Draggable = true
+MainFrame.Draggable = true -- Kéo thả UI
 MainFrame.Parent = ScreenGui
 
 local UICorner = Instance.new("UICorner")
@@ -35,46 +35,71 @@ UICorner.Parent = MainFrame
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 30)
 Title.BackgroundTransparency = 1
-Title.Text = "Dead Rails - Auto Bonds"
+Title.Text = "Dead Rails - Treasury Bonds"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.Font = Enum.Font.GothamBold
 Title.Parent = MainFrame
 
--- Hiển thị tên vật phẩm đang quét trên UI để theo dõi
-local StatusLabel = Instance.new("TextLabel")
-StatusLabel.Size = UDim2.new(1, 0, 0, 20)
-StatusLabel.Position = UDim2.new(0, 0, 0.25, 0)
-StatusLabel.BackgroundTransparency = 1
-StatusLabel.Text = "Đang tìm kiếm bonds..."
-StatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-StatusLabel.TextSize = 11
-StatusLabel.Font = Enum.Font.Gotham
-StatusLabel.Parent = MainFrame
+-- Nút Chức năng 1: Teleport đến Bonds
+local BtnTpTo = Instance.new("TextButton")
+BtnTpTo.Size = UDim2.new(0.9, 0, 0, 45)
+BtnTpTo.Position = UDim2.new(0.05, 0, 0.25, 0)
+BtnTpTo.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+BtnTpTo.Text = "TP đến Bonds: TẮT"
+BtnTpTo.TextColor3 = Color3.fromRGB(255, 255, 255)
+BtnTpTo.TextSize = 13
+BtnTpTo.Font = Enum.Font.GothamBold
+BtnTpTo.Parent = MainFrame
 
-local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Size = UDim2.new(0.9, 0, 0, 45)
-ToggleBtn.Position = UDim2.new(0.05, 0, 0.5, 0)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-ToggleBtn.Text = "Trạng thái: TẮT"
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.TextSize = 14
-ToggleBtn.Font = Enum.Font.GothamBold
-ToggleBtn.Parent = MainFrame
+local Corner1 = Instance.new("UICorner")
+Corner1.CornerRadius = UDim.new(0, 6)
+Corner1.Parent = BtnTpTo
 
-local BtnCorner = Instance.new("UICorner")
-BtnCorner.CornerRadius = UDim.new(0, 6)
-BtnCorner.Parent = ToggleBtn
+-- Nút Chức năng 2: Kéo Bonds về người
+local BtnBring = Instance.new("TextButton")
+BtnBring.Size = UDim2.new(0.9, 0, 0, 45)
+BtnBring.Position = UDim2.new(0.05, 0, 0.58, 0)
+BtnBring.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+BtnBring.Text = "Kéo Bonds về tôi: TẮT"
+BtnBring.TextColor3 = Color3.fromRGB(255, 255, 255)
+BtnBring.TextSize = 13
+BtnBring.Font = Enum.Font.GothamBold
+BtnBring.Parent = MainFrame
 
--- // Logic Bật/Tắt UI
-ToggleBtn.MouseButton1Click:Connect(function()
-    getgenv().AutoFarmBone = not getgenv().AutoFarmBone
-    if getgenv().AutoFarmBone then
-        ToggleBtn.Text = "Trạng thái: BẬT"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+local Corner2 = Instance.new("UICorner")
+Corner2.CornerRadius = UDim.new(0, 6)
+Corner2.Parent = BtnBring
+
+-- // Logic Bật/Tắt Chức năng 1
+BtnTpTo.MouseButton1Click:Connect(function()
+    getgenv().AutoTeleportToBonds = not getgenv().AutoTeleportToBonds
+    if getgenv().AutoTeleportToBonds then
+        getgenv().AutoBringBonds = false -- Tắt chức năng kia để tránh xung đột
+        BtnBring.Text = "Kéo Bonds về tôi: TẮT"
+        BtnBring.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        
+        BtnTpTo.Text = "TP đến Bonds: BẬT"
+        BtnTpTo.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
     else
-        ToggleBtn.Text = "Trạng thái: TẮT"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        BtnTpTo.Text = "TP đến Bonds: TẮT"
+        BtnTpTo.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    end
+end)
+
+-- // Logic Bật/Tắt Chức năng 2
+BtnBring.MouseButton1Click:Connect(function()
+    getgenv().AutoBringBonds = not getgenv().AutoBringBonds
+    if getgenv().AutoBringBonds then
+        getgenv().AutoTeleportToBonds = false -- Tắt chức năng kia để tránh xung đột
+        BtnTpTo.Text = "TP đến Bonds: TẮT"
+        BtnTpTo.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        
+        BtnBring.Text = "Kéo Bonds về tôi: BẬT"
+        BtnBring.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+    else
+        BtnBring.Text = "Kéo Bonds về tôi: TẮT"
+        BtnBring.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
     end
 end)
 
@@ -83,35 +108,20 @@ local function getRootPart()
     return char and char:FindFirstChild("HumanoidRootPart")
 end
 
--- // Tự động quét và tìm kiếm tên vật phẩm chứa chữ "bonds" trong game
-task.spawn(function()
-    while true do
-        task.wait(2)
-        pcall(function()
-            for _, obj in ipairs(Workspace:GetDescendants()) do
-                if string.find(string.lower(obj.Name), "bonds") then
-                    TARGET_NAME = obj.Name
-                    StatusLabel.Text = "Item: " .. TARGET_NAME
-                    break
-                end
-            end
-        end)
-    end
-end)
-
--- // Vòng lặp chính: Teleport người chơi tới vị trí "bonds" để nhặt
+-- // Luồng xử lý Chức năng 1: Teleport nhân vật đến vị trí Bonds
 task.spawn(function()
     while true do
         task.wait(0.2)
-        if getgenv().AutoFarmBone then
+        if getgenv().AutoTeleportToBonds then
             pcall(function()
                 local rootPart = getRootPart()
                 if not rootPart then return end
                 
                 for _, obj in ipairs(Workspace:GetDescendants()) do
-                    if not getgenv().AutoFarmBone then break end
+                    if not getgenv().AutoTeleportToBonds then break end
                     
-                    if string.find(string.lower(obj.Name), "bonds") then
+                    local nameLower = string.lower(obj.Name)
+                    if string.find(nameLower, "treasury") or string.find(nameLower, "bonds") then
                         local targetPart = nil
                         if obj:IsA("Model") then
                             targetPart = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
@@ -120,18 +130,51 @@ task.spawn(function()
                         end
                         
                         if targetPart then
-                            -- Dịch chuyển nhân vật đến gần vật phẩm để kích hoạt nhặt
                             rootPart.CFrame = targetPart.CFrame + Vector3.new(0, 2, 0)
                             
-                            -- Kích hoạt ProximityPrompt nếu có
                             local prompt = obj:FindFirstChildWhichIsA("ProximityPrompt", true)
                             if prompt then
-                                pcall(function()
-                                    fireproximityprompt(prompt)
-                                end)
+                                pcall(function() fireproximityprompt(prompt) end)
                             end
                             
                             task.wait(0.15)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- // Luồng xử lý Chức năng 2: Kéo/Dịch chuyển Bonds về vị trí nhân vật
+task.spawn(function()
+    while true do
+        task.wait(0.3)
+        if getgenv().AutoBringBonds then
+            pcall(function()
+                local rootPart = getRootPart()
+                if not rootPart then return end
+                
+                for _, obj in ipairs(Workspace:GetDescendants()) do
+                    if not getgenv().AutoBringBonds then break end
+                    
+                    local nameLower = string.lower(obj.Name)
+                    if string.find(nameLower, "treasury") or string.find(nameLower, "bonds") then
+                        local targetPart = nil
+                        if obj:IsA("Model") then
+                            targetPart = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+                        elseif obj:IsA("BasePart") then
+                            targetPart = obj
+                        end
+                        
+                        if targetPart then
+                            -- Dịch chuyển vật phẩm về vị trí nhân vật
+                            targetPart.CFrame = rootPart.CFrame + Vector3.new(0, 1, 0)
+                            
+                            local prompt = obj:FindFirstChildWhichIsA("ProximityPrompt", true)
+                            if prompt then
+                                pcall(function() fireproximityprompt(prompt) end)
+                            end
                         end
                     end
                 end
