@@ -1,20 +1,21 @@
 -- =====================================================================
--- HỆ THỐNG GHOST TÀNG HÌNH & SMART ANTI-KB (VOID GUARD) TỐI THƯỢNG
+-- HỆ THỐNG SKY CLONE, FREE CAM & MICRO ANTI-KB TUYỆT ĐỐI
 -- =====================================================================
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
 -- Xóa UI cũ nếu có
-if CoreGui:FindFirstChild("AdvancedGhostSystemUI") then
-    CoreGui.AdvancedGhostSystemUI:Destroy()
+if CoreGui:FindFirstChild("FreeCamSkyCloneUI") then
+    CoreGui.FreeCamSkyCloneUI:Destroy()
 end
 
 -- Tạo Giao Diện UI
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AdvancedGhostSystemUI"
+screenGui.Name = "FreeCamSkyCloneUI"
 screenGui.Parent = CoreGui
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
@@ -34,7 +35,7 @@ uiCorner.Parent = mainFrame
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, 0, 0, 35)
 titleLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-titleLabel.Text = "HỆ THỐNG GHOST & SMART ANTI-KB"
+titleLabel.Text = "FREE CAM & SKY CLONE"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextSize = 11
 titleLabel.Font = Enum.Font.GothamBold
@@ -62,26 +63,28 @@ local function createButton(posY, defaultText)
     return btn
 end
 
-local ghostBtn = createButton(45, "Bật Ghost & Tách Bộ Phận: TẮT")
-local antiKBBtn = createButton(85, "Bật Smart Anti-KB (Void Guard): TẮT")
+local skyCloneBtn = createButton(45, "Bật Sky Clone & Free Cam: TẮT")
+local antiKBBtn = createButton(85, "Bật Micro Anti-KB (Siêu Nhạy): TẮT")
 local resetBtn = createButton(125, "Khôi Phục / Reset Nhân Vật")
 
--- Biến trạng thái toàn cục
-local ghostActive = false
+-- Biến trạng thái
+local skyActive = false
 local antiKBActive = false
 
 local cloneModel = nil
-local ghostConnection = nil
+local skyConnection = nil
 local antiKBConnection = nil
+local freeCamConnection = nil
 
 local lastSafeCFrame = nil
 local lastCheckTick = 0
+local freeCamCF = nil
 
 -- =====================================================================
--- PHẦN 1: GHOST & TÁCH BỘ PHẬN TRƠN TRU (GIỮ ĐẦU & CLONE TỰ NHIÊN)
+-- PHẦN 1: SKY CLONE & TỰ ĐỘNG CHUYỂN CAMERA SANG CLONE / FREE CAM
 -- =====================================================================
-ghostBtn.MouseButton1Click:Connect(function()
-    ghostActive = not ghostActive
+skyCloneBtn.MouseButton1Click:Connect(function()
+    skyActive = not skyActive
     local char = player.Character
     if not char then return end
     local rootPart = char:FindFirstChild("HumanoidRootPart")
@@ -89,26 +92,25 @@ ghostBtn.MouseButton1Click:Connect(function()
     local head = char:FindFirstChild("Head")
     if not rootPart or not humanoid or not head then return end
     
-    if ghostActive then
-        ghostBtn.Text = "Bật Ghost & Tách Bộ Phận: BẬT"
-        ghostBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+    if skyActive then
+        skyCloneBtn.Text = "Bật Sky Clone & Free Cam: BẬT"
+        skyCloneBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
         
-        -- Lưu lại vị trí an toàn ban đầu
         lastSafeCFrame = rootPart.CFrame
+        freeCamCF = rootPart.CFrame
         
-        -- Tạo bản sao giả lập (Clone) ngay tại vị trí thật để đánh lừa thị giác
+        -- 1. Tạo bản sao giả lập (Clone) đặt ở trên trời cao (+15 mét)
         char.Archivable = true
         cloneModel = char:Clone()
-        cloneModel.Name = "NaturalVisualClone"
+        cloneModel.Name = "SkyVisualClone"
         
-        -- Dọn dẹp script thừa bên trong clone
         for _, desc in pairs(cloneModel:GetDescendants()) do
             if desc:IsA("Script") or desc:IsA("LocalScript") then
                 desc:Destroy()
             end
         end
         
-        -- Tàng hình toàn bộ clone nhưng giữ nguyên cấu trúc bộ phận để hiển thị tự nhiên
+        -- Tàng hình toàn bộ Clone (người khác hoàn toàn không thấy) nhưng giữ nguyên bộ phận tự nhiên
         for _, v in pairs(cloneModel:GetDescendants()) do
             if v:IsA("BasePart") then
                 v.Transparency = 1
@@ -123,7 +125,7 @@ ghostBtn.MouseButton1Click:Connect(function()
         end
         cloneModel.Parent = workspace
         
-        -- Tàng hình nhân vật thật hoàn toàn
+        -- 2. Tàng hình tuyệt đối nhân vật gốc (đảm bảo người khác không nhìn thấy nhân vật gốc)
         for _, v in pairs(char:GetDescendants()) do
             if v:IsA("BasePart") then
                 v.Transparency = 1
@@ -133,7 +135,7 @@ ghostBtn.MouseButton1Click:Connect(function()
             end
         end
         
-        -- Khóa camera vào đầu của clone để góc nhìn gắn liền với phần đầu mượt mà nhất
+        -- 3. Chuyển Camera ngay lập tức sang đầu của Clone ở trên trời
         local cloneHead = cloneModel:FindFirstChild("Head")
         if cloneHead then
             camera.CameraSubject = cloneHead
@@ -141,39 +143,37 @@ ghostBtn.MouseButton1Click:Connect(function()
             camera.CameraSubject = humanoid
         end
         
-        -- Vòng lặp đồng bộ mượt mà: Đưa Hitbox thật lên cao, đồng thời khớp chuyển động clone dưới đất
-        ghostConnection = RunService.Stepped:Connect(function()
+        -- 4. Vòng lặp đồng bộ Clone trên trời và biến cơ thể gốc thành Free Cam
+        skyConnection = RunService.RenderStepped:Connect(function()
             if char and rootPart and cloneModel then
                 pcall(function()
                     local cloneRoot = cloneModel:FindFirstChild("HumanoidRootPart")
                     if cloneRoot then
-                        -- Clone nằm ở vị trí mặt đất dưới chân
-                        cloneRoot.CFrame = rootPart.CFrame - Vector3.new(0, 8, 0)
+                        -- Đẩy Clone lên trời cao (+15 mét) so với vị trí gốc
+                        cloneRoot.CFrame = rootPart.CFrame + Vector3.new(0, 15, 0)
                         
-                        -- Đồng bộ vị trí các bộ phận cơ thể của clone khớp trơn tru với người thật ở trên cao
                         for _, realPart in pairs(char:GetChildren()) do
                             if realPart:IsA("BasePart") then
                                 local clonePart = cloneModel:FindFirstChild(realPart.Name)
                                 if clonePart and realPart ~= rootPart then
-                                    clonePart.CFrame = realPart.CFrame - Vector3.new(0, 8, 0)
+                                    clonePart.CFrame = realPart.CFrame + Vector3.new(0, 15, 0)
                                 end
                             end
                         end
                     end
                     
-                    -- Ghim hitbox thật lên cao an toàn khỏi tầm đánh
                     rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                     rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
                 end)
             end
         end)
     else
-        ghostBtn.Text = "Bật Ghost & Tách Bộ Phận: TẮT"
-        ghostBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+        skyCloneBtn.Text = "Bật Sky Clone & Free Cam: TẮT"
+        skyCloneBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
         
-        if ghostConnection then
-            ghostConnection:Disconnect()
-            ghostConnection = nil
+        if skyConnection then
+            skyConnection:Disconnect()
+            skyConnection = nil
         end
         if cloneModel then
             cloneModel:Destroy()
@@ -187,13 +187,13 @@ ghostBtn.MouseButton1Click:Connect(function()
 end)
 
 -- =====================================================================
--- PHẦN 2: SMART ANTI-KB (PHÂN BIỆT NHẢY VÀ KB, CHỐNG RƠI VỰC NHIỀU LẦN)
+-- PHẦN 2: MICRO-SENSITIVE SMART ANTI-KB (SIÊU NHẠY CHO MỌI CHIÊU NHẸ)
 -- =====================================================================
 antiKBBtn.MouseButton1Click:Connect(function()
     antiKBActive = not antiKBActive
     
     if antiKBActive then
-        antiKBBtn.Text = "Bật Smart Anti-KB (Void Guard): BẬT"
+        antiKBBtn.Text = "Bật Micro Anti-KB (Siêu Nhạy): BẬT"
         antiKBBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
         
         local char = player.Character
@@ -202,7 +202,6 @@ antiKBBtn.MouseButton1Click:Connect(function()
         local humanoid = char:FindFirstChildOfClass("Humanoid")
         if not rootPart or not humanoid then return end
         
-        -- Khởi tạo vị trí an toàn ban đầu
         lastSafeCFrame = rootPart.CFrame
         
         antiKBConnection = RunService.Heartbeat:Connect(function(dt)
@@ -212,32 +211,26 @@ antiKBBtn.MouseButton1Click:Connect(function()
                 local velocity = rootPart.AssemblyLinearVelocity
                 local floorMaterial = humanoid.FloorMaterial
                 
-                -- 1. XÁC ĐỊNH HÀNH ĐỘNG NHẢY HOẶC DI CHUYỂN HỢP LỆ
                 local isJumpingOrIntentional = (humanoid:GetState() == Enum.HumanoidStateType.Jumping) or 
-                                               (humanoid:GetState() == Enum.HumanoidStateType.Freefall and velocity.Y > -20) or
+                                               (humanoid:GetState() == Enum.HumanoidStateType.Freefall and velocity.Y > -15) or
                                                (floorMaterial ~= Enum.Material.Air)
                 
                 if isJumpingOrIntentional then
-                    -- Nếu đang đứng trên đất hoặc nhảy chủ động, liên tục cập nhật mốc an toàn mới nhất
-                    if floorMaterial ~= Enum.Material.Air and math.abs(velocity.Y) < 5 then
+                    if floorMaterial ~= Enum.Material.Air and math.abs(velocity.Y) < 3 then
                         lastSafeCFrame = rootPart.CFrame
                     end
                 else
-                    -- 2. PHÁT HIỆN BỊ DÍNH KB HOẶC RƠI XUỐNG VỰC SÂU (VOID)
                     local horizontalSpeed = Vector3.new(velocity.X, 0, velocity.Z).Magnitude
-                    local isKnockbacked = (horizontalSpeed > 45) or (velocity.Y < -55)
+                    local isMicroKnockbacked = (horizontalSpeed > 18) or (velocity.Y < -25)
                     
-                    if isKnockbacked then
-                        -- LẬP TỨC DỊCH CHUYỂN VỀ VỊ TRÍ AN TOÀN TRƯỚC ĐÓ ĐỂ KHÔNG BỊ RƠI VỰC CHẾT
-                        -- Quản lý chuỗi thông minh tránh bị ghi đè nhầm vị trí lỗi thứ 2
+                    if isMicroKnockbacked then
                         if lastSafeCFrame then
                             rootPart.CFrame = lastSafeCFrame
                             rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                             rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
                         end
                     else
-                        -- Định kỳ cập nhật mốc vị trí ổn định kế tiếp
-                        if tick() - lastCheckTick > 0.5 then
+                        if tick() - lastCheckTick > 0.3 then
                             lastCheckTick = tick()
                             if floorMaterial ~= Enum.Material.Air then
                                 lastSafeCFrame = rootPart.CFrame
@@ -246,7 +239,6 @@ antiKBBtn.MouseButton1Click:Connect(function()
                     end
                 end
                 
-                -- Triệt tiêu lực lạ từ skill địch
                 for _, child in pairs(rootPart:GetChildren()) do
                     if child:IsA("BodyVelocity") or child:IsA("BodyPosition") or child:IsA("LinearVelocity") or child:IsA("VectorForce") then
                         child:Destroy()
@@ -255,7 +247,7 @@ antiKBBtn.MouseButton1Click:Connect(function()
             end)
         end)
     else
-        antiKBBtn.Text = "Bật Smart Anti-KB (Void Guard): TẮT"
+        antiKBBtn.Text = "Bật Micro Anti-KB (Siêu Nhạy): TẮT"
         antiKBBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
         
         if antiKBConnection then
@@ -265,9 +257,9 @@ antiKBBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Nút Reset toàn bộ hệ thống
+-- Nút Reset toàn bộ
 resetBtn.MouseButton1Click:Connect(function()
-    if ghostConnection then ghostConnection:Destroy() end
+    if skyConnection then skyConnection:Disconnect() end
     if antiKBConnection then antiKBConnection:Disconnect() end
     if cloneModel then cloneModel:Destroy() end
     if player.Character then
@@ -275,4 +267,4 @@ resetBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-print("Đã tải xong toàn bộ Hệ thống Ghost & Smart Anti-KB hoàn chỉnh!")
+print("Đã tải xong hệ thống Free Cam & Sky Clone hoàn chỉnh!")
