@@ -1,6 +1,6 @@
 --[[
-    Script Name: Element Magic Battle - Pull Items to Player & Smooth Aimbot
-    Features: Smooth ESP, Non-Stuttering Aimbot, Pull Souls/Gems to Player, Minimize UI
+    Script Name: Element Magic Battle - Absolute Lock Aimbot & ESP
+    Features: Smooth ESP, Hard Lock Aimbot & Body Face (No Shift-Lock needed), Minimize UI
 ]]--
 
 if not game:IsLoaded() then game.Loaded:Wait() end
@@ -21,26 +21,23 @@ getgenv().EMBSettings = {
     TextColor = Color3.fromRGB(255, 255, 255),
     
     AimbotEnabled = false,
-    AimKey = Enum.UserInputType.MouseButton2,
-    Smoothness = 0.15,
-    AimbotPart = "HumanoidRootPart",
-    
-    AutoCollect = false
+    AimKey = Enum.UserInputType.MouseButton2, -- Giữ chuột phải hoặc nút ngắm trên mobile
+    AimbotPart = "HumanoidRootPart" -- Khóa vào thân hoặc đổi thành "Head" nếu muốn khóa vào đầu
 }
 
 --------------------------------------------------------------------------------
--- 1. GIAO DIỆN UI
+-- 1. GIAO DIỆN UI (CÓ NÚT THU NHỎ / MỞ RỘNG)
 --------------------------------------------------------------------------------
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "EMB_PullItemsUI"
+ScreenGui.Name = "EMB_HardLockUI"
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then
     ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 360, 0, 350)
-MainFrame.Position = UDim2.new(0.5, -180, 0.5, -175)
+MainFrame.Size = UDim2.new(0, 360, 0, 290)
+MainFrame.Position = UDim2.new(0.5, -180, 0.5, -145)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -54,7 +51,7 @@ UICorner.Parent = MainFrame
 local TitleBar = Instance.new("TextLabel")
 TitleBar.Size = UDim2.new(1, 0, 0, 40)
 TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
-TitleBar.Text = "  Element Magic Battle | Pull Items UI"
+TitleBar.Text = "  Element Magic Battle | Hard Lock UI"
 TitleBar.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleBar.TextSize = 13
 TitleBar.Font = Enum.Font.SourceSansBold
@@ -103,7 +100,7 @@ MinimizeBtn.MouseButton1Click:Connect(function()
         Container.Visible = false
         MinimizeBtn.Text = "+"
     else
-        MainFrame.Size = UDim2.new(0, 360, 0, 350)
+        MainFrame.Size = UDim2.new(0, 360, 0, 290)
         Container.Visible = true
         MinimizeBtn.Text = "-"
     end
@@ -139,16 +136,12 @@ local function CreateToggle(name, yPos, callback)
     end)
 end
 
-CreateToggle("ESP (Box, Health, Distance)", 15, function(state)
+CreateToggle("ESP (Box, Health, Distance)", 20, function(state)
     getgenv().EMBSettings.ESPEnabled = state
 end)
 
-CreateToggle("Aimbot + Auto Face (Hold Key)", 70, function(state)
+CreateToggle("Hard Lock Aimbot (Hold Key)", 85, function(state)
     getgenv().EMBSettings.AimbotEnabled = state
-end)
-
-CreateToggle("Auto Pull Souls & Gems", 125, function(state)
-    getgenv().EMBSettings.AutoCollect = state
 end)
 
 --------------------------------------------------------------------------------
@@ -236,7 +229,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 --------------------------------------------------------------------------------
--- 3. HỆ THỐNG AIMBOT & AUTO-FACE MƯỢT MÀ
+-- 3. HỆ THỐNG HARD LOCK AIMBOT & BODY FACE (KHÓA CỨNG CAMERA VÀ CƠ THỂ)
 --------------------------------------------------------------------------------
 local function getClosestPlayerByDistance()
     local closestPlayer = nil
@@ -264,7 +257,7 @@ local function getClosestPlayerByDistance()
     return closestPlayer
 end
 
-RunService.RenderStepped:Connect(function(dt)
+RunService.RenderStepped:Connect(function()
     if getgenv().EMBSettings.AimbotEnabled then
         local isAiming = UserInputService:IsMouseButtonPressed(getgenv().EMBSettings.AimKey) or UserInputService.TouchEnabled
         
@@ -277,47 +270,13 @@ RunService.RenderStepped:Connect(function(dt)
                 local myRoot = myCharacter and myCharacter:FindFirstChild("HumanoidRootPart")
                 
                 if targetPart and humanoid and humanoid.Health > 0 and myRoot then
-                    local currentCF = Camera.CFrame
-                    local targetCamCF = CFrame.new(Camera.CFrame.Position, targetPart.Position)
-                    Camera.CFrame = currentCF:Lerp(targetCamCF, getgenv().EMBSettings.Smoothness)
+                    -- Khóa cứng Camera hướng thẳng vào kẻ địch
+                    Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPart.Position)
                     
-                    local lookAtPos = Vector3.new(targetPart.Position.X, myRoot.Position.Y, targetPart.Position.Z)
-                    myRoot.CFrame = myRoot.CFrame:Lerp(CFrame.new(myRoot.Position, lookAtPos), getgenv().EMBSettings.Smoothness)
+                    -- Khóa cứng hướng cơ thể nhân vật đối diện thẳng vào kẻ địch (Thay thế hoàn toàn Shift-Lock)
+                    myRoot.CFrame = CFrame.new(myRoot.Position, Vector3.new(targetPart.Position.X, myRoot.Position.Y, targetPart.Position.Z))
                 end
             end
         end
-    end
-end)
-
---------------------------------------------------------------------------------
--- 4. HỆ THỐNG AUTO PULL SOULS & GEMS (HÚT VẬT PHẨM VỀ NGƯỜI)
---------------------------------------------------------------------------------
-RunService.Heartbeat:Connect(function()
-    if getgenv().EMBSettings.AutoCollect then
-        pcall(function()
-            local myCharacter = LocalPlayer.Character
-            if not myCharacter or not myCharacter:FindFirstChild("HumanoidRootPart") then return end
-            local myRootPos = myCharacter.HumanoidRootPart.Position
-
-            for _, obj in ipairs(Workspace:GetDescendants()) do
-                if obj:IsA("BasePart") or obj:IsA("Model") then
-                    local name = string.lower(obj.Name)
-                    if name:find("soul") or name:find("gem") or name:find("crystal") or name:find("orb") or name:find("coin") then
-                        local part = obj:IsA("Model") and obj.PrimaryPart or obj
-                        if not part and obj:IsA("Model") then
-                            part = obj:FindFirstChildWhichIsA("BasePart")
-                        end
-                        
-                        if part and part.Anchored == false then
-                            local distance = (part.Position - myRootPos).Magnitude
-                            -- Nếu item nằm trong bán kính 200 studs, lập tức dịch chuyển nó bay thẳng vào vị trí của bạn
-                            if distance < 200 then
-                                part.CFrame = CFrame.new(myRootPos)
-                            end
-                        end
-                    end
-                end
-            end
-        end)
     end
 end)
