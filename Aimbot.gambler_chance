@@ -1,6 +1,6 @@
 --[[
-    Script Name: Element Magic Battle - Final Optimized
-    Features: Fixed Aimbot (No Air Aim), Dynamic ESP (Supports players joining later)
+    Script Name: Element Magic Battle - Pro Aimbot (Auto-Rotate Character & Smooth Lock)
+    Features: Dynamic ESP, Smooth Continuous Aimbot, Auto-Face Target (No Shift-Lock needed)
 ]]--
 
 if not game:IsLoaded() then game.Loaded:Wait() end
@@ -20,16 +20,16 @@ getgenv().EMBSettings = {
     TextColor = Color3.fromRGB(255, 255, 255),
     
     AimbotEnabled = false,
-    AimKey = Enum.UserInputType.MouseButton2,
-    Smoothness = 4, -- Độ mượt của camera
-    AimbotPart = "Head" -- Khóa vào Đầu mục tiêu
+    AimKey = Enum.UserInputType.MouseButton2, -- Giữ chuột phải hoặc nút tương ứng để bật aim
+    Smoothness = 0.25, -- Độ mượt (0.1 = cực nhanh, 0.5 = chậm mượt, tùy chỉnh theo ý muốn)
+    AimbotPart = "HumanoidRootPart" -- Khóa vào thân hoặc "Head"
 }
 
 --------------------------------------------------------------------------------
 -- 1. GIAO DIỆN UI
 --------------------------------------------------------------------------------
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "EMB_ProUI"
+ScreenGui.Name = "EMB_UltimateUI"
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then
     ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -51,7 +51,7 @@ UICorner.Parent = MainFrame
 local TitleBar = Instance.new("TextLabel")
 TitleBar.Size = UDim2.new(1, 0, 0, 40)
 TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
-TitleBar.Text = "  Element Magic Battle | Fixed & Optimized"
+TitleBar.Text = "  Element Magic Battle | Auto-Face Aimbot"
 TitleBar.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleBar.TextSize = 13
 TitleBar.Font = Enum.Font.SourceSansBold
@@ -110,12 +110,12 @@ CreateToggle("ESP (Box, Health, Distance)", 60, function(state)
     getgenv().EMBSettings.ESPEnabled = state
 end)
 
-CreateToggle("Aimbot (Hold Aim Key)", 120, function(state)
+CreateToggle("Aimbot + Auto Face (Hold Key)", 120, function(state)
     getgenv().EMBSettings.AimbotEnabled = state
 end)
 
 --------------------------------------------------------------------------------
--- 2. HỆ THỐNG ESP DYNAMIC (TỰ ĐỘNG CẬP NHẬT KHI CÓ NGƯỜI MỚI VÀO SERVER)
+-- 2. HỆ THỐNG ESP DYNAMIC (TỰ CẬP NHẬT KHI CÓ NGƯỜI MỚI VÀO)
 --------------------------------------------------------------------------------
 local espCache = {}
 
@@ -146,7 +146,6 @@ local function createESP(player)
 
     espCache[player] = {Box = box, Info = infoText}
 
-    -- Xử lý khi người chơi chết hoặc reset nhân vật
     player.CharacterRemoving:Connect(function()
         if espCache[player] then
             espCache[player].Box.Visible = false
@@ -155,22 +154,10 @@ local function createESP(player)
     end)
 end
 
--- Khởi tạo cho người chơi hiện tại
-for _, p in ipairs(Players:GetPlayers()) do 
-    createESP(p) 
-end
+for _, p in ipairs(Players:GetPlayers()) do createESP(p) end
+Players.PlayerAdded:Connect(createESP)
+Players.PlayerRemoving:Connect(removeESP)
 
--- Lắng nghe sự kiện người chơi mới gia nhập server
-Players.PlayerAdded:Connect(function(player)
-    createESP(player)
-end)
-
--- Lắng nghe sự kiện người chơi rời khỏi server để dọn dẹp bộ nhớ
-Players.PlayerRemoving:Connect(function(player)
-    removeESP(player)
-end)
-
--- Vòng lặp hiển thị ESP mượt mà
 RunService.RenderStepped:Connect(function()
     for player, elements in pairs(espCache) do
         local character = player.Character
@@ -188,12 +175,10 @@ RunService.RenderStepped:Connect(function()
                 local boxHeight = math.abs(topPosition.Y - bottomPosition.Y)
                 local boxWidth = boxHeight / 2
                 
-                -- Cập nhật Box ESP
                 elements.Box.Size = Vector2.new(boxWidth, boxHeight)
                 elements.Box.Position = Vector2.new(vector.X - boxWidth / 2, topPosition.Y)
                 elements.Box.Visible = true
                 
-                -- Tính toán khoảng cách và máu
                 local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
                 local distance = myRoot and math.floor((rootPart.Position - myRoot.Position).Magnitude) or 0
                 local health = math.floor(humanoid.Health)
@@ -214,11 +199,15 @@ RunService.RenderStepped:Connect(function()
 end)
 
 --------------------------------------------------------------------------------
--- 3. HỆ THỐNG AIMBOT TỐI ƯU (ĐÃ FIX LỖI AIM VÀO KHÔNG KHÍ)
+-- 3. HỆ THỐNG AIMBOT & TỰ ĐỘNG XOAY NGƯỜI (GẦN NHẤT + LIÊN TỤC KHÔNG KHỰNG)
 --------------------------------------------------------------------------------
-local function getClosestPlayer()
+local function getClosestPlayerByDistance()
     local closestPlayer = nil
     local shortestDistance = math.huge
+    local myCharacter = LocalPlayer.Character
+    
+    if not myCharacter or not myCharacter:FindFirstChild("HumanoidRootPart") then return nil end
+    local myRootPos = myCharacter.HumanoidRootPart.Position
 
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character then
@@ -226,18 +215,13 @@ local function getClosestPlayer()
             local humanoid = character:FindFirstChildOfClass("Humanoid")
             local targetPart = character:FindFirstChild(getgenv().EMBSettings.AimbotPart)
             
-            -- Kiểm tra kỹ mục tiêu phải hợp lệ, còn sống và không nằm ở vị trí mặc định lỗi (Vector3.zero)
-            if humanoid and humanoid.Health > 0 and targetPart and targetPart.Position ~= Vector3.new(0, 0, 0) then
-                local screenPoint, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+            if humanoid and humanoid.Health > 0 and targetPart then
+                -- Tính khoảng cách thực tế trong không gian 3D để bắt người GẦN NHẤT chuẩn xác nhất
+                local distance = (targetPart.Position - myRootPos).Magnitude
                 
-                if onScreen then
-                    local mousePos = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
-                    local distance = (Vector2.new(screenPoint.X, screenPoint.Y) - mousePos).Magnitude
-                    
-                    if distance < shortestDistance then
-                        shortestDistance = distance
-                        closestPlayer = player
-                    end
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    closestPlayer = player
                 end
             end
         end
@@ -245,21 +229,27 @@ local function getClosestPlayer()
     return closestPlayer
 end
 
-RunService.RenderStepped:Connect(function()
+RunService.RenderStepped:Connect(function(dt)
     if getgenv().EMBSettings.AimbotEnabled then
         local isAiming = UserInputService:IsMouseButtonPressed(getgenv().EMBSettings.AimKey) or UserInputService.TouchEnabled
         
         if isAiming then
-            local target = getClosestPlayer()
+            local target = getClosestPlayerByDistance()
             if target and target.Character then
                 local targetPart = target.Character:FindFirstChild(getgenv().EMBSettings.AimbotPart)
-                -- Đảm bảo bộ phận aim tồn tại và người chơi đó chưa chết
                 local humanoid = target.Character:FindFirstChildOfClass("Humanoid")
+                local myCharacter = LocalPlayer.Character
+                local myRoot = myCharacter and myCharacter:FindFirstChild("HumanoidRootPart")
                 
-                if targetPart and humanoid and humanoid.Health > 0 then
+                if targetPart and humanoid and humanoid.Health > 0 and myRoot then
+                    -- 1. Xoay Camera mượt mà hướng tới mục tiêu (Liên tục, không giật)
                     local currentCF = Camera.CFrame
-                    local targetCF = CFrame.new(Camera.CFrame.Position, targetPart.Position)
-                    Camera.CFrame = currentCF:Lerp(targetCF, 1 / getgenv().EMBSettings.Smoothness)
+                    local targetCamCF = CFrame.new(Camera.CFrame.Position, targetPart.Position)
+                    Camera.CFrame = currentCF:Lerp(targetCamCF, math.clamp(dt * 15 * getgenv().EMBSettings.Smoothness, 0.1, 1))
+                    
+                    -- 2. Tự động xoay cơ thể nhân vật hướng về phía kẻ địch (Thay thế Shift-Lock)
+                    local lookAtPos = Vector3.new(targetPart.Position.X, myRoot.Position.Y, targetPart.Position.Z)
+                    myRoot.CFrame = myRoot.CFrame:Lerp(CFrame.new(myRoot.Position, lookAtPos), math.clamp(dt * 15 * getgenv().EMBSettings.Smoothness, 0.1, 1))
                 end
             end
         end
