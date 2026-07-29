@@ -1,6 +1,5 @@
 --[[
-    King Tower - Advanced Multi-Tab Controller Script with Godmode Clone
-    (Hướng dẫn chi tiết cách sử dụng và giải thích từng chức năng ở bên ngoài script)
+    King Tower - Advanced Multi-Tab Controller Script with Godmode Clone (Anti-Cheat Safe)
 ]]
 
 -- SERVICES: Load core Roblox services required for players, frame rendering, GUI, tween animations, and user inputs.
@@ -250,7 +249,7 @@ CloneTabBtn.MouseButton1Click:Connect(function()
     CloneTabBtn.BackgroundColor3 = Color3.fromRGB(50, 40, 70)
     CloneTabBtn.TextColor3 = Color3.fromRGB(255, 200, 100)
     RealTabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-    RealTabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+    CloneTabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
 end)
 
 -- MINIMIZE LOGIC: Collapse or expand the main UI window smoothly using TweenService.
@@ -286,21 +285,21 @@ local cloneMoveConnection = nil
 local antiTpConnection = nil
 local targetSkyCFrame = nil
 
--- PLATFORM CREATOR: Spawns an extra thick sky platform to prevent falling through.
+-- PLATFORM CREATOR: Spawns an extra safe and thick sky platform at a lower height to avoid Anti-Cheat triggers.
 local function createThickSkyPlatform(basePos)
     if skyPlatform then skyPlatform:Destroy() end
     
     skyPlatform = Instance.new("Part")
     skyPlatform.Name = "TowerThickSkyPlatform"
-    skyPlatform.Size = Vector3.new(80, 6, 80) -- Extra thick platform blocks
-    skyPlatform.CFrame = CFrame.new(basePos.X, basePos.Y + 3000, basePos.Z)
+    skyPlatform.Size = Vector3.new(120, 10, 120) -- Thicker and wider to guarantee no falling through
+    skyPlatform.CFrame = CFrame.new(basePos.X, 350, basePos.Z) -- Fixed safe low height to bypass aggressive anti-cheat ceiling limits
     skyPlatform.Anchored = true
     skyPlatform.CanCollide = true
     skyPlatform.Transparency = 0.2
     skyPlatform.BrickColor = BrickColor.new("Dark stone grey")
     skyPlatform.Parent = workspace
     
-    return CFrame.new(basePos.X, basePos.Y + 3005, basePos.Z)
+    return CFrame.new(basePos.X, 355, basePos.Z)
 end
 
 local function removeSkyPlatform()
@@ -315,10 +314,10 @@ MakePlatformBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     targetSkyCFrame = createThickSkyPlatform(character.HumanoidRootPart.CFrame.Position)
-    InfoLabel.Text = "Status: Thick Sky Platform Created!"
+    InfoLabel.Text = "Status: Safe Sky Platform Created!"
 end)
 
--- EVENT: Teleport Real Body button functionality with anti-TP protection loop.
+-- EVENT: Teleport Real Body button functionality with anti-TP protection loop and velocity neutralization.
 TpSkyBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
@@ -328,19 +327,23 @@ TpSkyBtn.MouseButton1Click:Connect(function()
         targetSkyCFrame = createThickSkyPlatform(realHrp.CFrame.Position)
     end
     
+    -- Neutralize velocity first to prevent anti-cheat velocity flags
+    realHrp.AssemblyLinearVelocity = Vector3.zero
+    realHrp.AssemblyAngularVelocity = Vector3.zero
     realHrp.CFrame = targetSkyCFrame
     
     if antiTpConnection then antiTpConnection:Disconnect() end
     antiTpConnection = RunService.Heartbeat:Connect(function()
         if skyPlatform and character and realHrp then
-            if realHrp.Position.Y < (skyPlatform.Position.Y - 10) then
+            if realHrp.Position.Y < (skyPlatform.Position.Y - 10) or realHrp.Position.Y > 500 then
+                realHrp.AssemblyLinearVelocity = Vector3.zero
+                realHrp.AssemblyAngularVelocity = Vector3.zero
                 realHrp.CFrame = targetSkyCFrame
-                realHrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
             end
         end
     end)
     
-    InfoLabel.Text = "Status: Real Body Teleported to Sky Safely!"
+    InfoLabel.Text = "Status: Real Body Teleported Safely!"
 end)
 
 -- EVENT: Lock/Unlock Real Body movement using PlatformStand.
@@ -494,10 +497,12 @@ SwapPositionsBtn.MouseButton1Click:Connect(function()
     
     if antiTpConnection then antiTpConnection:Disconnect() end
     
+    realHrp.AssemblyLinearVelocity = Vector3.zero
+    realHrp.AssemblyAngularVelocity = Vector3.zero
     realHrp.CFrame = cloneCF
     cloneHrp.CFrame = realCF
     
-    if realHrp.Position.Y < 1000 then
+    if realHrp.Position.Y < 250 then
         if realHumanoid then realHumanoid.PlatformStand = false end
         if realHumanoid then Camera.CameraSubject = realHumanoid end
         InfoLabel.Text = "Status: Real Body Swapped to Ground!"
@@ -509,9 +514,10 @@ SwapPositionsBtn.MouseButton1Click:Connect(function()
         targetSkyCFrame = realHrp.CFrame
         antiTpConnection = RunService.Heartbeat:Connect(function()
             if skyPlatform and character and realHrp then
-                if realHrp.Position.Y > 1000 and realHrp.Position.Y < (skyPlatform.Position.Y - 10) then
+                if realHrp.Position.Y > 250 and (realHrp.Position.Y < (skyPlatform.Position.Y - 10) or realHrp.Position.Y > 500) then
+                    realHrp.AssemblyLinearVelocity = Vector3.zero
+                    realHrp.AssemblyAngularVelocity = Vector3.zero
                     realHrp.CFrame = targetSkyCFrame
-                    realHrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                 end
             end
         end)
