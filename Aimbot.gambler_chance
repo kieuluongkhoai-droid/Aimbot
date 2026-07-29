@@ -1,6 +1,6 @@
 --[[
-    Script Name: Element Magic Battle - Fixed Aimbot & Advanced ESP
-    Features: ESP (Boxes, Names, Health, Distance), Smooth Camera Aimbot, Delta UI
+    Script Name: Element Magic Battle - Final Optimized
+    Features: Fixed Aimbot (No Air Aim), Dynamic ESP (Supports players joining later)
 ]]--
 
 if not game:IsLoaded() then game.Loaded:Wait() end
@@ -20,16 +20,16 @@ getgenv().EMBSettings = {
     TextColor = Color3.fromRGB(255, 255, 255),
     
     AimbotEnabled = false,
-    AimKey = Enum.UserInputType.MouseButton2, -- Giữ chuột phải (hoặc nút Aim trên mobile) để kích hoạt
-    Smoothness = 4, -- Độ mượt (số càng nhỏ càng nhanh, càng lớn càng mượt)
-    AimbotPart = "Head" -- Khóa vào Đầu hoặc "HumanoidRootPart"
+    AimKey = Enum.UserInputType.MouseButton2,
+    Smoothness = 4, -- Độ mượt của camera
+    AimbotPart = "Head" -- Khóa vào Đầu mục tiêu
 }
 
 --------------------------------------------------------------------------------
--- 1. GIAO DIỆN UI (DELTA COMPATIBLE)
+-- 1. GIAO DIỆN UI
 --------------------------------------------------------------------------------
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "EMB_AdvancedUI"
+ScreenGui.Name = "EMB_ProUI"
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then
     ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -51,9 +51,9 @@ UICorner.Parent = MainFrame
 local TitleBar = Instance.new("TextLabel")
 TitleBar.Size = UDim2.new(1, 0, 0, 40)
 TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
-TitleBar.Text = "  Element Magic Battle | Pro UI"
+TitleBar.Text = "  Element Magic Battle | Fixed & Optimized"
 TitleBar.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleBar.TextSize = 14
+TitleBar.TextSize = 13
 TitleBar.Font = Enum.Font.SourceSansBold
 TitleBar.TextXAlignment = Enum.TextXAlignment.Left
 TitleBar.Parent = MainFrame
@@ -115,12 +115,21 @@ CreateToggle("Aimbot (Hold Aim Key)", 120, function(state)
 end)
 
 --------------------------------------------------------------------------------
--- 2. HỆ THỐNG ESP (BOX + TÊN + MÁU + KHOẢNG CÁCH)
+-- 2. HỆ THỐNG ESP DYNAMIC (TỰ ĐỘNG CẬP NHẬT KHI CÓ NGƯỜI MỚI VÀO SERVER)
 --------------------------------------------------------------------------------
 local espCache = {}
 
+local function removeESP(player)
+    if espCache[player] then
+        if espCache[player].Box then espCache[player].Box:Remove() end
+        if espCache[player].Info then espCache[player].Info:Remove() end
+        espCache[player] = nil
+    end
+end
+
 local function createESP(player)
     if player == LocalPlayer then return end
+    removeESP(player)
     
     local box = Drawing.new("Square")
     box.Visible = false
@@ -137,22 +146,31 @@ local function createESP(player)
 
     espCache[player] = {Box = box, Info = infoText}
 
+    -- Xử lý khi người chơi chết hoặc reset nhân vật
     player.CharacterRemoving:Connect(function()
-        box.Visible = false
-        infoText.Visible = false
+        if espCache[player] then
+            espCache[player].Box.Visible = false
+            espCache[player].Info.Visible = false
+        end
     end)
 end
 
-for _, p in ipairs(Players:GetPlayers()) do createESP(p) end
-Players.PlayerAdded:Connect(createESP)
-Players.PlayerRemoving:Connect(function(p)
-    if espCache[p] then
-        espCache[p].Box:Remove()
-        espCache[p].Info:Remove()
-        espCache[p] = nil
-    end
+-- Khởi tạo cho người chơi hiện tại
+for _, p in ipairs(Players:GetPlayers()) do 
+    createESP(p) 
+end
+
+-- Lắng nghe sự kiện người chơi mới gia nhập server
+Players.PlayerAdded:Connect(function(player)
+    createESP(player)
 end)
 
+-- Lắng nghe sự kiện người chơi rời khỏi server để dọn dẹp bộ nhớ
+Players.PlayerRemoving:Connect(function(player)
+    removeESP(player)
+end)
+
+-- Vòng lặp hiển thị ESP mượt mà
 RunService.RenderStepped:Connect(function()
     for player, elements in pairs(espCache) do
         local character = player.Character
@@ -175,14 +193,13 @@ RunService.RenderStepped:Connect(function()
                 elements.Box.Position = Vector2.new(vector.X - boxWidth / 2, topPosition.Y)
                 elements.Box.Visible = true
                 
-                -- Tính toán khoảng cách (Studs) và Máu
+                -- Tính toán khoảng cách và máu
                 local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
                 local distance = myRoot and math.floor((rootPart.Position - myRoot.Position).Magnitude) or 0
                 local health = math.floor(humanoid.Health)
                 local maxHealth = math.floor(humanoid.MaxHealth)
                 
-                -- Hiển thị Tên | Máu | Khoảng cách
-                elements.Info.Text = string.Format("%s [%d/%dHP] (%dm)", player.Name, health, maxHealth, math.floor(distance / 3.5)) -- Quy đổi studs sang mét ảo cho dễ nhìn
+                elements.Info.Text = string.format("%s [%d/%dHP] (%dm)", player.Name, health, maxHealth, math.floor(distance / 3.5))
                 elements.Info.Position = Vector2.new(vector.X, topPosition.Y - 18)
                 elements.Info.Visible = true
             else
@@ -190,14 +207,14 @@ RunService.RenderStepped:Connect(function()
                 elements.Info.Visible = false
             end
         else
-            elements.Box.Visible = false
-            elements.Info.Visible = false
+            if elements.Box then elements.Box.Visible = false end
+            if elements.Info then elements.Info.Visible = false end
         end
     end
 end)
 
 --------------------------------------------------------------------------------
--- 3. HỆ THỐNG AIMBOT (ĐÃ FIX HOẠT ĐỘNG TRÊN CLIENT)
+-- 3. HỆ THỐNG AIMBOT TỐI ƯU (ĐÃ FIX LỖI AIM VÀO KHÔNG KHÍ)
 --------------------------------------------------------------------------------
 local function getClosestPlayer()
     local closestPlayer = nil
@@ -205,11 +222,14 @@ local function getClosestPlayer()
 
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character then
-            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-            local targetPart = player.Character:FindFirstChild(getgenv().EMBSettings.AimbotPart)
+            local character = player.Character
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            local targetPart = character:FindFirstChild(getgenv().EMBSettings.AimbotPart)
             
-            if humanoid and humanoid.Health > 0 and targetPart then
+            -- Kiểm tra kỹ mục tiêu phải hợp lệ, còn sống và không nằm ở vị trí mặc định lỗi (Vector3.zero)
+            if humanoid and humanoid.Health > 0 and targetPart and targetPart.Position ~= Vector3.new(0, 0, 0) then
                 local screenPoint, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+                
                 if onScreen then
                     local mousePos = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
                     local distance = (Vector2.new(screenPoint.X, screenPoint.Y) - mousePos).Magnitude
@@ -227,15 +247,16 @@ end
 
 RunService.RenderStepped:Connect(function()
     if getgenv().EMBSettings.AimbotEnabled then
-        -- Kiểm tra xem có đang giữ nút Aimbot không (Chuột phải hoặc điều kiện bấm màn hình)
         local isAiming = UserInputService:IsMouseButtonPressed(getgenv().EMBSettings.AimKey) or UserInputService.TouchEnabled
         
         if isAiming then
             local target = getClosestPlayer()
             if target and target.Character then
                 local targetPart = target.Character:FindFirstChild(getgenv().EMBSettings.AimbotPart)
-                if targetPart then
-                    -- Khóa camera mượt mà vào mục tiêu
+                -- Đảm bảo bộ phận aim tồn tại và người chơi đó chưa chết
+                local humanoid = target.Character:FindFirstChildOfClass("Humanoid")
+                
+                if targetPart and humanoid and humanoid.Health > 0 then
                     local currentCF = Camera.CFrame
                     local targetCF = CFrame.new(Camera.CFrame.Position, targetPart.Position)
                     Camera.CFrame = currentCF:Lerp(targetCF, 1 / getgenv().EMBSettings.Smoothness)
