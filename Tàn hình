@@ -1,8 +1,8 @@
 --[[
-    King Tower - Precise Soul Transfer Script
-    - Bấm lần 1: Nhập hồn sang Clone, Clone đến chỗ nhân vật gốc, nhân vật gốc về chỗ Clone cũ.
-    - Bấm lần 2: Nhập hồn về nhân vật gốc, nhân vật gốc đến chỗ Clone hiện tại, Clone về chỗ nhân vật gốc cũ.
-    - Giao diện UI viền cầu vồng + Nút thu nhỏ linh hoạt.
+    King Tower - Final Split UI Script (2 Separate Buttons)
+    - Nút 1 (Toggle Mode): Bật/Tắt chế độ ẩn hitbox lên trời để bất tử, để Clone chiến đấu dưới tháp.
+    - Nút 2 (Swap Position): Hoán đổi vị trí tọa độ trực tiếp giữa Nhân vật gốc (trên trời) và Clone (dưới tháp) khi đang bật mode.
+    - Giao diện UI viền cầu vồng (RGB) + Nút thu nhỏ linh hoạt.
 ]]
 
 local Players = game:GetService("Players")
@@ -13,18 +13,18 @@ local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-if _G.KingTowerPreciseSwapLoaded then return end
-_G.KingTowerPreciseSwapLoaded = true
+if _G.KingTowerTwoButtonsLoaded then return end
+_G.KingTowerTwoButtonsLoaded = true
 
 -- Tạo UI chính
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "PreciseSoulSwapUI"
+ScreenGui.Name = "TwoButtonsUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 220, 0, 95)
+MainFrame.Size = UDim2.new(0, 220, 0, 140)
 MainFrame.Position = UDim2.new(0, 50, 0, 150)
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
 MainFrame.BorderSizePixel = 0
@@ -60,9 +60,9 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -35, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "Precise Soul Swap"
+TitleLabel.Text = "King Tower - Split 2 Buttons"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.TextSize = 12
+TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
@@ -82,20 +82,35 @@ local UICornerMin = Instance.new("UICorner")
 UICornerMin.CornerRadius = UDim.new(0, 6)
 UICornerMin.Parent = MinimizeBtn
 
--- Nút Hoán Đổi Chính
+-- Nút 1: Bật/Tắt chế độ bất tử (Hitbox thật lên trời / Clone dưới tháp)
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(1, -20, 0, 35)
+ToggleBtn.Position = UDim2.new(0, 10, 0, 40)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
+ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+ToggleBtn.TextSize = 12
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.Text = "🛡️ Mode: OFF (Normal)"
+ToggleBtn.Parent = MainFrame
+
+local UICornerBtn1 = Instance.new("UICorner")
+UICornerBtn1.CornerRadius = UDim.new(0, 8)
+UICornerBtn1.Parent = ToggleBtn
+
+-- Nút 2: Hoán đổi vị trí độc lập giữa Nhân vật gốc và Clone
 local SwapBtn = Instance.new("TextButton")
-SwapBtn.Size = UDim2.new(1, -20, 0, 40)
-SwapBtn.Position = UDim2.new(0, 10, 0, 42)
+SwapBtn.Size = UDim2.new(1, -20, 0, 35)
+SwapBtn.Position = UDim2.new(0, 10, 0, 85)
 SwapBtn.BackgroundColor3 = Color3.fromRGB(40, 30, 60)
-SwapBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-SwapBtn.TextSize = 13
+SwapBtn.TextColor3 = Color3.fromRGB(255, 150, 0)
+SwapBtn.TextSize = 12
 SwapBtn.Font = Enum.Font.GothamBold
-SwapBtn.Text = "👻 Control: Original Body"
+SwapBtn.Text = "🔄 Swap Position"
 SwapBtn.Parent = MainFrame
 
-local UICornerBtn = Instance.new("UICorner")
-UICornerBtn.CornerRadius = UDim.new(0, 8)
-UICornerBtn.Parent = SwapBtn
+local UICornerBtn2 = Instance.new("UICorner")
+UICornerBtn2.CornerRadius = UDim.new(0, 8)
+UICornerBtn2.Parent = SwapBtn
 
 -- Logic thu nhỏ UI
 local isMinimized = false
@@ -103,20 +118,30 @@ MinimizeBtn.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
     if isMinimized then
         MinimizeBtn.Text = "+"
+        ToggleBtn.Visible = false
         SwapBtn.Visible = false
         TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 220, 0, 35)}):Play()
     else
         MinimizeBtn.Text = "-"
+        ToggleBtn.Visible = true
         SwapBtn.Visible = true
-        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 220, 0, 95)}):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 220, 0, 140)}):Play()
     end
 end)
 
--- Biến lưu trữ trạng thái
+-- Biến trạng thái
 local cloneChar = nil
-local isControllingClone = false
+local isAnchorActive = false
 
--- Hàm khởi tạo Clone tại vị trí ban đầu của nhân vật
+local function setModelTransparency(model, transparency)
+    for _, part in ipairs(model:GetDescendants()) do
+        if part:IsA("BasePart") or part:IsA("Decal") then
+            part.Transparency = transparency
+        end
+    end
+end
+
+-- Khởi tạo Clone
 local function initializeClone()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
@@ -129,63 +154,105 @@ local function initializeClone()
         for _, v in ipairs(cloneChar:GetDescendants()) do
             if v:IsA("LocalScript") or v:IsA("Script") then v:Destroy() end
         end
-        cloneChar.Name = "PreciseSoulClone"
+        cloneChar.Name = "TwoButtonClone"
         cloneChar.Parent = workspace
         cloneChar:SetPrimaryPartCFrame(character.HumanoidRootPart.CFrame)
+        setModelTransparency(cloneChar, 0)
     end
 end
 
--- Xử lý nút bấm hoán đổi vị trí và quyền điều khiển
-SwapBtn.MouseButton1Click:Connect(function()
+-- Nút 1: Bật/Tắt trạng thái bảo vệ (Hitbox thật lên trời, Clone ở dưới tháp)
+ToggleBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-    
-    initializeClone()
+    local realHrp = character.HumanoidRootPart
+
+    if not isAnchorActive then
+        initializeClone()
+        local cloneHrp = cloneChar:FindFirstChild("HumanoidRootPart")
+        if cloneHrp then
+            local currentPos = realHrp.CFrame
+            
+            -- Đưa hitbox thật lên trời 3000m để né đòn
+            realHrp.CFrame = currentPos + Vector3.new(0, 3000, 0)
+            -- Đặt Clone xuống dưới tháp
+            cloneHrp.CFrame = currentPos
+            
+            setModelTransparency(character, 1)
+            setModelTransparency(cloneChar, 0)
+            
+            if cloneChar:FindFirstChild("Humanoid") then
+                Camera.CameraSubject = cloneChar.Humanoid
+            end
+            
+            isAnchorActive = true
+            ToggleBtn.Text = "🛡️ Mode: ON (Protected)"
+            ToggleBtn.TextColor3 = Color3.fromRGB(255, 60, 60)
+        end
+    else
+        local cloneHrp = cloneChar and cloneChar:FindFirstChild("HumanoidRootPart")
+        if cloneHrp then
+            realHrp.CFrame = cloneHrp.CFrame
+        end
+        
+        if cloneChar then
+            cloneChar:Destroy()
+            cloneChar = nil
+        end
+        
+        setModelTransparency(character, 0)
+        if character:FindFirstChild("Humanoid") then
+            Camera.CameraSubject = character.Humanoid
+        end
+        
+        isAnchorActive = false
+        ToggleBtn.Text = "🛡️ Mode: OFF (Normal)"
+        ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+    end
+end)
+
+-- Nút 2: Chức năng Hoán đổi vị trí độc lập giữa Nhân vật gốc và Clone
+SwapBtn.MouseButton1Click:Connect(function()
+    if not isAnchorActive or not cloneChar then return end
+    local character = LocalPlayer.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     
     local realHrp = character.HumanoidRootPart
     local cloneHrp = cloneChar:FindFirstChild("HumanoidRootPart")
     
     if cloneHrp then
+        -- Lưu tạm tọa độ hiện tại của cả hai
         local realCF = realHrp.CFrame
         local cloneCF = cloneHrp.CFrame
         
-        if not isControllingClone then
-            -- Bấm lần 1: Đưa nhân vật gốc đến chỗ Clone, đồng thời đưa Clone đến chỗ nhân vật gốc cũ
-            realHrp.CFrame = cloneCF
-            cloneHrp.CFrame = realCF
-            
-            -- Chuyển Camera sang nhìn Clone (đang đứng ở vị trí nhân vật gốc cũ)
-            if cloneChar:FindFirstChild("Humanoid") then
-                Camera.CameraSubject = cloneChar.Humanoid
-            end
-            
-            isControllingClone = true
-            SwapBtn.Text = "👻 Control: Clone"
-            SwapBtn.TextColor3 = Color3.fromRGB(255, 150, 0)
-        else
-            -- Bấm lần 2: Nhập hồn về nhân vật gốc, nhân vật gốc di chuyển đến chỗ Clone hiện tại, Clone về lại chỗ cũ
-            realHrp.CFrame = cloneCF
-            cloneHrp.CFrame = realCF
-            
-            -- Chuyển Camera về lại nhân vật gốc
+        -- Thực hiện hoán đổi tọa độ cho nhau
+        realHrp.CFrame = cloneCF
+        cloneHrp.CFrame = realCF
+        
+        -- Tự động chuyển góc nhìn Camera và độ mờ theo vị trí thực tế sau khi đổi chỗ
+        if realHrp.Position.Y < 1000 then
+            setModelTransparency(character, 0)
+            setModelTransparency(cloneChar, 1)
             if character:FindFirstChild("Humanoid") then
                 Camera.CameraSubject = character.Humanoid
             end
-            
-            isControllingClone = false
-            SwapBtn.Text = "👻 Control: Original Body"
-            SwapBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+        else
+            setModelTransparency(character, 1)
+            setModelTransparency(cloneChar, 0)
+            if cloneChar:FindFirstChild("Humanoid") then
+                Camera.CameraSubject = cloneChar.Humanoid
+            end
         end
     end
 end)
 
 -- Reset khi nhân vật chết hoặc hồi sinh
-LocalPlayer.CharacterAdded:Connect(function(newChar)
+LocalPlayer.CharacterAdded:Connect(function()
+    isAnchorActive = false
     if cloneChar then
         cloneChar:Destroy()
         cloneChar = nil
     end
-    isControllingClone = false
-    SwapBtn.Text = "👻 Control: Original Body"
-    SwapBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+    ToggleBtn.Text = "🛡️ Mode: OFF (Normal)"
+    ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
 end)
