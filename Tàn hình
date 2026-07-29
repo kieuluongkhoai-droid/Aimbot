@@ -1,8 +1,9 @@
 --[[
-    King Tower - Anti-Hitbox / God Mode Script
-    - Đưa toàn bộ thân xác thật lên trời để bất tử, né mọi đòn đẩy/đấm.
-    - Tạo nhân bản ảo để điều khiển và tung chiêu trên tháp.
-    - Giao diện UI viền cầu vồng + Nút thu nhỏ linh hoạt.
+    King Tower - Infinite ForceField & Sky Hitbox Script
+    - Kéo dài thời gian khiên bảo vệ (ForceField) là vô hạn (Vĩnh cửu).
+    - Đưa Hitbox thật lên trời để bất tử, né toàn bộ đòn đánh/đẩy trên tháp.
+    - Tạo hình nộm hiển thị dưới tháp để tung chiêu mượt mà.
+    - Giao diện UI viền cầu vồng (RGB) + Nút thu nhỏ linh hoạt.
 ]]
 
 local Players = game:GetService("Players")
@@ -13,12 +14,12 @@ local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-if _G.KingTowerGodMode then return end
-_G.KingTowerGodMode = true
+if _G.KingTowerInfiniteShield then return end
+_G.KingTowerInfiniteShield = true
 
 -- Tạo UI chính
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "KingTowerUI"
+ScreenGui.Name = "KingTowerInfiniteUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
@@ -60,9 +61,9 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -35, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "King Tower - Bypass"
+TitleLabel.Text = "King Tower - Infinite Shield"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.TextSize = 13
+TitleLabel.TextSize = 12
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
@@ -90,7 +91,7 @@ ToggleBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
 ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
 ToggleBtn.TextSize = 13
 ToggleBtn.Font = Enum.Font.GothamBold
-ToggleBtn.Text = "Status: OFF (Normal)"
+ToggleBtn.Text = "Status: OFF (Infinite)"
 ToggleBtn.Parent = MainFrame
 
 local UICornerBtn = Instance.new("UICorner")
@@ -112,17 +113,18 @@ MinimizeBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Biến lưu trữ trạng thái game
-local isGodActive = false
+-- Biến trạng thái
+local isInfiniteActive = false
 local visualDummy = nil
+local shieldConnection = nil
 
-local function toggleGodMode(state)
+local function toggleInfiniteShield(state)
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     local hrp = character.HumanoidRootPart
 
     if state then
-        -- 1. Tạo hình nộm hiển thị dưới tháp để nhìn và tung chiêu
+        -- 1. Tạo hình nộm để bạn nhìn và đánh nhau dưới tháp
         character.Archivable = true
         visualDummy = character:Clone()
         character.Archivable = false
@@ -130,17 +132,42 @@ local function toggleGodMode(state)
         for _, v in ipairs(visualDummy:GetDescendants()) do
             if v:IsA("LocalScript") or v:IsA("Script") then v:Destroy() end
         end
-        visualDummy.Name = "TowerVisualDummy"
+        visualDummy.Name = "InfiniteShieldDummy"
         visualDummy.Parent = workspace
         
-        -- 2. Đưa hitbox thật lên trời cao (né mọi đòn đấm/đẩy trên tháp)
+        -- 2. Đưa hitbox thật lên trời cao
         hrp.CFrame = hrp.CFrame + Vector3.new(0, 4000, 0)
         
-        ToggleBtn.Text = "Status: ON (God Mode)"
+        -- 3. Tạo vòng lặp vô hạn (Infinite Loop) liên tục duy trì hoặc tái tạo ForceField trên client
+        shieldConnection = RunService.Heartbeat:Connect(function()
+            local char = LocalPlayer.Character
+            if char then
+                local hasShield = false
+                for _, v in ipairs(char:GetChildren()) do
+                    if v:IsA("ForceField") then
+                        hasShield = true
+                        break
+                    end
+                end
+                -- Nếu game tự động xóa khiên theo thời gian, script sẽ tự động tạo lại cái mới ngay lập tức
+                if not hasShield then
+                    local newShield = Instance.new("ForceField")
+                    newShield.Visible = true
+                    newShield.Parent = char
+                end
+            end
+        end)
+
+        ToggleBtn.Text = "Status: ON (Infinite Shield)"
         ToggleBtn.TextColor3 = Color3.fromRGB(255, 60, 60)
-        isGodActive = true
+        isInfiniteActive = true
     else
-        -- Tắt: Kéo hitbox thật về vị trí của hình nộm và xóa hình nộm
+        -- Tắt: Ngắt kết nối duy trì khiên, xóa hình nộm và đưa hitbox về chỗ cũ
+        if shieldConnection then
+            shieldConnection:Disconnect()
+            shieldConnection = nil
+        end
+        
         if visualDummy then
             if visualDummy:FindFirstChild("HumanoidRootPart") then
                 hrp.CFrame = visualDummy.HumanoidRootPart.CFrame
@@ -149,19 +176,25 @@ local function toggleGodMode(state)
             visualDummy = nil
         end
         
-        ToggleBtn.Text = "Status: OFF (Normal)"
+        for _, v in ipairs(character:GetChildren()) do
+            if v:IsA("ForceField") then
+                v:Destroy()
+            end
+        end
+
+        ToggleBtn.Text = "Status: OFF (Infinite)"
         ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-        isGodActive = false
+        isInfiniteActive = false
     end
 end
 
 ToggleBtn.MouseButton1Click:Connect(function()
-    toggleGodMode(not isGodActive)
+    toggleInfiniteShield(not isInfiniteActive)
 end)
 
--- Giúp camera bám sát hình nộm dưới tháp để chơi mượt mà
+-- Đồng bộ Camera bám sát hình nộm dưới tháp
 RunService.RenderStepped:Connect(function()
-    if isGodActive and visualDummy and visualDummy:FindFirstChild("Humanoid") then
+    if isInfiniteActive and visualDummy and visualDummy:FindFirstChild("Humanoid") then
         pcall(function()
             Camera.CameraSubject = visualDummy.Humanoid
         end)
@@ -173,13 +206,17 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Reset trạng thái khi chết hoặc đổi tầng/vào trận mới
+-- Reset khi hồi sinh nhân vật mới
 LocalPlayer.CharacterAdded:Connect(function()
-    isGodActive = false
+    isInfiniteActive = false
+    if shieldConnection then
+        shieldConnection:Disconnect()
+        shieldConnection = nil
+    end
     if visualDummy then
         visualDummy:Destroy()
         visualDummy = nil
     end
-    ToggleBtn.Text = "Status: OFF (Normal)"
+    ToggleBtn.Text = "Status: OFF (Infinite)"
     ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
 end)
