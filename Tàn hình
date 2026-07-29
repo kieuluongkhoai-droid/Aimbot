@@ -1,8 +1,9 @@
 --[[
-    King Tower - Final Split UI Script (2 Separate Buttons)
-    - Nút 1 (Toggle Mode): Bật/Tắt chế độ ẩn hitbox lên trời để bất tử, để Clone chiến đấu dưới tháp.
-    - Nút 2 (Swap Position): Hoán đổi vị trí tọa độ trực tiếp giữa Nhân vật gốc (trên trời) và Clone (dưới tháp) khi đang bật mode.
-    - Giao diện UI viền cầu vồng (RGB) + Nút thu nhỏ linh hoạt.
+    King Tower - Safe Platform & Invisible Clone Script
+    - Tự động tạo 1 tấm sàn riêng biệt (chỉ mình bạn nhìn thấy và đứng được) ở vị trí ban đầu.
+    - Clone đứng vững vàng trên sàn đó mà không bị rơi xuống hay chạm đất gây lỗi.
+    - Hitbox thật nằm an toàn trên trời (bất tử tuyệt đối, tránh Anti-cheat quét).
+    - 3 Nút chức năng riêng biệt: Bật/Tắt Mode, Đổi góc nhìn Camera, Hoán đổi vị trí.
 ]]
 
 local Players = game:GetService("Players")
@@ -13,18 +14,18 @@ local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-if _G.KingTowerTwoButtonsLoaded then return end
-_G.KingTowerTwoButtonsLoaded = true
+if _G.SafePlatformCloneLoaded then return end
+_G.SafePlatformCloneLoaded = true
 
 -- Tạo UI chính
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "TwoButtonsUI"
+ScreenGui.Name = "SafePlatformUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 220, 0, 140)
+MainFrame.Size = UDim2.new(0, 230, 0, 185)
 MainFrame.Position = UDim2.new(0, 50, 0, 150)
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
 MainFrame.BorderSizePixel = 0
@@ -60,14 +61,14 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -35, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "King Tower - Split 2 Buttons"
+TitleLabel.Text = "Safe Platform & Clone"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
 
--- Nút Thu Nhỏ / Mở rộng (-) (+)
+-- Nút Thu Nh่อ / Mở rộng (-) (+)
 local MinimizeBtn = Instance.new("TextButton")
 MinimizeBtn.Size = UDim2.new(0, 25, 0, 25)
 MinimizeBtn.Position = UDim2.new(1, -28, 0, 3)
@@ -82,35 +83,62 @@ local UICornerMin = Instance.new("UICorner")
 UICornerMin.CornerRadius = UDim.new(0, 6)
 UICornerMin.Parent = MinimizeBtn
 
--- Nút 1: Bật/Tắt chế độ bất tử (Hitbox thật lên trời / Clone dưới tháp)
+-- Nút 1: Bật/Tắt chế độ
 local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Size = UDim2.new(1, -20, 0, 35)
-ToggleBtn.Position = UDim2.new(0, 10, 0, 40)
+ToggleBtn.Size = UDim2.new(1, -20, 0, 30)
+ToggleBtn.Position = UDim2.new(0, 10, 0, 38)
 ToggleBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
 ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-ToggleBtn.TextSize = 12
+ToggleBtn.TextSize = 11
 ToggleBtn.Font = Enum.Font.GothamBold
 ToggleBtn.Text = "🛡️ Mode: OFF (Normal)"
 ToggleBtn.Parent = MainFrame
 
 local UICornerBtn1 = Instance.new("UICorner")
-UICornerBtn1.CornerRadius = UDim.new(0, 8)
+UICornerBtn1.CornerRadius = UDim.new(0, 6)
 UICornerBtn1.Parent = ToggleBtn
 
--- Nút 2: Hoán đổi vị trí độc lập giữa Nhân vật gốc và Clone
+-- Nút 2: Đổi góc nhìn Camera
+local CamBtn = Instance.new("TextButton")
+CamBtn.Size = UDim2.new(1, -20, 0, 30)
+CamBtn.Position = UDim2.new(0, 10, 0, 74)
+CamBtn.BackgroundColor3 = Color3.fromRGB(30, 40, 50)
+CamBtn.TextColor3 = Color3.fromRGB(0, 200, 255)
+CamBtn.TextSize = 11
+CamBtn.Font = Enum.Font.GothamBold
+CamBtn.Text = "👁️ View: Clone"
+CamBtn.Parent = MainFrame
+
+local UICornerBtn2 = Instance.new("UICorner")
+UICornerBtn2.CornerRadius = UDim.new(0, 6)
+UICornerBtn2.Parent = CamBtn
+
+-- Nút 3: Hoán đổi vị trí
 local SwapBtn = Instance.new("TextButton")
-SwapBtn.Size = UDim2.new(1, -20, 0, 35)
-SwapBtn.Position = UDim2.new(0, 10, 0, 85)
+SwapBtn.Size = UDim2.new(1, -20, 0, 30)
+SwapBtn.Position = UDim2.new(0, 10, 0, 110)
 SwapBtn.BackgroundColor3 = Color3.fromRGB(40, 30, 60)
 SwapBtn.TextColor3 = Color3.fromRGB(255, 150, 0)
-SwapBtn.TextSize = 12
+SwapBtn.TextSize = 11
 SwapBtn.Font = Enum.Font.GothamBold
 SwapBtn.Text = "🔄 Swap Position"
 SwapBtn.Parent = MainFrame
 
-local UICornerBtn2 = Instance.new("UICorner")
-UICornerBtn2.CornerRadius = UDim.new(0, 8)
-UICornerBtn2.Parent = SwapBtn
+local UICornerBtn3 = Instance.new("UICorner")
+UICornerBtn3.CornerRadius = UDim.new(0, 6)
+UICornerBtn3.Parent = SwapBtn
+
+-- Nhãn trạng thái
+local InfoLabel = Instance.new("TextLabel")
+InfoLabel.Size = UDim2.new(1, -20, 0, 25)
+InfoLabel.Position = UDim2.new(0, 10, 0, 148)
+InfoLabel.BackgroundTransparency = 1
+InfoLabel.Text = "Status: Platform Ready"
+InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+InfoLabel.TextSize = 10
+InfoLabel.Font = Enum.Font.Gotham
+InfoLabel.TextXAlignment = Enum.TextXAlignment.Center
+InfoLabel.Parent = MainFrame
 
 -- Logic thu nhỏ UI
 local isMinimized = false
@@ -119,32 +147,70 @@ MinimizeBtn.MouseButton1Click:Connect(function()
     if isMinimized then
         MinimizeBtn.Text = "+"
         ToggleBtn.Visible = false
+        CamBtn.Visible = false
         SwapBtn.Visible = false
-        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 220, 0, 35)}):Play()
+        InfoLabel.Visible = false
+        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 230, 0, 35)}):Play()
     else
         MinimizeBtn.Text = "-"
         ToggleBtn.Visible = true
+        CamBtn.Visible = true
         SwapBtn.Visible = true
-        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 220, 0, 140)}):Play()
+        InfoLabel.Visible = true
+        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 230, 0, 185)}):Play()
     end
 end)
 
 -- Biến trạng thái
 local cloneChar = nil
-local isAnchorActive = false
+local safePlatform = nil
+local isModeActive = false
+local currentViewIsClone = true
 
-local function setModelTransparency(model, transparency)
+-- Hàm tạo tấm sàn riêng biệt chống rơi và chống anti-cheat quét khi khởi tạo chung chỗ
+local function createSafePlatform(position)
+    if safePlatform then safePlatform:Destroy() end
+    
+    safePlatform = Instance.new("Part")
+    safePlatform.Name = "KingTowerSafePlatform"
+    safePlatform.Size = Vector3.new(10, 1, 10)
+    safePlatform.Position = position - Vector3.new(0, 3, 0) -- Nằm ngay dưới chân nhân vật
+    safePlatform.Anchored = true
+    safePlatform.CanCollide = true
+    safePlatform.Transparency = 1 -- Hoàn toàn vô hình để không ai thấy
+    safePlatform.Parent = workspace
+end
+
+local function removeSafePlatform()
+    if safePlatform then
+        safePlatform:Destroy()
+        safePlatform = nil
+    end
+end
+
+-- Hàm giấu Clone hoàn toàn (vô hình và tắt hitbox)
+local function setCloneStealth(model, hide)
     for _, part in ipairs(model:GetDescendants()) do
-        if part:IsA("BasePart") or part:IsA("Decal") then
-            part.Transparency = transparency
+        if part:IsA("BasePart") then
+            part.Transparency = hide and 1 or 0
+            part.CanCollide = false
+            part.CanTouch = false
+            part.CanQuery = false
+        elseif part:IsA("Decal") then
+            part.Transparency = hide and 1 or 0
         end
     end
 end
 
--- Khởi tạo Clone
+-- Khởi tạo Clone và Sàn đứng
 local function initializeClone()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+    
+    local currentPos = character.HumanoidRootPart.CFrame
+    
+    -- Tạo sàn ngay dưới chân vị trí xuất phát
+    createSafePlatform(character.HumanoidRootPart.Position)
     
     if not cloneChar or not cloneChar.Parent then
         character.Archivable = true
@@ -154,40 +220,46 @@ local function initializeClone()
         for _, v in ipairs(cloneChar:GetDescendants()) do
             if v:IsA("LocalScript") or v:IsA("Script") then v:Destroy() end
         end
-        cloneChar.Name = "TwoButtonClone"
+        cloneChar.Name = "PlatformSafeClone"
         cloneChar.Parent = workspace
-        cloneChar:SetPrimaryPartCFrame(character.HumanoidRootPart.CFrame)
-        setModelTransparency(cloneChar, 0)
+        cloneChar:SetPrimaryPartCFrame(currentPos)
+        
+        setCloneStealth(cloneChar, true)
     end
 end
 
--- Nút 1: Bật/Tắt trạng thái bảo vệ (Hitbox thật lên trời, Clone ở dưới tháp)
+-- Nút 1: Bật/Tắt chế độ
 ToggleBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     local realHrp = character.HumanoidRootPart
 
-    if not isAnchorActive then
+    if not isModeActive then
         initializeClone()
         local cloneHrp = cloneChar:FindFirstChild("HumanoidRootPart")
         if cloneHrp then
             local currentPos = realHrp.CFrame
             
-            -- Đưa hitbox thật lên trời 3000m để né đòn
+            -- Đưa hitbox thật lên trời (3000m) bất tử
             realHrp.CFrame = currentPos + Vector3.new(0, 3000, 0)
-            -- Đặt Clone xuống dưới tháp
+            -- Đặt Clone đứng trên sàn an toàn tại vị trí cũ
             cloneHrp.CFrame = currentPos
             
-            setModelTransparency(character, 1)
-            setModelTransparency(cloneChar, 0)
+            -- Giấu nhân vật thật
+            for _, p in ipairs(character:GetDescendants()) do
+                if p:IsA("BasePart") then p.Transparency = 1 end
+            end
             
             if cloneChar:FindFirstChild("Humanoid") then
                 Camera.CameraSubject = cloneChar.Humanoid
             end
             
-            isAnchorActive = true
+            isModeActive = true
+            currentViewIsClone = true
             ToggleBtn.Text = "🛡️ Mode: ON (Protected)"
             ToggleBtn.TextColor3 = Color3.fromRGB(255, 60, 60)
+            CamBtn.Text = "👁️ View: Clone"
+            InfoLabel.Text = "Status: Platform Active | Safe"
         end
     else
         local cloneHrp = cloneChar and cloneChar:FindFirstChild("HumanoidRootPart")
@@ -195,25 +267,54 @@ ToggleBtn.MouseButton1Click:Connect(function()
             realHrp.CFrame = cloneHrp.CFrame
         end
         
+        removeSafePlatform()
         if cloneChar then
             cloneChar:Destroy()
             cloneChar = nil
         end
         
-        setModelTransparency(character, 0)
+        for _, p in ipairs(character:GetDescendants()) do
+            if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then p.Transparency = 0 end
+        end
+        
         if character:FindFirstChild("Humanoid") then
             Camera.CameraSubject = character.Humanoid
         end
         
-        isAnchorActive = false
+        isModeActive = false
         ToggleBtn.Text = "🛡️ Mode: OFF (Normal)"
         ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+        CamBtn.Text = "👁️ View: Normal"
+        InfoLabel.Text = "Status: Normal Mode"
     end
 end)
 
--- Nút 2: Chức năng Hoán đổi vị trí độc lập giữa Nhân vật gốc và Clone
+-- Nút 2: Đổi góc nhìn Camera
+CamBtn.MouseButton1Click:Connect(function()
+    if not isModeActive then return end
+    local character = LocalPlayer.Character
+    if not character then return end
+    
+    currentViewIsClone = not currentViewIsClone
+    
+    if currentViewIsClone then
+        if cloneChar and cloneChar:FindFirstChild("Humanoid") then
+            Camera.CameraSubject = cloneChar.Humanoid
+            CamBtn.Text = "👁️ View: Clone"
+            InfoLabel.Text = "Camera on Clone"
+        end
+    else
+        if character:FindFirstChild("Humanoid") then
+            Camera.CameraSubject = character.Humanoid
+            CamBtn.Text = "👁️ View: Real Body"
+            InfoLabel.Text = "Camera on Real Body (Sky)"
+        end
+    end
+end)
+
+-- Nút 3: Hoán đổi vị trí
 SwapBtn.MouseButton1Click:Connect(function()
-    if not isAnchorActive or not cloneChar then return end
+    if not isModeActive or not cloneChar then return end
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     
@@ -221,38 +322,31 @@ SwapBtn.MouseButton1Click:Connect(function()
     local cloneHrp = cloneChar:FindFirstChild("HumanoidRootPart")
     
     if cloneHrp then
-        -- Lưu tạm tọa độ hiện tại của cả hai
         local realCF = realHrp.CFrame
         local cloneCF = cloneHrp.CFrame
         
-        -- Thực hiện hoán đổi tọa độ cho nhau
         realHrp.CFrame = cloneCF
         cloneHrp.CFrame = realCF
         
-        -- Tự động chuyển góc nhìn Camera và độ mờ theo vị trí thực tế sau khi đổi chỗ
-        if realHrp.Position.Y < 1000 then
-            setModelTransparency(character, 0)
-            setModelTransparency(cloneChar, 1)
-            if character:FindFirstChild("Humanoid") then
-                Camera.CameraSubject = character.Humanoid
-            end
-        else
-            setModelTransparency(character, 1)
-            setModelTransparency(cloneChar, 0)
-            if cloneChar:FindFirstChild("Humanoid") then
-                Camera.CameraSubject = cloneChar.Humanoid
-            end
+        -- Cập nhật lại vị trí của sàn để phù hợp với chỗ đứng mới của Clone
+        if safePlatform then
+            safePlatform.Position = cloneHrp.Position - Vector3.new(0, 3, 0)
         end
+        
+        InfoLabel.Text = "Positions Swapped & Platform Moved!"
     end
 end)
 
 -- Reset khi nhân vật chết hoặc hồi sinh
 LocalPlayer.CharacterAdded:Connect(function()
-    isAnchorActive = false
+    isModeActive = false
+    removeSafePlatform()
     if cloneChar then
         cloneChar:Destroy()
         cloneChar = nil
     end
     ToggleBtn.Text = "🛡️ Mode: OFF (Normal)"
     ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+    CamBtn.Text = "👁️ View: Clone"
+    InfoLabel.Text = "Status: Normal Mode"
 end)
