@@ -1,4 +1,4 @@
--- Script Tàn Hình Pro + Anti-KB / Sit / Roll + Nút Thu Nhỏ UI
+-- Script Tàn Hình (An toàn không chết) + Anti-KB chuyên dụng cho Game Đấu Trường
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
@@ -31,9 +31,9 @@ uiCorner.Parent = mainFrame
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, 0, 0, 35)
 titleLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-titleLabel.Text = "MENU TÀN HÌNH PRO"
+titleLabel.Text = "THE KING TOWER - MENU"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.TextSize = 14
+titleLabel.TextSize = 13
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.Parent = mainFrame
 
@@ -41,7 +41,7 @@ local titleCorner = Instance.new("UICorner")
 titleCorner.CornerRadius = UDim.new(0, 8)
 titleCorner.Parent = titleLabel
 
--- Tạo nút Thu Nhỏ / Mở Rộng (-) nằm ở góc phải tiêu đề
+-- Nút Thu Nhỏ / Mở Rộng (-)
 local minBtn = Instance.new("TextButton")
 minBtn.Size = UDim2.new(0, 30, 0, 30)
 minBtn.Position = UDim2.new(1, -33, 0, 2)
@@ -63,7 +63,7 @@ local function createButton(posY, defaultText)
     btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     btn.Text = defaultText
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 13
+    btn.TextSize = 12
     btn.Font = Enum.Font.GothamSemibold
     btn.Parent = mainFrame
     
@@ -74,11 +74,10 @@ local function createButton(posY, defaultText)
     return btn
 end
 
-local invisBtn = createButton(45, "Tàn Hình Tuyệt Đối: TẮT")
-local antiKBBtn = createButton(90, "Anti-KB / Sit / Roll: TẮT")
+local invisBtn = createButton(45, "Tàn Hình An Toàn: TẮT")
+local antiKBBtn = createButton(90, "Anti-KB / Sit / Stun: TẮT")
 local resetBtn = createButton(135, "Khôi Phục / Reset")
 
--- Lưu trữ danh sách các tính năng cần ẩn khi thu nhỏ UI
 local elementsToToggle = {invisBtn, antiKBBtn, resetBtn}
 local isMinimized = false
 
@@ -86,13 +85,13 @@ minBtn.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
     if isMinimized then
         minBtn.Text = "+"
-        mainFrame.Size = UDim2.new(0, 220, 0, 35) -- Chỉ giữ lại thanh tiêu đề
+        mainFrame.Size = UDim2.new(0, 220, 0, 35)
         for _, elem in ipairs(elementsToToggle) do
             elem.Visible = false
         end
     else
         minBtn.Text = "-"
-        mainFrame.Size = UDim2.new(0, 220, 0, 180) -- Phục hồi kích thước cũ
+        mainFrame.Size = UDim2.new(0, 220, 0, 180)
         for _, elem in ipairs(elementsToToggle) do
             elem.Visible = true
         end
@@ -103,23 +102,20 @@ local isInvisible = false
 local protectionActive = false
 local protectionConnection = nil
 
--- 1. Xử lý Tàn Hình Tuyệt Đối
+-- 1. Tàn Hình An Toàn (Không bị chết do sập hầm)
 invisBtn.MouseButton1Click:Connect(function()
     local character = player.Character
     if not character then return end
-    local rootPart = character:FindFirstChild("HumanoidRootPart")
     local humanoid = character:FindFirstChildOfClass("Humanoid")
-    
-    if not rootPart or not humanoid then return end
+    if not humanoid then return end
 
     isInvisible = not isInvisible
     
     if isInvisible then
-        invisBtn.Text = "Tàn Hình Tuyệt Đối: BẬT"
+        invisBtn.Text = "Tàn Hình An Toàn: BẬT"
         invisBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
         
-        local pos = rootPart.CFrame
-        
+        -- Làm trong suốt toàn bộ cơ thể, phụ kiện, hiệu ứng mà không cần dịch chuyển xuống vực sâu
         for _, v in pairs(character:GetDescendants()) do
             if v:IsA("BasePart") or v:IsA("MeshPart") then
                 v.Transparency = 1
@@ -132,38 +128,38 @@ invisBtn.MouseButton1Click:Connect(function()
             end
         end
         humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-        rootPart.CFrame = CFrame.new(pos.X, -499, pos.Z)
     else
-        invisBtn.Text = "Tàn Hình Tuyệt Đối: TẮT"
+        invisBtn.Text = "Tàn Hình An Toàn: TẮT"
         invisBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
         player.Character:BreakJoints()
     end
 end)
 
--- 2. Xử lý Chống Knockback, Chống Ngồi (Anti-Sit) và Chống Lăn/Lật (Anti-Roll)
+-- 2. Anti-Knockback & Chống Stun/Sit chuyên sâu cho Game Chiến Đấu
 antiKBBtn.MouseButton1Click:Connect(function()
     protectionActive = not protectionActive
     
     if protectionActive then
-        antiKBBtn.Text = "Anti-KB / Sit / Roll: BẬT"
+        antiKBBtn.Text = "Anti-KB / Sit / Stun: BẬT"
         antiKBBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
         
-        protectionConnection = RunService.Stepped:Connect(function()
+        protectionConnection = RunService.RenderStepped:Connect(function()
             local character = player.Character
             if character then
                 local rootPart = character:FindFirstChild("HumanoidRootPart")
                 local humanoid = character:FindFirstChildOfClass("Humanoid")
                 
                 if rootPart and humanoid then
-                    local vel = rootPart.AssemblyLinearVelocity
-                    if vel.Magnitude > 45 and not humanoid.PlatformStand then
-                        rootPart.AssemblyLinearVelocity = Vector3.new(0, vel.Y, 0)
+                    -- Triệt tiêu lực văng vật lý bất thường (Knockback) bằng cách kìm hãm tốc độ ngang
+                    local currentVel = rootPart.AssemblyLinearVelocity
+                    if currentVel.Magnitude > 35 and not humanoid.PlatformStand then
+                        rootPart.AssemblyLinearVelocity = Vector3.new(0, currentVel.Y, 0)
                     end
                     
+                    -- Chống bị ép ngồi (Sit) hoặc bị choáng/đẩy ngã (PlatformStand / Ragdoll)
                     if humanoid.Sit then
                         humanoid.Sit = false
                     end
-                    
                     if humanoid.PlatformStand then
                         humanoid.PlatformStand = false
                     end
@@ -171,7 +167,7 @@ antiKBBtn.MouseButton1Click:Connect(function()
             end
         end)
     else
-        antiKBBtn.Text = "Anti-KB / Sit / Roll: TẮT"
+        antiKBBtn.Text = "Anti-KB / Sit / Stun: TẮT"
         antiKBBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
         if protectionConnection then
             protectionConnection:Disconnect()
@@ -180,11 +176,11 @@ antiKBBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- 3. Nút Reset nhanh
+-- 3. Nút Reset
 resetBtn.MouseButton1Click:Connect(function()
     if player.Character then
         player.Character:BreakJoints()
     end
 end)
 
-print("Đã tải xong Script kèm nút thu nhỏ UI!")
+print("Đã cập nhật script tối ưu cho The King Tower!")
