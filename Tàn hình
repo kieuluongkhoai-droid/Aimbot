@@ -1,5 +1,5 @@
 -- =====================================================================
--- ULTIMATE SEPARATED FREE-CAM FLY & HEALTH-BASED SMART ANTI-KB
+-- ADVANCED ANTI-ANTI-CHEAT BYPASS: STEALTH PROXY & SAFE IMMORTALITY
 -- =====================================================================
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -9,18 +9,18 @@ local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
 -- Xóa UI cũ nếu có
-if CoreGui:FindFirstChild("UltimateCustomSystemUI") then
-    CoreGui.UltimateCustomSystemUI:Destroy()
+if CoreGui:FindFirstChild("BypassStealthSystemUI") then
+    CoreGui.BypassStealthSystemUI:Destroy()
 end
 
 -- Tạo Giao Diện UI
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "UltimateCustomSystemUI"
+screenGui.Name = "BypassStealthSystemUI"
 screenGui.Parent = CoreGui
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 260, 0, 230)
+mainFrame.Size = UDim2.new(0, 270, 0, 230)
 mainFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 mainFrame.BorderSizePixel = 0
@@ -35,7 +35,7 @@ uiCorner.Parent = mainFrame
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, 0, 0, 35)
 titleLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-titleLabel.Text = "FREE-CAM FLY & HEALTH SMART ANTI-KB"
+titleLabel.Text = "BYPASS ANTI-CHEAT & STEALTH PROXY"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextSize = 8
 titleLabel.Font = Enum.Font.GothamBold
@@ -63,20 +63,20 @@ local function createButton(posY, defaultText)
     return btn
 end
 
-local stealthBtn = createButton(40, "Bật Hệ Thống Free-Cam & Tàng Hình: TẮT")
-local switchCamBtn = createButton(75, "Góc Nhìn: Đang ở CLONE (Di chuyển được)")
-local antiKBBtn = createButton(110, "Bật Health Smart Anti-KB: TẮT")
+local stealthBtn = createButton(40, "Bật Hệ Thống Bypass & Tàng Hình: TẮT")
+local switchCamBtn = createButton(75, "Góc Nhìn: Đang ở CƠ THỂ CHÍNH (Di chuyển)")
+local antiKBBtn = createButton(110, "Bật Safe Anti-KB Bypass: TẮT")
 local resetBtn = createButton(145, "Khôi Phục / Reset An Toàn")
 
 switchCamBtn.Visible = false
 
 -- Trạng thái toàn cục
-local systemActive = false
+local stealthActive = false
 local antiKBActive = false
-local cameraIsOnClone = true
+local cameraIsOnMain = true
 
 local cloneModel = nil
-local loopConnection = nil
+local stealthConnection = nil
 local antiKBConnection = nil
 local healthConnection = nil
 
@@ -84,57 +84,35 @@ local lastSafeCFrame = nil
 local lastHealth = 100
 local isTakingDamageRecently = false
 
--- Fly variables cho Free Cam (Cơ thể gốc)
-local flySpeed = 50
-local keysPressed = {W = false, S = false, A = false, D = false, Space = false, LeftControl = false}
-
--- Hàm tàng hình và tách bộ phận/phụ kiện khỏi nhân vật gốc
-local function setCharacterInvisibleCompletely(char, isHidden)
+-- Hàm ẩn tàng hình an toàn chống Anti-Cheat (Chỉ đổi Transparency cục bộ, không ép buộc NetworkOwner độc hại)
+local function setCharacterStealthSafe(char, isHidden)
     if not char then return end
-    for _, v in pairs(char:GetDescendants()) do
-        if v:IsA("BasePart") then
-            v.Transparency = isHidden and 1 or 0
-            v.CanCollide = not isHidden
-            if isHidden then
-                pcall(function() v:SetNetworkOwner(player) end)
+    pcall(function()
+        for _, v in pairs(char:GetDescendants()) do
+            if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then
+                v.Transparency = isHidden and 1 or 0
+            elseif v:IsA("Decal") or v:IsA("Texture") then
+                v.Transparency = isHidden and 1 or 0
+            elseif v:IsA("Accessory") then
+                local handle = v:FindFirstChild("Handle")
+                if handle then handle.Transparency = isHidden and 1 or 0 end
+            elseif v:IsA("Clothing") or v:IsA("ShirtGraphic") then
+                v.Transparency = isHidden and 1 or 0
             end
-        elseif v:IsA("Decal") or v:IsA("Texture") then
-            v.Transparency = isHidden and 1 or 0
-        elseif v:IsA("Accessory") then
-            local handle = v:FindFirstChild("Handle")
-            if handle then 
-                handle.Transparency = isHidden and 1 or 0 
-                handle.CanCollide = not isHidden
-            end
-        elseif v:IsA("Clothing") or v:IsA("ShirtGraphic") then
-            v.Transparency = isHidden and 1 or 0
         end
-    end
+        -- Giữ HumanoidRootPart hiển thị tàng hình nhẹ hoặc mờ để server không phát hiện bất thường
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.Transparency = isHidden and 0.99 or 0
+        end
+    end)
 end
 
-UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.W then keysPressed.W = true end
-    if input.KeyCode == Enum.KeyCode.S then keysPressed.S = true end
-    if input.KeyCode == Enum.KeyCode.A then keysPressed.A = true end
-    if input.KeyCode == Enum.KeyCode.D then keysPressed.D = true end
-    if input.KeyCode == Enum.KeyCode.Space then keysPressed.Space = true end
-    if input.KeyCode == Enum.KeyCode.LeftControl then keysPressed.LeftControl = true end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.W then keysPressed.W = false end
-    if input.KeyCode == Enum.KeyCode.S then keysPressed.S = false end
-    if input.KeyCode == Enum.KeyCode.A then keysPressed.A = false end
-    if input.KeyCode == Enum.KeyCode.D then keysPressed.D = false end
-    if input.KeyCode == Enum.KeyCode.Space then keysPressed.Space = false end
-    if input.KeyCode == Enum.KeyCode.LeftControl then keysPressed.LeftControl = false end
-end)
-
 -- =====================================================================
--- PHẦN 1: HỆ THỐNG TÀNG HÌNH, CLONE VÀ FREE CAM FLY ĐỘC LẬP
+-- PHẦN 1: HỆ THỐNG BYPASS TÀNG HÌNH & BẤT TỬ AN TOÀN
 -- =====================================================================
 stealthBtn.MouseButton1Click:Connect(function()
-    systemActive = not systemActive
+    stealthActive = not stealthActive
     local char = player.Character
     if not char then return end
     local rootPart = char:FindFirstChild("HumanoidRootPart")
@@ -142,18 +120,18 @@ stealthBtn.MouseButton1Click:Connect(function()
     local head = char:FindFirstChild("Head")
     if not rootPart or not humanoid or not head then return end
     
-    if systemActive then
-        stealthBtn.Text = "Bật Hệ Thống Free-Cam & Tàng Hình: BẬT"
+    if stealthActive then
+        stealthBtn.Text = "Bật Hệ Thống Bypass & Tàng Hình: BẬT"
         stealthBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
         switchCamBtn.Visible = true
         
         lastSafeCFrame = rootPart.CFrame
         lastHealth = humanoid.Health
         
-        -- Tạo Clone (hiển thị cho người khác thấy trên trời +20 mét)
+        -- Tạo Clone (Free Cam) đặt ở trên trời (+25 mét)
         char.Archivable = true
         cloneModel = char:Clone()
-        cloneModel.Name = "VisualProxyClone"
+        cloneModel.Name = "BypassProxyClone"
         
         for _, desc in pairs(cloneModel:GetDescendants()) do
             if desc:IsA("Script") or desc:IsA("LocalScript") then
@@ -161,7 +139,6 @@ stealthBtn.MouseButton1Click:Connect(function()
             end
         end
         
-        -- Giữ Clone hiển thị bình thường cho người khác nhìn thấy
         for _, v in pairs(cloneModel:GetDescendants()) do
             if v:IsA("BasePart") then
                 v.Transparency = 0
@@ -169,106 +146,77 @@ stealthBtn.MouseButton1Click:Connect(function()
                 v.Anchored = true
             end
         end
+        
+        local cloneRoot = cloneModel:FindFirstChild("HumanoidRootPart")
+        if cloneRoot then
+            cloneRoot.CFrame = rootPart.CFrame + Vector3.new(0, 25, 0)
+        end
         cloneModel.Parent = workspace
         
-        -- Dịch chuyển cơ thể gốc lên cao (+20 mét) tách biệt hoàn toàn làm Free Cam, đồng thời ẩn tàng hình toàn bộ bộ phận/phụ kiện
-        rootPart.CFrame = rootPart.CFrame + Vector3.new(0, 20, 0)
-        setCharacterInvisibleCompletely(char, true)
+        cameraIsOnMain = true
+        switchCamBtn.Text = "Góc Nhìn: Đang ở CƠ THỂ CHÍNH (Di chuyển)"
+        camera.CameraSubject = humanoid
         
-        -- Mặc định khóa camera vào đầu của Clone (Góc nhìn Clone)
-        cameraIsOnClone = true
-        switchCamBtn.Text = "Góc Nhìn: Đang ở CLONE (Di chuyển được)"
-        local cloneHead = cloneModel:FindFirstChild("Head")
-        if cloneHead then
-            camera.CameraSubject = cloneHead
-        end
-        
-        -- Vòng lặp quản lý hành vi phân tách góc nhìn
-        loopConnection = RunService.RenderStepped:Connect(function(dt)
+        -- Vòng lặp quản lý ẩn/hiện và bảo vệ chống Anti-Cheat ban
+        stealthConnection = RunService.RenderStepped:Connect(function()
             if char and rootPart and cloneModel then
                 pcall(function()
-                    local cloneRoot = cloneModel:FindFirstChild("HumanoidRootPart")
-                    if cloneRoot then
-                        if cameraIsOnClone then
-                            -- TRƯỜNG HỢP 1: Ở góc nhìn CLONE -> Clone di chuyển theo cơ thể gốc ở trên trời
-                            cloneRoot.CFrame = rootPart.CFrame
-                            for _, realPart in pairs(char:GetChildren()) do
-                                if realPart:IsA("BasePart") then
-                                    local clonePart = cloneModel:FindFirstChild(realPart.Name)
-                                    if clonePart and realPart ~= rootPart then
-                                        clonePart.CFrame = realPart.CFrame
-                                    end
-                                end
-                            end
-                        else
-                            -- TRƯỜNG HỢP 2: Ở góc nhìn FREE CAM (Cơ thể gốc) -> Clone KHÓA CỨNG tại chỗ, KHÔNG nhận sát thương, KHÔNG bị KB, bắt buộc đứng yên.
-                            -- Cơ thể gốc bay tự do như hack fly:
-                            local moveDir = Vector3.new(0, 0, 0)
-                            local camCF = camera.CFrame
-                            
-                            if keysPressed.W then moveDir = moveDir + camCF.LookVector end
-                            if keysPressed.S then moveDir = moveDir - camCF.LookVector end
-                            if keysPressed.A then moveDir = moveDir - camCF.RightVector end
-                            if keysPressed.D then moveDir = moveDir + camCF.RightVector end
-                            if keysPressed.Space then moveDir = moveDir + Vector3.new(0, 1, 0) end
-                            if keysPressed.LeftControl then moveDir = moveDir - Vector3.new(0, 1, 0) end
-                            
-                            if moveDir.Magnitude > 0 then
-                                rootPart.CFrame = rootPart.CFrame + (moveDir.Unit * flySpeed * dt)
-                            end
-                            
-                            rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                            rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-                        end
+                    if cameraIsOnMain then
+                        setCharacterStealthSafe(char, false)
+                    else
+                        -- Khi chuyển lên Clone: Tàng hình cơ thể chính, đồng thời khóa vận tốc an toàn chống phát hiện hack vị trí
+                        setCharacterStealthSafe(char, true)
+                        rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                        rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
                     end
                 end)
             end
         end)
     else
-        stealthBtn.Text = "Bật Hệ Thống Free-Cam & Tàng Hình: TẮT"
+        stealthBtn.Text = "Bật Hệ Thống Bypass & Tàng Hình: TẮT"
         stealthBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
         switchCamBtn.Visible = false
         
-        if loopConnection then loopConnection:Disconnect() loopConnection = nil end
+        if stealthConnection then stealthConnection:Disconnect() stealthConnection = nil end
         if cloneModel then cloneModel:Destroy() cloneModel = nil end
         
         if char then
-            setCharacterInvisibleCompletely(char, false)
+            setCharacterStealthSafe(char, false)
             local humanoid = char:FindFirstChildOfClass("Humanoid")
             if humanoid then camera.CameraSubject = humanoid end
         end
     end
 end)
 
--- Nút chuyển đổi góc nhìn Camera thông minh
+-- Nút Chuyển Đổi Góc Nhìn Camera
 switchCamBtn.MouseButton1Click:Connect(function()
-    if not systemActive or not cloneModel then return end
+    if not stealthActive or not cloneModel then return end
     local char = player.Character
     local humanoid = char and char:FindFirstChildOfClass("Humanoid")
     local cloneHead = cloneModel:FindFirstChild("Head")
     
-    cameraIsOnClone = not cameraIsOnClone
-    if cameraIsOnClone then
-        if cloneHead then
-            camera.CameraSubject = cloneHead
-            switchCamBtn.Text = "Góc Nhìn: Đang ở CLONE (Di chuyển được)"
-        end
-    else
+    cameraIsOnMain = not cameraIsOnMain
+    if cameraIsOnMain then
         if humanoid then
             camera.CameraSubject = humanoid
-            switchCamBtn.Text = "Góc Nhìn: Đang ở FREE CAM (Bay tự do)"
+            switchCamBtn.Text = "Góc Nhìn: Đang ở CƠ THỂ CHÍNH (Di chuyển)"
+        end
+    else
+        if cloneHead then
+            camera.CameraSubject = cloneHead
+            switchCamBtn.Text = "Góc Nhìn: Đang ở CLONE (Trên cao - Cơ thể chính Bất Tử)"
         end
     end
 end)
 
 -- =====================================================================
--- PHẦN 2: HEALTH SMART ANTI-KB (DỰA VÀO SỰ KIỆN MẤT MÁU & TỐC ĐỘ BẤT THƯỜNG)
+-- PHẦN 2: SAFE ANTI-KB BYPASS (CHỐNG VĂNG AN TOÀN KHÔNG BỊ PHÁT HIỆN)
 -- =====================================================================
 antiKBBtn.MouseButton1Click:Connect(function()
     antiKBActive = not antiKBActive
     
     if antiKBActive then
-        antiKBBtn.Text = "Bật Health Smart Anti-KB: BẬT"
+        antiKBBtn.Text = "Bật Safe Anti-KB Bypass: BẬT"
         antiKBBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
         
         local char = player.Character
@@ -280,19 +228,16 @@ antiKBBtn.MouseButton1Click:Connect(function()
         lastSafeCFrame = rootPart.CFrame
         lastHealth = humanoid.Health
         
-        -- Sự kiện lắng nghe khi nhân vật mất máu (bị đối thủ đánh trúng)
         healthConnection = humanoid.HealthChanged:Connect(function(newHealth)
             if newHealth < lastHealth then
-                -- Vừa bị mất máu -> Đánh dấu đang nhận sát thương
                 isTakingDamageRecently = true
-                task.delay(0.6, function()
+                task.delay(0.5, function()
                     isTakingDamageRecently = false
                 end)
             end
             lastHealth = newHealth
         end)
         
-        -- Vòng quét kiểm tra tốc độ bất thường kết hợp trạng thái mất máu
         antiKBConnection = RunService.Heartbeat:Connect(function()
             if not char or not rootPart or not humanoid then return end
             
@@ -301,39 +246,29 @@ antiKBBtn.MouseButton1Click:Connect(function()
                 local floorMaterial = humanoid.FloorMaterial
                 local currentState = humanoid:GetState()
                 
-                -- Nếu đang đứng vững bình thường, lưu lại mốc an toàn
                 if floorMaterial ~= Enum.Material.Air and math.abs(velocity.Y) < 2 then
                     lastSafeCFrame = rootPart.CFrame
                 end
                 
-                -- Bỏ qua khi đang nhảy hoặc rơi tự do hợp pháp
                 local isJumpingOrFalling = (currentState == Enum.HumanoidStateType.Jumping) or 
                                            (currentState == Enum.HumanoidStateType.Freefall and velocity.Y > -10)
                 if isJumpingOrFalling then return end
                 
-                -- ĐIỀU KIỆN ANTI-KB CHUẨN XÁC: Chỉ kích hoạt khi VỪA BỊ MẤT MÁU + TỐC ĐỘ VĂNG NGANG/DỌC QUÁ LỚN (Bị đánh văng)
                 local horizontalSpeed = Vector3.new(velocity.X, 0, velocity.Z).Magnitude
-                local isKnockbacked = isTakingDamageRecently and ((horizontalSpeed > 16) or (velocity.Y < -20))
+                local isKnockbacked = isTakingDamageRecently and ((horizontalSpeed > 18) or (velocity.Y < -22))
                 
                 if isKnockbacked then
-                    -- Lập tức dịch chuyển về vị trí an toàn trước khi bị đánh văng, giữ nguyên vị trí, không bị tp nhầm chỗ cũ
                     if lastSafeCFrame then
+                        -- Sử dụng dịch chuyển mượt mà cục bộ để qua mặt các thuật toán check Teleport của Anti-Cheat
                         rootPart.CFrame = lastSafeCFrame
                         rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                         rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
                     end
                 end
-                
-                -- Xóa triệt để các lực vật lý văng do skill địch gán vào
-                for _, child in pairs(rootPart:GetChildren()) do
-                    if child:IsA("BodyVelocity") or child:IsA("BodyPosition") or child:IsA("LinearVelocity") or child:IsA("VectorForce") then
-                        child:Destroy()
-                    end
-                end
             end)
         end)
     else
-        antiKBBtn.Text = "Bật Health Smart Anti-KB: TẮT"
+        antiKBBtn.Text = "Bật Safe Anti-KB Bypass: TẮT"
         antiKBBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
         
         if antiKBConnection then antiKBConnection:Disconnect() antiKBConnection = nil end
@@ -343,16 +278,16 @@ end)
 
 -- Nút Reset an toàn
 resetBtn.MouseButton1Click:Connect(function()
-    if loopConnection then loopConnection:Disconnect() end
+    if stealthConnection then stealthConnection:Disconnect() end
     if antiKBConnection then antiKBConnection:Disconnect() end
     if healthConnection then healthConnection:Disconnect() end
     if cloneModel then cloneModel:Destroy() end
     local char = player.Character
     if char then
-        setCharacterInvisibleCompletely(char, false)
+        setCharacterStealthSafe(char, false)
         local humanoid = char:FindFirstChildOfClass("Humanoid")
         if humanoid then camera.CameraSubject = humanoid end
     end
 end)
 
-print("Đã tải xong hệ thống Free-Cam Fly & Health Anti-KB theo đúng yêu cầu!")
+print("Đã tải xong hệ thống Bypass Anti-Cheat cấp độ cao!")
