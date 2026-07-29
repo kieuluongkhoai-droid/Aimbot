@@ -1,6 +1,6 @@
 --[[
-    Script Name: Element Magic Battle - Ultimate Pro Script
-    Features: Dynamic ESP, Smooth Auto-Face Aimbot, Minimize UI, Auto Collect (Souls & Gems)
+    Script Name: Element Magic Battle - Pull Items to Player & Smooth Aimbot
+    Features: Smooth ESP, Non-Stuttering Aimbot, Pull Souls/Gems to Player, Minimize UI
 ]]--
 
 if not game:IsLoaded() then game.Loaded:Wait() end
@@ -22,24 +22,24 @@ getgenv().EMBSettings = {
     
     AimbotEnabled = false,
     AimKey = Enum.UserInputType.MouseButton2,
-    Smoothness = 0.25,
+    Smoothness = 0.15,
     AimbotPart = "HumanoidRootPart",
     
-    AutoCollect = false -- Tính năng tự động nhặt Soul và Gems
+    AutoCollect = false
 }
 
 --------------------------------------------------------------------------------
--- 1. GIAO DIỆN UI (CÓ NÚT THU NHỎ / MỞ RỘNG)
+-- 1. GIAO DIỆN UI
 --------------------------------------------------------------------------------
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "EMB_UltimateUI"
+ScreenGui.Name = "EMB_PullItemsUI"
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then
     ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 360, 0, 350) -- Tăng chiều cao để chứa thêm nút tính năng mới
+MainFrame.Size = UDim2.new(0, 360, 0, 350)
 MainFrame.Position = UDim2.new(0.5, -180, 0.5, -175)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 MainFrame.BorderSizePixel = 0
@@ -54,7 +54,7 @@ UICorner.Parent = MainFrame
 local TitleBar = Instance.new("TextLabel")
 TitleBar.Size = UDim2.new(1, 0, 0, 40)
 TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
-TitleBar.Text = "  Element Magic Battle | Pro Menu"
+TitleBar.Text = "  Element Magic Battle | Pull Items UI"
 TitleBar.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleBar.TextSize = 13
 TitleBar.Font = Enum.Font.SourceSansBold
@@ -65,7 +65,6 @@ local TitleCorner = Instance.new("UICorner")
 TitleCorner.CornerRadius = UDim.new(0, 8)
 TitleCorner.Parent = TitleBar
 
--- Nút Đóng (X)
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Size = UDim2.new(0, 40, 0, 40)
 CloseBtn.Position = UDim2.new(1, -40, 0, 0)
@@ -80,7 +79,6 @@ CloseBtn.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- Nút Thu Nhỏ / Mở Rộng (-)
 local MinimizeBtn = Instance.new("TextButton")
 MinimizeBtn.Size = UDim2.new(0, 40, 0, 40)
 MinimizeBtn.Position = UDim2.new(1, -80, 0, 0)
@@ -91,7 +89,6 @@ MinimizeBtn.TextSize = 18
 MinimizeBtn.Font = Enum.Font.SourceSansBold
 MinimizeBtn.Parent = TitleBar
 
--- Container chứa các tính năng bên trong để ẩn/hiện khi thu nhỏ
 local Container = Instance.new("Frame")
 Container.Size = UDim2.new(1, 0, 1, -40)
 Container.Position = UDim2.new(0, 0, 0, 40)
@@ -150,7 +147,7 @@ CreateToggle("Aimbot + Auto Face (Hold Key)", 70, function(state)
     getgenv().EMBSettings.AimbotEnabled = state
 end)
 
-CreateToggle("Auto Collect Souls & Gems", 125, function(state)
+CreateToggle("Auto Pull Souls & Gems", 125, function(state)
     getgenv().EMBSettings.AutoCollect = state
 end)
 
@@ -239,7 +236,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 --------------------------------------------------------------------------------
--- 3. HỆ THỐNG AIMBOT & TỰ ĐỘNG XOAY NGƯỜI
+-- 3. HỆ THỐNG AIMBOT & AUTO-FACE MƯỢT MÀ
 --------------------------------------------------------------------------------
 local function getClosestPlayerByDistance()
     local closestPlayer = nil
@@ -282,10 +279,10 @@ RunService.RenderStepped:Connect(function(dt)
                 if targetPart and humanoid and humanoid.Health > 0 and myRoot then
                     local currentCF = Camera.CFrame
                     local targetCamCF = CFrame.new(Camera.CFrame.Position, targetPart.Position)
-                    Camera.CFrame = currentCF:Lerp(targetCamCF, math.clamp(dt * 15 * getgenv().EMBSettings.Smoothness, 0.1, 1))
+                    Camera.CFrame = currentCF:Lerp(targetCamCF, getgenv().EMBSettings.Smoothness)
                     
                     local lookAtPos = Vector3.new(targetPart.Position.X, myRoot.Position.Y, targetPart.Position.Z)
-                    myRoot.CFrame = myRoot.CFrame:Lerp(CFrame.new(myRoot.Position, lookAtPos), math.clamp(dt * 15 * getgenv().EMBSettings.Smoothness, 0.1, 1))
+                    myRoot.CFrame = myRoot.CFrame:Lerp(CFrame.new(myRoot.Position, lookAtPos), getgenv().EMBSettings.Smoothness)
                 end
             end
         end
@@ -293,34 +290,34 @@ RunService.RenderStepped:Connect(function(dt)
 end)
 
 --------------------------------------------------------------------------------
--- 4. TÍNH NĂNG AUTO COLLECT SOULS & GEMS
+-- 4. HỆ THỐNG AUTO PULL SOULS & GEMS (HÚT VẬT PHẨM VỀ NGƯỜI)
 --------------------------------------------------------------------------------
 RunService.Heartbeat:Connect(function()
     if getgenv().EMBSettings.AutoCollect then
-        local myCharacter = LocalPlayer.Character
-        if not myCharacter or not myCharacter:FindFirstChild("HumanoidRootPart") then return end
-        local myRoot = myCharacter.HumanoidRootPart
+        pcall(function()
+            local myCharacter = LocalPlayer.Character
+            if not myCharacter or not myCharacter:FindFirstChild("HumanoidRootPart") then return end
+            local myRootPos = myCharacter.HumanoidRootPart.Position
 
-        -- Quét toàn bộ Workspace để tìm các vật phẩm Soul hoặc Gem (thường được lưu dưới dạng Part hoặc Model có tên liên quan)
-        for _, obj in ipairs(Workspace:GetDescendants()) do
-            if obj:IsA("BasePart") or obj:IsA("Model") then
-                local name = string.lower(obj.Name)
-                -- Kiểm tra tên vật phẩm phổ biến trong game magic battle
-                if name:find("soul") or name:find("gem") or name:find("crystal") or name:find("coin") then
-                    local targetPart = obj:IsA("Model") and obj.PrimaryPart or obj
-                    if not targetPart then
-                        targetPart = obj:FindFirstChildWhichIsA("BasePart")
-                    end
-                    
-                    if targetPart then
-                        -- Tự động dịch chuyển nhân vật tới gần vật phẩm để nhặt (hoặc dịch chuyển vật phẩm về phía người chơi)
-                        -- Dùng phương pháp đưa nhân vật lại gần vị trí vật phẩm để game nhận diện va chạm nhặt item
-                        if (targetPart.Position - myRoot.Position).Magnitude < 100 then -- Chỉ nhặt item trong phạm vi bán kính 100 studs để tránh bị lag
-                            myRoot.CFrame = CFrame.new(targetPart.Position + Vector3.new(0, 2, 0))
+            for _, obj in ipairs(Workspace:GetDescendants()) do
+                if obj:IsA("BasePart") or obj:IsA("Model") then
+                    local name = string.lower(obj.Name)
+                    if name:find("soul") or name:find("gem") or name:find("crystal") or name:find("orb") or name:find("coin") then
+                        local part = obj:IsA("Model") and obj.PrimaryPart or obj
+                        if not part and obj:IsA("Model") then
+                            part = obj:FindFirstChildWhichIsA("BasePart")
+                        end
+                        
+                        if part and part.Anchored == false then
+                            local distance = (part.Position - myRootPos).Magnitude
+                            -- Nếu item nằm trong bán kính 200 studs, lập tức dịch chuyển nó bay thẳng vào vị trí của bạn
+                            if distance < 200 then
+                                part.CFrame = CFrame.new(myRootPos)
+                            end
                         end
                     end
                 end
             end
-        end
+        end)
     end
 end)
