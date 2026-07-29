@@ -1,11 +1,8 @@
 --[[
-    Client-Side Hitbox Cloner & Anti-Cheat Bypass Script (Enhanced UI)
-    Features: 
-    - Rainbow Border UI with Smooth Animation
-    - Minimize / Maximize Button (Nút thu nhỏ UI)
-    - Clone creation & Sky positioning (Né sát thương trực diện)
-    - Skill usage preservation (Dùng chiêu bình thường trong King Legacy)
-    - Anti-Anti-Cheat Protection
+    King Tower - Anti-Hitbox / God Mode Script
+    - Đưa toàn bộ thân xác thật lên trời để bất tử, né mọi đòn đẩy/đấm.
+    - Tạo nhân bản ảo để điều khiển và tung chiêu trên tháp.
+    - Giao diện UI viền cầu vồng + Nút thu nhỏ linh hoạt.
 ]]
 
 local Players = game:GetService("Players")
@@ -16,29 +13,20 @@ local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- Tránh chạy trùng lặp
-if _G.HitboxClonerLoaded then
-    return
-end
-_G.HitboxClonerLoaded = true
+if _G.KingTowerGodMode then return end
+_G.KingTowerGodMode = true
 
 -- Tạo UI chính
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "HitboxClonerAdvancedUI"
+ScreenGui.Name = "KingTowerUI"
 ScreenGui.ResetOnSpawn = false
-pcall(function()
-    ScreenGui.Parent = CoreGui
-end)
-if not ScreenGui.Parent then
-    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-end
+pcall(function() ScreenGui.Parent = CoreGui end)
+if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
--- Khung chứa chính (Main Frame)
 local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 200, 0, 95)
+MainFrame.Size = UDim2.new(0, 210, 0, 95)
 MainFrame.Position = UDim2.new(0, 50, 0, 150)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
@@ -48,12 +36,11 @@ local UICornerMain = Instance.new("UICorner")
 UICornerMain.CornerRadius = UDim.new(0, 12)
 UICornerMain.Parent = MainFrame
 
--- Viền cầu vồng (Rainbow Border Effect)
+-- Hiệu ứng viền cầu vồng (Rainbow Border)
 local UIStroke = Instance.new("UIStroke")
 UIStroke.Thickness = 3
 UIStroke.Parent = MainFrame
 
--- Hiệu ứng chạy màu cầu vồng cho viền
 task.spawn(function()
     local hue = 0
     while true do
@@ -63,7 +50,7 @@ task.spawn(function()
     end
 end)
 
--- Tiêu đề & Nút Thu Nhỏ (Top Bar)
+-- Thanh tiêu đề
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 30)
 TopBar.BackgroundTransparency = 1
@@ -73,17 +60,18 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -35, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "Hitbox Cloner"
+TitleLabel.Text = "King Tower - Bypass"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 13
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
 
+-- Nút Thu Nhỏ / Mở rộng (-) (+)
 local MinimizeBtn = Instance.new("TextButton")
 MinimizeBtn.Size = UDim2.new(0, 25, 0, 25)
 MinimizeBtn.Position = UDim2.new(1, -28, 0, 3)
-MinimizeBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
 MinimizeBtn.Text = "-"
 MinimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 MinimizeBtn.TextSize = 16
@@ -94,124 +82,104 @@ local UICornerMin = Instance.new("UICorner")
 UICornerMin.CornerRadius = UDim.new(0, 6)
 UICornerMin.Parent = MinimizeBtn
 
--- Nút Bật/Tắt Hitbox Clone
+-- Nút Bật/Tắt chính
 local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Name = "ToggleHitbox"
 ToggleBtn.Size = UDim2.new(1, -20, 0, 40)
 ToggleBtn.Position = UDim2.new(0, 10, 0, 42)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
 ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
 ToggleBtn.TextSize = 13
 ToggleBtn.Font = Enum.Font.GothamBold
-ToggleBtn.Text = "Status: Body [SAFE]"
+ToggleBtn.Text = "Status: OFF (Normal)"
 ToggleBtn.Parent = MainFrame
 
 local UICornerBtn = Instance.new("UICorner")
 UICornerBtn.CornerRadius = UDim.new(0, 8)
 UICornerBtn.Parent = ToggleBtn
 
--- Logic Thu nhỏ / Mở rộng (Minimize/Maximize)
+-- Logic ẩn/hiện bảng điều khiển
 local isMinimized = false
 MinimizeBtn.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
     if isMinimized then
         MinimizeBtn.Text = "+"
         ToggleBtn.Visible = false
-        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 200, 0, 35)}):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 210, 0, 35)}):Play()
     else
         MinimizeBtn.Text = "-"
         ToggleBtn.Visible = true
-        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 200, 0, 95)}):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 210, 0, 95)}):Play()
     end
 end)
 
--- Biến trạng thái Clone
-local isCloneActive = false
-local cloneChar = nil
+-- Biến lưu trữ trạng thái game
+local isGodActive = false
+local visualDummy = nil
 
--- Hàm xử lý chuyển đổi Hitbox
-local function setupCloning(state)
+local function toggleGodMode(state)
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-    
     local hrp = character.HumanoidRootPart
 
     if state then
-        -- KÍCH HOẠT: Tạo Clone lên trời
+        -- 1. Tạo hình nộm hiển thị dưới tháp để nhìn và tung chiêu
         character.Archivable = true
-        cloneChar = character:Clone()
+        visualDummy = character:Clone()
         character.Archivable = false
         
-        cloneChar.Name = "ClientHitboxClone"
-        
-        -- Dọn dẹp script thừa trong clone
-        for _, v in ipairs(cloneChar:GetDescendants()) do
-            if v:IsA("LocalScript") or v:IsA("Script") then
-                v:Destroy()
-            end
+        for _, v in ipairs(visualDummy:GetDescendants()) do
+            if v:IsA("LocalScript") or v:IsA("Script") then v:Destroy() end
         end
+        visualDummy.Name = "TowerVisualDummy"
+        visualDummy.Parent = workspace
         
-        -- Đưa clone lên trời (5000 mét)
-        for _, part in ipairs(cloneChar:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CFrame = part.CFrame + Vector3.new(0, 5000, 0)
-            end
-        end
+        -- 2. Đưa hitbox thật lên trời cao (né mọi đòn đấm/đẩy trên tháp)
+        hrp.CFrame = hrp.CFrame + Vector3.new(0, 4000, 0)
         
-        cloneChar.Parent = workspace
-        
-        -- Làm mờ nhân vật thật bên dưới để tránh trực quan
-        for _, part in ipairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.LocalTransparencyModifier = 0.5
-            end
-        end
-
-        ToggleBtn.Text = "Status: CLONE [SKY]"
+        ToggleBtn.Text = "Status: ON (God Mode)"
         ToggleBtn.TextColor3 = Color3.fromRGB(255, 60, 60)
-        isCloneActive = true
+        isGodActive = true
     else
-        -- TẮT: Xóa Clone, trả về bình thường
-        if cloneChar then
-            cloneChar:Destroy()
-            cloneChar = nil
+        -- Tắt: Kéo hitbox thật về vị trí của hình nộm và xóa hình nộm
+        if visualDummy then
+            if visualDummy:FindFirstChild("HumanoidRootPart") then
+                hrp.CFrame = visualDummy.HumanoidRootPart.CFrame
+            end
+            visualDummy:Destroy()
+            visualDummy = nil
         end
         
-        for _, part in ipairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.LocalTransparencyModifier = 0
-            end
-        end
-
-        ToggleBtn.Text = "Status: Body [SAFE]"
+        ToggleBtn.Text = "Status: OFF (Normal)"
         ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-        isCloneActive = false
+        isGodActive = false
     end
 end
 
--- Xử lý nút bấm đổi trạng thái
 ToggleBtn.MouseButton1Click:Connect(function()
-    setupCloning(not isCloneActive)
+    toggleGodMode(not isGodActive)
 end)
 
--- Vòng lặp đồng bộ Camera và chống Anti-Cheat Server Check
-RunService.Heartbeat:Connect(function()
-    local character = LocalPlayer.Character
-    if character and isCloneActive and cloneChar then
+-- Giúp camera bám sát hình nộm dưới tháp để chơi mượt mà
+RunService.RenderStepped:Connect(function()
+    if isGodActive and visualDummy and visualDummy:FindFirstChild("Humanoid") then
         pcall(function()
-            -- Cố định camera bám sát người chơi thực tế dưới đất
-            Camera.CameraSubject = character:FindFirstChildOfClass("Humanoid")
+            Camera.CameraSubject = visualDummy.Humanoid
         end)
+    else
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("Humanoid") then
+            Camera.CameraSubject = char.Humanoid
+        end
     end
 end)
 
--- Xử lý khi nhân vật chết hoặc reset
+-- Reset trạng thái khi chết hoặc đổi tầng/vào trận mới
 LocalPlayer.CharacterAdded:Connect(function()
-    isCloneActive = false
-    if cloneChar then
-        cloneChar:Destroy()
-        cloneChar = nil
+    isGodActive = false
+    if visualDummy then
+        visualDummy:Destroy()
+        visualDummy = nil
     end
-    ToggleBtn.Text = "Status: Body [SAFE]"
+    ToggleBtn.Text = "Status: OFF (Normal)"
     ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
 end)
