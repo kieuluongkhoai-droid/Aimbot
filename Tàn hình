@@ -1,30 +1,28 @@
 --[[
-    King Tower - Advanced Multi-Tab Controller Script with Godmode Clone & Infinite Dual-Cam Toggle
+    King Tower - Advanced Multi-Tab Controller Script (NPC Mode + High Sky Platform Y=600)
 ]]
 
--- SERVICES: Load core Roblox services required for players, frame rendering, GUI, tween animations, and user inputs.
+-- SERVICES: Load core Roblox services.
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
--- PLAYERS & CAMERA: Define local player reference and active workspace camera.
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- PREVENT MULTIPLE EXECUTIONS: Stop script if already running to avoid duplicate UI and loops.
+-- PREVENT MULTIPLE EXECUTIONS
 if _G.AdvancedTabbedCoreLoaded then return end
 _G.AdvancedTabbedCoreLoaded = true
 
--- MAIN UI SETUP: Create the main ScreenGui container and parent it safely to CoreGui or PlayerGui.
+-- MAIN UI SETUP
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "AdvancedTabbedUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
--- MAIN FRAME: Create the draggable main control panel window.
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 260, 0, 290)
 MainFrame.Position = UDim2.new(0, 50, 0, 150)
@@ -34,7 +32,6 @@ MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
--- CORNER & STYLING: Apply rounded corners and a dynamic rainbow glowing border to the main window.
 local UICornerMain = Instance.new("UICorner")
 UICornerMain.CornerRadius = UDim.new(0, 12)
 UICornerMain.Parent = MainFrame
@@ -52,7 +49,6 @@ task.spawn(function()
     end
 end)
 
--- TOP BAR: Create the title header and minimize button.
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 30)
 TopBar.BackgroundTransparency = 1
@@ -62,7 +58,7 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -35, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "Tower Core & Clone Hub"
+TitleLabel.Text = "Tower NPC & HighSky Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
@@ -83,7 +79,6 @@ local UICornerMin = Instance.new("UICorner")
 UICornerMin.CornerRadius = UDim.new(0, 6)
 UICornerMin.Parent = MinimizeBtn
 
--- TAB BAR: Create navigation buttons to switch between Real Body and Clone panels.
 local TabBar = Instance.new("Frame")
 TabBar.Size = UDim2.new(1, -20, 0, 28)
 TabBar.Position = UDim2.new(0, 10, 0, 35)
@@ -111,14 +106,13 @@ CloneTabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 CloneTabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
 CloneTabBtn.TextSize = 11
 CloneTabBtn.Font = Enum.Font.GothamBold
-CloneTabBtn.Text = "👤 Clone Hub"
+CloneTabBtn.Text = "🤖 NPC Clone Hub"
 CloneTabBtn.Parent = TabBar
 
 local UICornerCloneTab = Instance.new("UICorner")
 UICornerCloneTab.CornerRadius = UDim.new(0, 6)
 UICornerCloneTab.Parent = CloneTabBtn
 
--- CONTAINERS: Create separate UI containers for each tab's elements.
 local RealContainer = Instance.new("Frame")
 RealContainer.Size = UDim2.new(1, -20, 0, 185)
 RealContainer.Position = UDim2.new(0, 10, 0, 68)
@@ -133,19 +127,18 @@ CloneContainer.BackgroundTransparency = 1
 CloneContainer.Visible = false
 CloneContainer.Parent = MainFrame
 
--- STATUS LABEL: Bottom text label to display system statuses and messages.
 local InfoLabel = Instance.new("TextLabel")
 InfoLabel.Size = UDim2.new(1, -20, 0, 20)
 InfoLabel.Position = UDim2.new(0, 10, 0, 260)
 InfoLabel.BackgroundTransparency = 1
-InfoLabel.Text = "Status: System Ready"
+InfoLabel.Text = "Status: NPC Mode & Sky Y=600 Ready"
 InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 InfoLabel.TextSize = 10
 InfoLabel.Font = Enum.Font.Gotham
 InfoLabel.TextXAlignment = Enum.TextXAlignment.Center
 InfoLabel.Parent = MainFrame
 
--- ==================== REAL BODY TAB CONTROLS ====================
+-- ==================== REAL BODY TAB ====================
 
 local MakePlatformBtn = Instance.new("TextButton")
 MakePlatformBtn.Size = UDim2.new(1, 0, 0, 32)
@@ -154,7 +147,7 @@ MakePlatformBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 MakePlatformBtn.TextColor3 = Color3.fromRGB(0, 255, 180)
 MakePlatformBtn.TextSize = 11
 MakePlatformBtn.Font = Enum.Font.GothamBold
-MakePlatformBtn.Text = "🏗️ Spawn Thick Sky Platform"
+MakePlatformBtn.Text = "🏗️ Spawn High Sky Platform (Y=600)"
 MakePlatformBtn.Parent = RealContainer
 
 local UIC_P1 = Instance.new("UICorner") UIC_P1.CornerRadius = UDim.new(0, 6) UIC_P1.Parent = MakePlatformBtn
@@ -166,7 +159,7 @@ TpSkyBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 TpSkyBtn.TextColor3 = Color3.fromRGB(0, 200, 255)
 TpSkyBtn.TextSize = 11
 TpSkyBtn.Font = Enum.Font.GothamBold
-TpSkyBtn.Text = "⬆️ Teleport Real Body to Sky"
+TpSkyBtn.Text = "⬆️ Teleport Real Body to Y=600"
 TpSkyBtn.Parent = RealContainer
 
 local UIC_P2 = Instance.new("UICorner") UIC_P2.CornerRadius = UDim.new(0, 6) UIC_P2.Parent = TpSkyBtn
@@ -190,7 +183,7 @@ SwapPositionsBtn.BackgroundColor3 = Color3.fromRGB(60, 30, 40)
 SwapPositionsBtn.TextColor3 = Color3.fromRGB(255, 150, 0)
 SwapPositionsBtn.TextSize = 11
 SwapPositionsBtn.Font = Enum.Font.GothamBold
-SwapPositionsBtn.Text = "🔄 Swap Real Body <-> Clone"
+SwapPositionsBtn.Text = "🔄 Swap Real Body <-> NPC Clone"
 SwapPositionsBtn.Parent = RealContainer
 
 local UIC_P4 = Instance.new("UICorner") UIC_P4.CornerRadius = UDim.new(0, 6) UIC_P4.Parent = SwapPositionsBtn
@@ -207,7 +200,7 @@ CamRealBtn.Parent = RealContainer
 
 local UIC_P5 = Instance.new("UICorner") UIC_P5.CornerRadius = UDim.new(0, 6) UIC_P5.Parent = CamRealBtn
 
--- ==================== CLONE TAB CONTROLS ====================
+-- ==================== CLONE TAB ====================
 
 local SpawnCloneBtn = Instance.new("TextButton")
 SpawnCloneBtn.Size = UDim2.new(1, 0, 0, 35)
@@ -216,7 +209,7 @@ SpawnCloneBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 SpawnCloneBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
 SpawnCloneBtn.TextSize = 11
 SpawnCloneBtn.Font = Enum.Font.GothamBold
-SpawnCloneBtn.Text = "👤 Create & Activate Clone"
+SpawnCloneBtn.Text = "🤖 Spawn & Activate NPC Clone"
 SpawnCloneBtn.Parent = CloneContainer
 
 local UIC_C1 = Instance.new("UICorner") UIC_C1.CornerRadius = UDim.new(0, 6) UIC_C1.Parent = SpawnCloneBtn
@@ -228,7 +221,7 @@ CamCloneBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 CamCloneBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
 CamCloneBtn.TextSize = 11
 CamCloneBtn.Font = Enum.Font.GothamBold
-CamCloneBtn.Text = "👁️ Focus Camera on Clone"
+CamCloneBtn.Text = "👁️ Focus Camera on NPC Clone"
 CamCloneBtn.Parent = CloneContainer
 
 local UIC_C2 = Instance.new("UICorner") UIC_C2.CornerRadius = UDim.new(0, 6) UIC_C2.Parent = CamCloneBtn
@@ -240,12 +233,12 @@ LockCloneBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 LockCloneBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
 LockCloneBtn.TextSize = 11
 LockCloneBtn.Font = Enum.Font.GothamBold
-LockCloneBtn.Text = "🔒 Lock Clone Move: OFF"
+LockCloneBtn.Text = "🔒 Lock NPC Move: OFF"
 LockCloneBtn.Parent = CloneContainer
 
 local UIC_C3 = Instance.new("UICorner") UIC_C3.CornerRadius = UDim.new(0, 6) UIC_C3.Parent = LockCloneBtn
 
--- TAB SWITCHING: Handle tab button interactions and visibility toggles.
+-- TAB SWITCHING
 RealTabBtn.MouseButton1Click:Connect(function()
     RealContainer.Visible = true
     CloneContainer.Visible = false
@@ -261,10 +254,10 @@ CloneTabBtn.MouseButton1Click:Connect(function()
     CloneTabBtn.BackgroundColor3 = Color3.fromRGB(50, 40, 70)
     CloneTabBtn.TextColor3 = Color3.fromRGB(255, 200, 100)
     RealTabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-    CloneTabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+    RealTabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
 end)
 
--- MINIMIZE LOGIC: Collapse or expand the main UI window smoothly using TweenService.
+-- MINIMIZE LOGIC
 local isMinimized = false
 MinimizeBtn.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
@@ -288,7 +281,7 @@ MinimizeBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- VARIABLES: State variables for tracking characters, platforms, locks, and loops.
+-- VARIABLES
 local cloneChar = nil
 local skyPlatform = nil
 local isRealLocked = false
@@ -297,21 +290,21 @@ local cloneMoveConnection = nil
 local antiTpConnection = nil
 local targetSkyCFrame = nil
 
--- PLATFORM CREATOR: Spawns an extra safe and thick sky platform at a lower height to avoid Anti-Cheat triggers.
+-- PLATFORM CREATOR AT Y = 600
 local function createThickSkyPlatform(basePos)
     if skyPlatform then skyPlatform:Destroy() end
     
     skyPlatform = Instance.new("Part")
-    skyPlatform.Name = "TowerThickSkyPlatform"
-    skyPlatform.Size = Vector3.new(150, 12, 150)
-    skyPlatform.CFrame = CFrame.new(basePos.X, 350, basePos.Z)
+    skyPlatform.Name = "TowerHighSkyPlatform"
+    skyPlatform.Size = Vector3.new(200, 12, 200)
+    skyPlatform.CFrame = CFrame.new(basePos.X, 600, basePos.Z)
     skyPlatform.Anchored = true
     skyPlatform.CanCollide = true
-    skyPlatform.Transparency = 0.2
+    skyPlatform.Transparency = 0.3
     skyPlatform.BrickColor = BrickColor.new("Dark stone grey")
     skyPlatform.Parent = workspace
     
-    return CFrame.new(basePos.X, 356, basePos.Z)
+    return CFrame.new(basePos.X, 608, basePos.Z)
 end
 
 local function removeSkyPlatform()
@@ -321,19 +314,18 @@ local function removeSkyPlatform()
     end
 end
 
--- EVENT: Create Thick Sky Platform button functionality.
 MakePlatformBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     targetSkyCFrame = createThickSkyPlatform(character.HumanoidRootPart.CFrame.Position)
-    InfoLabel.Text = "Status: Safe Sky Platform Created!"
+    InfoLabel.Text = "Status: High Sky Platform at Y=600 Created!"
 end)
 
--- EVENT: Teleport Real Body button functionality with anti-TP protection loop and velocity neutralization.
 TpSkyBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     local realHrp = character.HumanoidRootPart
+    local realHumanoid = character:FindFirstChildOfClass("Humanoid")
     
     if not skyPlatform then
         targetSkyCFrame = createThickSkyPlatform(realHrp.CFrame.Position)
@@ -343,21 +335,25 @@ TpSkyBtn.MouseButton1Click:Connect(function()
     realHrp.AssemblyAngularVelocity = Vector3.zero
     realHrp.CFrame = targetSkyCFrame
     
+    if realHumanoid then
+        realHumanoid.Sit = true
+    end
+    
     if antiTpConnection then antiTpConnection:Disconnect() end
     antiTpConnection = RunService.Heartbeat:Connect(function()
         if skyPlatform and character and realHrp then
-            if realHrp.Position.Y < 330 or realHrp.Position.Y > 400 then
+            if realHrp.Position.Y < 580 or realHrp.Position.Y > 650 then
                 realHrp.AssemblyLinearVelocity = Vector3.zero
                 realHrp.AssemblyAngularVelocity = Vector3.zero
                 realHrp.CFrame = targetSkyCFrame
+                if realHumanoid then realHumanoid.Sit = true end
             end
         end
     end)
     
-    InfoLabel.Text = "Status: Real Body Teleported Safely!"
+    InfoLabel.Text = "Status: Real Body Seated at Sky Y=600!"
 end)
 
--- EVENT: Lock/Unlock Real Body movement using PlatformStand.
 LockRealBtn.MouseButton1Click:Connect(function()
     isRealLocked = not isRealLocked
     local character = LocalPlayer.Character
@@ -371,15 +367,15 @@ LockRealBtn.MouseButton1Click:Connect(function()
     if isRealLocked then
         LockRealBtn.Text = "🔒 Lock Real Body Move: ON"
         LockRealBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-        InfoLabel.Text = "Status: Real Body Movement Locked"
+        InfoLabel.Text = "Status: Real Body Locked"
     else
         LockRealBtn.Text = "🔒 Lock Real Body Move: OFF"
         LockRealBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
-        InfoLabel.Text = "Status: Real Body Movement Unlocked"
+        InfoLabel.Text = "Status: Real Body Unlocked"
     end
 end)
 
--- EVENT: Create and activate clone with custom movement physics loop and collision hitbox support (Godmode enabled).
+-- SPAWN NPC CLONE (Đội lốt NPC qua mặt Anti-Cheat)
 SpawnCloneBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
@@ -394,10 +390,13 @@ SpawnCloneBtn.MouseButton1Click:Connect(function()
     cloneChar = character:Clone()
     character.Archivable = false
     
+    -- Xóa bỏ các script liên quan đến player cũ để biến nó thành NPC độc lập
     for _, v in ipairs(cloneChar:GetDescendants()) do
         if v:IsA("LocalScript") or v:IsA("Script") then v:Destroy() end
     end
-    cloneChar.Name = "MovablePathfinderClone"
+    
+    -- Đổi tên định danh thành NPC để Server không bắt lỗi player trùng lặp
+    cloneChar.Name = "ServerGuardNPC_Bot"
     cloneChar.Parent = workspace
     cloneChar:SetPrimaryPartCFrame(startCF + Vector3.new(0, 3, 0))
     
@@ -409,7 +408,7 @@ SpawnCloneBtn.MouseButton1Click:Connect(function()
         cloneHumanoid.AutoRotate = true
         Camera.CameraSubject = cloneHumanoid
         
-        -- GODMODE FEATURE: Lock health and prevent taking damage permanently
+        -- GODMODE NPC
         cloneHumanoid.MaxHealth = math.huge
         cloneHumanoid.Health = math.huge
         cloneHumanoid.HealthChanged:Connect(function()
@@ -461,20 +460,18 @@ SpawnCloneBtn.MouseButton1Click:Connect(function()
         end
     end)
     
-    InfoLabel.Text = "Status: Clone Spawned & Walkable!"
+    InfoLabel.Text = "Status: NPC Clone Spawned & Walkable!"
 end)
 
--- EVENT: Focus camera view onto the clone (Infinite unrestricted toggle).
 CamCloneBtn.MouseButton1Click:Connect(function()
     if cloneChar and cloneChar:FindFirstChild("Humanoid") then
         Camera.CameraSubject = cloneChar.Humanoid
-        InfoLabel.Text = "Status: Camera Focused on Clone"
+        InfoLabel.Text = "Status: Camera Focused on NPC"
     else
-        InfoLabel.Text = "Status: Clone not found!"
+        InfoLabel.Text = "Status: NPC not found!"
     end
 end)
 
--- EVENT: Focus camera view onto the Real Body (Infinite unrestricted toggle).
 CamRealBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if character and character:FindFirstChildOfClass("Humanoid") then
@@ -485,7 +482,6 @@ CamRealBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- EVENT: Lock/Unlock clone movement.
 LockCloneBtn.MouseButton1Click:Connect(function()
     isCloneLocked = not isCloneLocked
     if cloneChar then
@@ -496,21 +492,20 @@ LockCloneBtn.MouseButton1Click:Connect(function()
     end
     
     if isCloneLocked then
-        LockCloneBtn.Text = "🔒 Lock Clone Move: ON"
+        LockCloneBtn.Text = "🔒 Lock NPC Move: ON"
         LockCloneBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-        InfoLabel.Text = "Status: Clone Movement Locked"
+        InfoLabel.Text = "Status: NPC Movement Locked"
     else
-        LockCloneBtn.Text = "🔒 Lock Clone Move: OFF"
+        LockCloneBtn.Text = "🔒 Lock NPC Move: OFF"
         LockCloneBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
-        InfoLabel.Text = "Status: Lock Clone Move: OFF"
+        InfoLabel.Text = "Status: NPC Movement Unlocked"
     end
 end)
 
--- EVENT: Swap positions directly between the real body and clone.
 SwapPositionsBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") or not cloneChar or not cloneChar:FindFirstChild("HumanoidRootPart") then
-        InfoLabel.Text = "Status: Cannot swap, clone or real body missing!"
+        InfoLabel.Text = "Status: Cannot swap, NPC or real body missing!"
         return
     end
     
@@ -529,27 +524,32 @@ SwapPositionsBtn.MouseButton1Click:Connect(function()
     realHrp.CFrame = cloneCF
     cloneHrp.CFrame = realCF
     
-    if realHrp.Position.Y < 250 then
-        if realHumanoid then realHumanoid.PlatformStand = false end
+    if realHrp.Position.Y < 500 then
+        if realHumanoid then 
+            realHumanoid.Sit = false 
+            realHumanoid.PlatformStand = false 
+        end
         InfoLabel.Text = "Status: Real Body Swapped to Ground!"
     else
-        if realHumanoid then realHumanoid.PlatformStand = true end
-        InfoLabel.Text = "Status: Real Body Swapped back to Sky!"
+        if realHumanoid then 
+            realHumanoid.Sit = true 
+        end
+        InfoLabel.Text = "Status: Real Body Swapped back to Sky Y=600 & Seated!"
         
         targetSkyCFrame = realHrp.CFrame
         antiTpConnection = RunService.Heartbeat:Connect(function()
             if skyPlatform and character and realHrp then
-                if realHrp.Position.Y > 250 and (realHrp.Position.Y < 330 or realHrp.Position.Y > 400) then
+                if realHrp.Position.Y > 500 and (realHrp.Position.Y < 580 or realHrp.Position.Y > 650) then
                     realHrp.AssemblyLinearVelocity = Vector3.zero
                     realHrp.AssemblyAngularVelocity = Vector3.zero
                     realHrp.CFrame = targetSkyCFrame
+                    if realHumanoid then realHumanoid.Sit = true end
                 end
             end
         end)
     end
 end)
 
--- CLEANUP: Automatically clean up connections and platforms on player character respawn.
 LocalPlayer.CharacterAdded:Connect(function()
     if antiTpConnection then antiTpConnection:Disconnect() antiTpConnection = nil end
     if cloneMoveConnection then cloneMoveConnection:Disconnect() cloneMoveConnection = nil end
