@@ -1,10 +1,10 @@
--- Khởi tạo dịch vụ và biến môi trường an toàn
+-- Khởi tạo dịch vụ và biến môi trường
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local player = Players.LocalPlayer
 
--- Xóa UI cũ nếu có để tránh trùng lặp
+-- Xóa UI cũ nếu có
 if CoreGui:FindFirstChild("ProInvisUI") then
     CoreGui.ProInvisUI:Destroy()
 end
@@ -21,7 +21,7 @@ mainFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
 mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
-mainFrame.Draggable = true -- Cho phép kéo thả bảng UI trên màn hình
+mainFrame.Draggable = true
 mainFrame.Parent = screenGui
 
 local uiCorner = Instance.new("UICorner")
@@ -41,7 +41,7 @@ local titleCorner = Instance.new("UICorner")
 titleCorner.CornerRadius = UDim.new(0, 8)
 titleCorner.Parent = titleLabel
 
--- Nút Thu Nhỏ / Mở Rộng (-) ở góc phải tiêu đề
+-- Nút Thu Nhỏ / Mở Rộng (-)
 local minBtn = Instance.new("TextButton")
 minBtn.Size = UDim2.new(0, 30, 0, 30)
 minBtn.Position = UDim2.new(1, -33, 0, 2)
@@ -74,11 +74,10 @@ local function createButton(posY, defaultText)
     return btn
 end
 
-local invisBtn = createButton(45, "Tàn Hình (Văng Tay): TẮT")
-local antiKBBtn = createButton(90, "Anti-KB Siêu Tốc: TẮT")
+local invisBtn = createButton(45, "Tàn Hình (Giấu Bộ Phận): TẮT")
+local antiKBBtn = createButton(90, "Anti-KB Thông Minh: TẮT")
 local resetBtn = createButton(135, "Khôi Phục / Reset")
 
--- Xử lý ẩn/hiện khi thu nhỏ UI
 local elementsToToggle = {invisBtn, antiKBBtn, resetBtn}
 local isMinimized = false
 
@@ -99,7 +98,7 @@ minBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- 1. Tính năng Tàn Hình bằng cách làm "bay/văng các bộ phận ra xa" (Kể cả vũ khí)
+-- 1. Tàn Hình kiểu tách rời và dịch chuyển bộ phận đi nơi khác (Không cần chết)
 local invisActive = false
 invisBtn.MouseButton1Click:Connect(function()
     invisActive = not invisActive
@@ -107,23 +106,26 @@ invisBtn.MouseButton1Click:Connect(function()
     if not char then return end
     
     if invisActive then
-        invisBtn.Text = "Tàn Hình (Văng Tay): BẬT"
+        invisBtn.Text = "Tàn Hình (Giấu Bộ Phận): BẬT"
         invisBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
         
-        -- Kỹ thuật bẻ gãy các khớp nối (Joints) của tay/chân để chúng văng đi nơi khác, giấu luôn vũ khí đang cầm
+        -- Ngắt kết nối các Motor6D và ném các bộ phận (tay, chân, phụ kiện) xuống dưới lòng đất sâu để ẩn hoàn toàn
         for _, v in pairs(char:GetDescendants()) do
             if v:IsA("Motor6D") then
-                v.Part0 = nil -- Ngắt kết nối khớp nối để bộ phận rơi ra hoặc bay đi
+                v.Part0 = nil
+            elseif v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then
+                -- Dịch chuyển các bộ phận rời xa vị trí thật để người khác không nhìn thấy
+                v.CFrame = CFrame.new(0, -500, 0)
             end
         end
     else
-        invisBtn.Text = "Tàn Hình (Văng Tay): TẮT"
+        invisBtn.Text = "Tàn Hình (Giấu Bộ Phận): TẮT"
         invisBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        player.Character:BreakJoints() -- Reset lại nhân vật về bình thường
+        player.Character:BreakJoints() -- Reset lại nhân vật khi tắt tàn hình
     end
 end)
 
--- 2. Tính năng Anti-Knockback Siêu Tốc (Phản ứng tức thì, kéo về chỗ cũ siêu nhanh)
+-- 2. Anti-Knockback Thông Minh (Phân biệt rõ lúc Nhảy và lúc bị Hất Tung)
 local antiKBActive = false
 local kbConnection = nil
 local lastSafeCFrame = nil
@@ -132,7 +134,7 @@ antiKBBtn.MouseButton1Click:Connect(function()
     antiKBActive = not antiKBActive
     
     if antiKBActive then
-        antiKBBtn.Text = "Anti-KB Siêu Tốc: BẬT"
+        antiKBBtn.Text = "Anti-KB Thông Minh: BẬT"
         antiKBBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
         
         local char = player.Character
@@ -149,12 +151,16 @@ antiKBBtn.MouseButton1Click:Connect(function()
                 if rootPart and humanoid then
                     local moveDirection = humanoid.MoveDirection
                     local isMoving = moveDirection.Magnitude > 0
+                    local currentState = humanoid:GetState()
                     
-                    if not humanoid.PlatformStand and humanoid.Health > 0 then
-                        -- Ngưỡng siêu nhạy: Chỉ cần lệch trên 1.5 mét là kéo về ngay lập tức không chần chừ
+                    -- Bỏ qua kiểm tra nếu nhân vật đang trong trạng thái chủ động NHẢY (Jumping) hoặc RƠI TỰ DO (Freefall) bình thường
+                    local isJumpingOrFalling = (currentState == Enum.HumanoidStateType.Jumping or currentState == Enum.HumanoidStateType.Freefall)
+                    
+                    if not humanoid.PlatformStand and humanoid.Health > 0 and not isJumpingOrFalling then
+                        -- Nếu đứng yên hoặc di chuyển bình thường mà bị đẩy văng trái phép > 2 mét
                         if not isMoving and lastSafeCFrame then
                             local distance = (rootPart.Position - lastSafeCFrame.Position).Magnitude
-                            if distance > 1.5 then 
+                            if distance > 2 then 
                                 rootPart.CFrame = lastSafeCFrame
                                 pcall(function()
                                     rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
@@ -162,14 +168,14 @@ antiKBBtn.MouseButton1Click:Connect(function()
                             end
                         end
                         
-                        -- Cập nhật liên tục tọa độ an toàn khi đi lại bình thường
+                        -- Cập nhật tọa độ an toàn liên tục khi đi lại bình thường
                         if isMoving or rootPart.AssemblyLinearVelocity.Magnitude < 15 then
                             lastSafeCFrame = rootPart.CFrame
                         end
                     end
                     
-                    -- Chống hất tung / bay lên trời ngay khi vừa có dấu hiệu văng
-                    if (humanoid.PlatformStand or rootPart.AssemblyLinearVelocity.Y > 20) and lastSafeCFrame then
+                    -- Chỉ chống hất tung mạnh khi thực sự dính trạng thái Ragdoll (PlatformStand) hoặc bay vút lên trời ngoài ý muốn
+                    if (humanoid.PlatformStand or (rootPart.AssemblyLinearVelocity.Y > 35 and not isJumpingOrFalling)) and lastSafeCFrame then
                         rootPart.CFrame = lastSafeCFrame
                         pcall(function()
                             rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
@@ -180,7 +186,7 @@ antiKBBtn.MouseButton1Click:Connect(function()
             end
         end)
     else
-        antiKBBtn.Text = "Anti-KB Siêu Tốc: TẮT"
+        antiKBBtn.Text = "Anti-KB Thông Minh: TẮT"
         antiKBBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
         if kbConnection then
             kbConnection:Disconnect()
@@ -196,4 +202,4 @@ resetBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-print("Đã tải xong Menu Pro tối ưu theo ý tưởng của bạn!")
+print("Đã cập nhật bản Anti-KB thông minh và Tàn Hình tách bộ phận hoàn hảo!")
