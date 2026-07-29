@@ -1,8 +1,7 @@
 --[[
-    King Tower - Advanced Multi-Tab Controller Script (NPC Mode + High Sky Platform Y=600)
+    King Tower - Mastermind Identity Swap Script (Real Body = NPC God, Clone = Player Bait)
 ]]
 
--- SERVICES: Load core Roblox services.
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
@@ -12,19 +11,18 @@ local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- PREVENT MULTIPLE EXECUTIONS
-if _G.AdvancedTabbedCoreLoaded then return end
-_G.AdvancedTabbedCoreLoaded = true
+if _G.MastermindIdentityCoreLoaded then return end
+_G.MastermindIdentityCoreLoaded = true
 
--- MAIN UI SETUP
+-- MAIN UI INTERFACE SETUP
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "AdvancedTabbedUI"
+ScreenGui.Name = "MastermindIdentityUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 260, 0, 290)
+MainFrame.Size = UDim2.new(0, 260, 0, 230)
 MainFrame.Position = UDim2.new(0, 50, 0, 150)
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
 MainFrame.BorderSizePixel = 0
@@ -58,7 +56,7 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -35, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "Tower NPC & HighSky Hub"
+TitleLabel.Text = "Mastermind NPC Swap Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
@@ -79,183 +77,59 @@ local UICornerMin = Instance.new("UICorner")
 UICornerMin.CornerRadius = UDim.new(0, 6)
 UICornerMin.Parent = MinimizeBtn
 
-local TabBar = Instance.new("Frame")
-TabBar.Size = UDim2.new(1, -20, 0, 28)
-TabBar.Position = UDim2.new(0, 10, 0, 35)
-TabBar.BackgroundTransparency = 1
-TabBar.Parent = MainFrame
-
-local RealTabBtn = Instance.new("TextButton")
-RealTabBtn.Size = UDim2.new(0.5, -2, 1, 0)
-RealTabBtn.Position = UDim2.new(0, 0, 0, 0)
-RealTabBtn.BackgroundColor3 = Color3.fromRGB(50, 40, 70)
-RealTabBtn.TextColor3 = Color3.fromRGB(255, 200, 100)
-RealTabBtn.TextSize = 11
-RealTabBtn.Font = Enum.Font.GothamBold
-RealTabBtn.Text = "👑 Real Body"
-RealTabBtn.Parent = TabBar
-
-local UICornerRealTab = Instance.new("UICorner")
-UICornerRealTab.CornerRadius = UDim.new(0, 6)
-UICornerRealTab.Parent = RealTabBtn
-
-local CloneTabBtn = Instance.new("TextButton")
-CloneTabBtn.Size = UDim2.new(0.5, -2, 1, 0)
-CloneTabBtn.Position = UDim2.new(0.5, 2, 0, 0)
-CloneTabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-CloneTabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
-CloneTabBtn.TextSize = 11
-CloneTabBtn.Font = Enum.Font.GothamBold
-CloneTabBtn.Text = "🤖 NPC Clone Hub"
-CloneTabBtn.Parent = TabBar
-
-local UICornerCloneTab = Instance.new("UICorner")
-UICornerCloneTab.CornerRadius = UDim.new(0, 6)
-UICornerCloneTab.Parent = CloneTabBtn
-
-local RealContainer = Instance.new("Frame")
-RealContainer.Size = UDim2.new(1, -20, 0, 185)
-RealContainer.Position = UDim2.new(0, 10, 0, 68)
-RealContainer.BackgroundTransparency = 1
-RealContainer.Visible = true
-RealContainer.Parent = MainFrame
-
-local CloneContainer = Instance.new("Frame")
-CloneContainer.Size = UDim2.new(1, -20, 0, 185)
-CloneContainer.Position = UDim2.new(0, 10, 0, 68)
-CloneContainer.BackgroundTransparency = 1
-CloneContainer.Visible = false
-CloneContainer.Parent = MainFrame
+local Container = Instance.new("Frame")
+Container.Size = UDim2.new(1, -20, 0, 130)
+Container.Position = UDim2.new(0, 10, 0, 40)
+Container.BackgroundTransparency = 1
+Container.Parent = MainFrame
 
 local InfoLabel = Instance.new("TextLabel")
-InfoLabel.Size = UDim2.new(1, -20, 0, 20)
-InfoLabel.Position = UDim2.new(0, 10, 0, 260)
+InfoLabel.Size = UDim2.new(1, -20, 0, 25)
+InfoLabel.Position = UDim2.new(0, 10, 0, 195)
 InfoLabel.BackgroundTransparency = 1
-InfoLabel.Text = "Status: NPC Mode & Sky Y=600 Ready"
+InfoLabel.Text = "Status: Ready to Execute Swap Strategy"
 InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 InfoLabel.TextSize = 10
 InfoLabel.Font = Enum.Font.Gotham
 InfoLabel.TextXAlignment = Enum.TextXAlignment.Center
 InfoLabel.Parent = MainFrame
 
--- ==================== REAL BODY TAB ====================
+-- CONTROL BUTTONS
+local ActivateSwapBtn = Instance.new("TextButton")
+ActivateSwapBtn.Size = UDim2.new(1, 0, 0, 38)
+ActivateSwapBtn.Position = UDim2.new(0, 0, 0, 0)
+ActivateSwapBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+ActivateSwapBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+ActivateSwapBtn.TextSize = 11
+ActivateSwapBtn.Font = Enum.Font.GothamBold
+ActivateSwapBtn.Text = "🎭 Execute Identity Swap (Real=NPC, Clone=Player)"
+ActivateSwapBtn.Parent = Container
 
-local MakePlatformBtn = Instance.new("TextButton")
-MakePlatformBtn.Size = UDim2.new(1, 0, 0, 32)
-MakePlatformBtn.Position = UDim2.new(0, 0, 0, 0)
-MakePlatformBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-MakePlatformBtn.TextColor3 = Color3.fromRGB(0, 255, 180)
-MakePlatformBtn.TextSize = 11
-MakePlatformBtn.Font = Enum.Font.GothamBold
-MakePlatformBtn.Text = "🏗️ Spawn High Sky Platform (Y=600)"
-MakePlatformBtn.Parent = RealContainer
-
-local UIC_P1 = Instance.new("UICorner") UIC_P1.CornerRadius = UDim.new(0, 6) UIC_P1.Parent = MakePlatformBtn
-
-local TpSkyBtn = Instance.new("TextButton")
-TpSkyBtn.Size = UDim2.new(1, 0, 0, 32)
-TpSkyBtn.Position = UDim2.new(0, 0, 0, 38)
-TpSkyBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-TpSkyBtn.TextColor3 = Color3.fromRGB(0, 200, 255)
-TpSkyBtn.TextSize = 11
-TpSkyBtn.Font = Enum.Font.GothamBold
-TpSkyBtn.Text = "⬆️ Teleport Real Body to Y=600"
-TpSkyBtn.Parent = RealContainer
-
-local UIC_P2 = Instance.new("UICorner") UIC_P2.CornerRadius = UDim.new(0, 6) UIC_P2.Parent = TpSkyBtn
-
-local LockRealBtn = Instance.new("TextButton")
-LockRealBtn.Size = UDim2.new(1, 0, 0, 32)
-LockRealBtn.Position = UDim2.new(0, 0, 0, 76)
-LockRealBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-LockRealBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
-LockRealBtn.TextSize = 11
-LockRealBtn.Font = Enum.Font.GothamBold
-LockRealBtn.Text = "🔒 Lock Real Body Move: OFF"
-LockRealBtn.Parent = RealContainer
-
-local UIC_P3 = Instance.new("UICorner") UIC_P3.CornerRadius = UDim.new(0, 6) UIC_P3.Parent = LockRealBtn
-
-local SwapPositionsBtn = Instance.new("TextButton")
-SwapPositionsBtn.Size = UDim2.new(1, 0, 0, 32)
-SwapPositionsBtn.Position = UDim2.new(0, 0, 0, 114)
-SwapPositionsBtn.BackgroundColor3 = Color3.fromRGB(60, 30, 40)
-SwapPositionsBtn.TextColor3 = Color3.fromRGB(255, 150, 0)
-SwapPositionsBtn.TextSize = 11
-SwapPositionsBtn.Font = Enum.Font.GothamBold
-SwapPositionsBtn.Text = "🔄 Swap Real Body <-> NPC Clone"
-SwapPositionsBtn.Parent = RealContainer
-
-local UIC_P4 = Instance.new("UICorner") UIC_P4.CornerRadius = UDim.new(0, 6) UIC_P4.Parent = SwapPositionsBtn
+local UIC_1 = Instance.new("UICorner") UIC_1.CornerRadius = UDim.new(0, 6) UIC_1.Parent = ActivateSwapBtn
 
 local CamRealBtn = Instance.new("TextButton")
-CamRealBtn.Size = UDim2.new(1, 0, 0, 32)
-CamRealBtn.Position = UDim2.new(0, 0, 0, 152)
+CamRealBtn.Size = UDim2.new(1, 0, 0, 38)
+CamRealBtn.Position = UDim2.new(0, 0, 0, 45)
 CamRealBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 CamRealBtn.TextColor3 = Color3.fromRGB(255, 220, 100)
 CamRealBtn.TextSize = 11
 CamRealBtn.Font = Enum.Font.GothamBold
-CamRealBtn.Text = "👁️ Focus Camera on Real Body"
-CamRealBtn.Parent = RealContainer
+CamRealBtn.Text = "👁️ View Camera on Real Body (NPC)"
+CamRealBtn.Parent = Container
 
-local UIC_P5 = Instance.new("UICorner") UIC_P5.CornerRadius = UDim.new(0, 6) UIC_P5.Parent = CamRealBtn
-
--- ==================== CLONE TAB ====================
-
-local SpawnCloneBtn = Instance.new("TextButton")
-SpawnCloneBtn.Size = UDim2.new(1, 0, 0, 35)
-SpawnCloneBtn.Position = UDim2.new(0, 0, 0, 0)
-SpawnCloneBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-SpawnCloneBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-SpawnCloneBtn.TextSize = 11
-SpawnCloneBtn.Font = Enum.Font.GothamBold
-SpawnCloneBtn.Text = "🤖 Spawn & Activate NPC Clone"
-SpawnCloneBtn.Parent = CloneContainer
-
-local UIC_C1 = Instance.new("UICorner") UIC_C1.CornerRadius = UDim.new(0, 6) UIC_C1.Parent = SpawnCloneBtn
+local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2.Parent = CamRealBtn
 
 local CamCloneBtn = Instance.new("TextButton")
-CamCloneBtn.Size = UDim2.new(1, 0, 0, 35)
-CamCloneBtn.Position = UDim2.new(0, 0, 0, 40)
+CamCloneBtn.Size = UDim2.new(1, 0, 0, 38)
+CamCloneBtn.Position = UDim2.new(0, 0, 0, 90)
 CamCloneBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 CamCloneBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
 CamCloneBtn.TextSize = 11
 CamCloneBtn.Font = Enum.Font.GothamBold
-CamCloneBtn.Text = "👁️ Focus Camera on NPC Clone"
-CamCloneBtn.Parent = CloneContainer
+CamCloneBtn.Text = "👁️ View Camera on Clone (Bait Player)"
+CamCloneBtn.Parent = Container
 
-local UIC_C2 = Instance.new("UICorner") UIC_C2.CornerRadius = UDim.new(0, 6) UIC_C2.Parent = CamCloneBtn
-
-local LockCloneBtn = Instance.new("TextButton")
-LockCloneBtn.Size = UDim2.new(1, 0, 0, 35)
-LockCloneBtn.Position = UDim2.new(0, 0, 0, 80)
-LockCloneBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-LockCloneBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
-LockCloneBtn.TextSize = 11
-LockCloneBtn.Font = Enum.Font.GothamBold
-LockCloneBtn.Text = "🔒 Lock NPC Move: OFF"
-LockCloneBtn.Parent = CloneContainer
-
-local UIC_C3 = Instance.new("UICorner") UIC_C3.CornerRadius = UDim.new(0, 6) UIC_C3.Parent = LockCloneBtn
-
--- TAB SWITCHING
-RealTabBtn.MouseButton1Click:Connect(function()
-    RealContainer.Visible = true
-    CloneContainer.Visible = false
-    RealTabBtn.BackgroundColor3 = Color3.fromRGB(50, 40, 70)
-    RealTabBtn.TextColor3 = Color3.fromRGB(255, 200, 100)
-    CloneTabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-    CloneTabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
-end)
-
-CloneTabBtn.MouseButton1Click:Connect(function()
-    RealContainer.Visible = false
-    CloneContainer.Visible = true
-    CloneTabBtn.BackgroundColor3 = Color3.fromRGB(50, 40, 70)
-    CloneTabBtn.TextColor3 = Color3.fromRGB(255, 200, 100)
-    RealTabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-    RealTabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
-end)
+local UIC_3 = Instance.new("UICorner") UIC_3.CornerRadius = UDim.new(0, 6) UIC_3.Parent = CamCloneBtn
 
 -- MINIMIZE LOGIC
 local isMinimized = false
@@ -263,177 +137,82 @@ MinimizeBtn.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
     if isMinimized then
         MinimizeBtn.Text = "+"
-        TabBar.Visible = false
-        RealContainer.Visible = false
-        CloneContainer.Visible = false
+        Container.Visible = false
         InfoLabel.Visible = false
         TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 260, 0, 35)}):Play()
     else
         MinimizeBtn.Text = "-"
-        TabBar.Visible = true
-        if RealTabBtn.BackgroundColor3 == Color3.fromRGB(50, 40, 70) then
-            RealContainer.Visible = true
-        else
-            CloneContainer.Visible = true
-        end
+        Container.Visible = true
         InfoLabel.Visible = true
-        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 260, 0, 290)}):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 260, 0, 230)}):Play()
     end
 end)
 
--- VARIABLES
-local cloneChar = nil
-local skyPlatform = nil
-local isRealLocked = false
-local isCloneLocked = false
-local cloneMoveConnection = nil
-local antiTpConnection = nil
-local targetSkyCFrame = nil
+-- CORE LOGIC VARIABLES
+local activeClone = nil
+local realMoveConnection = nil
 
--- PLATFORM CREATOR AT Y = 600
-local function createThickSkyPlatform(basePos)
-    if skyPlatform then skyPlatform:Destroy() end
-    
-    skyPlatform = Instance.new("Part")
-    skyPlatform.Name = "TowerHighSkyPlatform"
-    skyPlatform.Size = Vector3.new(200, 12, 200)
-    skyPlatform.CFrame = CFrame.new(basePos.X, 600, basePos.Z)
-    skyPlatform.Anchored = true
-    skyPlatform.CanCollide = true
-    skyPlatform.Transparency = 0.3
-    skyPlatform.BrickColor = BrickColor.new("Dark stone grey")
-    skyPlatform.Parent = workspace
-    
-    return CFrame.new(basePos.X, 608, basePos.Z)
-end
-
-local function removeSkyPlatform()
-    if skyPlatform then
-        skyPlatform:Destroy()
-        skyPlatform = nil
-    end
-end
-
-MakePlatformBtn.MouseButton1Click:Connect(function()
+-- EXECUTE IDENTITY SWAP
+ActivateSwapBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-    targetSkyCFrame = createThickSkyPlatform(character.HumanoidRootPart.CFrame.Position)
-    InfoLabel.Text = "Status: High Sky Platform at Y=600 Created!"
-end)
-
-TpSkyBtn.MouseButton1Click:Connect(function()
-    local character = LocalPlayer.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-    local realHrp = character.HumanoidRootPart
-    local realHumanoid = character:FindFirstChildOfClass("Humanoid")
-    
-    if not skyPlatform then
-        targetSkyCFrame = createThickSkyPlatform(realHrp.CFrame.Position)
+    if not character or not character:FindFirstChild("HumanoidRootPart") then 
+        InfoLabel.Text = "Status: Character not found!"
+        return 
     end
     
-    realHrp.AssemblyLinearVelocity = Vector3.zero
-    realHrp.AssemblyAngularVelocity = Vector3.zero
-    realHrp.CFrame = targetSkyCFrame
-    
-    if realHumanoid then
-        realHumanoid.Sit = true
-    end
-    
-    if antiTpConnection then antiTpConnection:Disconnect() end
-    antiTpConnection = RunService.Heartbeat:Connect(function()
-        if skyPlatform and character and realHrp then
-            if realHrp.Position.Y < 580 or realHrp.Position.Y > 650 then
-                realHrp.AssemblyLinearVelocity = Vector3.zero
-                realHrp.AssemblyAngularVelocity = Vector3.zero
-                realHrp.CFrame = targetSkyCFrame
-                if realHumanoid then realHumanoid.Sit = true end
-            end
-        end
-    end)
-    
-    InfoLabel.Text = "Status: Real Body Seated at Sky Y=600!"
-end)
-
-LockRealBtn.MouseButton1Click:Connect(function()
-    isRealLocked = not isRealLocked
-    local character = LocalPlayer.Character
-    if character then
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            humanoid.PlatformStand = isRealLocked
-        end
-    end
-    
-    if isRealLocked then
-        LockRealBtn.Text = "🔒 Lock Real Body Move: ON"
-        LockRealBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-        InfoLabel.Text = "Status: Real Body Locked"
-    else
-        LockRealBtn.Text = "🔒 Lock Real Body Move: OFF"
-        LockRealBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
-        InfoLabel.Text = "Status: Real Body Unlocked"
-    end
-end)
-
--- SPAWN NPC CLONE (Đội lốt NPC qua mặt Anti-Cheat)
-SpawnCloneBtn.MouseButton1Click:Connect(function()
-    local character = LocalPlayer.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     local startCF = character.HumanoidRootPart.CFrame
     
-    if cloneChar and cloneChar.Parent then
-        cloneChar:Destroy()
-        cloneChar = nil
+    if activeClone and activeClone.Parent then
+        activeClone:Destroy()
+        activeClone = nil
     end
     
-    character.Archivable = true
-    cloneChar = character:Clone()
-    character.Archivable = false
+    -- 1. BIẾN CƠ THỂ GỐC THÀNH NPC (Đổi tên để ngắt liên kết nhận diện player trực tiếp)
+    character.Name = "InertNPC_GodBody"
+    local realHumanoid = character:FindFirstChildOfClass("Humanoid")
     
-    -- Xóa bỏ các script liên quan đến player cũ để biến nó thành NPC độc lập
-    for _, v in ipairs(cloneChar:GetDescendants()) do
-        if v:IsA("LocalScript") or v:IsA("Script") then v:Destroy() end
-    end
-    
-    -- Đổi tên định danh thành NPC để Server không bắt lỗi player trùng lặp
-    cloneChar.Name = "ServerGuardNPC_Bot"
-    cloneChar.Parent = workspace
-    cloneChar:SetPrimaryPartCFrame(startCF + Vector3.new(0, 3, 0))
-    
-    local cloneHumanoid = cloneChar:FindFirstChildOfClass("Humanoid")
-    local cloneHrp = cloneChar:FindFirstChild("HumanoidRootPart")
-    
-    if cloneHumanoid then
-        cloneHumanoid.PlatformStand = false
-        cloneHumanoid.AutoRotate = true
-        Camera.CameraSubject = cloneHumanoid
-        
-        -- GODMODE NPC
-        cloneHumanoid.MaxHealth = math.huge
-        cloneHumanoid.Health = math.huge
-        cloneHumanoid.HealthChanged:Connect(function()
-            if cloneHumanoid and cloneHumanoid.Health < cloneHumanoid.MaxHealth then
-                cloneHumanoid.Health = cloneHumanoid.MaxHealth
+    if realHumanoid then
+        -- GODMODE CHO REAL BODY (Bất tử hoàn toàn, nhận sát thương nhưng máu lập tức hồi đầy)
+        realHumanoid.MaxHealth = math.huge
+        realHumanoid.Health = math.huge
+        realHumanoid.HealthChanged:Connect(function()
+            if realHumanoid and realHumanoid.Health < realHumanoid.MaxHealth then
+                realHumanoid.Health = realHumanoid.MaxHealth
             end
         end)
     end
     
-    for _, part in ipairs(cloneChar:GetDescendants()) do
+    -- 2. TẠO CLONE MANG NGUYÊN VẸN DANH TÍNH PLAYER ĐỂ ĐỨNG Ở KHU HỒI SINH/DƯỚI ĐẤT
+    character.Archivable = true
+    activeClone = character:Clone()
+    character.Archivable = false
+    
+    -- Khôi phục tên gốc cho Clone để nó giữ trọn vẹn đặc tính Player trước mắt Server
+    activeClone.Name = LocalPlayer.Name
+    activeClone.Parent = workspace
+    activeClone:SetPrimaryPartCFrame(startCF + Vector3.new(0, 2, 0))
+    
+    local cloneHumanoid = activeClone:FindFirstChildOfClass("Humanoid")
+    local cloneHrp = activeClone:FindFirstChild("HumanoidRootPart")
+    
+    if cloneHumanoid then
+        cloneHumanoid.PlatformStand = false
+        cloneHumanoid.AutoRotate = true
+        -- Hướng góc nhìn camera bám theo Real Body để bạn tự do điều khiển Real Body đi quậy
+        Camera.CameraSubject = realHumanoid
+    end
+    
+    -- Thiết lập va chạm cho Clone làm mồi nhử
+    for _, part in ipairs(activeClone:GetDescendants()) do
         if part:IsA("BasePart") then
-            if part.Name == "HumanoidRootPart" then
-                part.CanCollide = false
-                part.Transparency = 1
-            else
-                part.CanCollide = true
-                part.CanTouch = false
-                part.CanQuery = false
-            end
+            part.CanCollide = true
         end
     end
     
-    if cloneMoveConnection then cloneMoveConnection:Disconnect() end
-    cloneMoveConnection = RunService.RenderStepped:Connect(function()
-        if cloneChar and cloneChar.Parent and cloneHumanoid and cloneHrp and not isCloneLocked then
+    -- 3. ĐIỀU KHIỂN REAL BODY (NPC) HOẠT ĐỘNG TỰ DO KHẮP NƠI
+    if realMoveConnection then realMoveConnection:Disconnect() end
+    realMoveConnection = RunService.RenderStepped:Connect(function()
+        if character and character.Parent and realHumanoid then
             local moveDir = Vector3.zero
             if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.Up) then
                 moveDir = moveDir + Vector3.new(0, 0, -1)
@@ -455,108 +234,36 @@ SpawnCloneBtn.MouseButton1Click:Connect(function()
                 camRight = Vector3.new(camRight.X, 0, camRight.Z).Unit
                 
                 local worldDir = (camRight * moveDir.X + camLook * -moveDir.Z).Unit
-                cloneHumanoid:Move(worldDir, false)
+                realHumanoid:Move(worldDir, false)
             end
         end
     end)
     
-    InfoLabel.Text = "Status: NPC Clone Spawned & Walkable!"
+    InfoLabel.Text = "Status: Swap Success! Real Body is NPC God."
 end)
 
-CamCloneBtn.MouseButton1Click:Connect(function()
-    if cloneChar and cloneChar:FindFirstChild("Humanoid") then
-        Camera.CameraSubject = cloneChar.Humanoid
-        InfoLabel.Text = "Status: Camera Focused on NPC"
-    else
-        InfoLabel.Text = "Status: NPC not found!"
-    end
-end)
-
+-- CAMERA SWITCH CONTROLS
 CamRealBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if character and character:FindFirstChildOfClass("Humanoid") then
         Camera.CameraSubject = character:FindFirstChildOfClass("Humanoid")
-        InfoLabel.Text = "Status: Camera Focused on Real Body"
-    else
-        InfoLabel.Text = "Status: Real Body not found!"
+        InfoLabel.Text = "Status: Camera on Real Body (NPC)"
     end
 end)
 
-LockCloneBtn.MouseButton1Click:Connect(function()
-    isCloneLocked = not isCloneLocked
-    if cloneChar then
-        local humanoid = cloneChar:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            humanoid.PlatformStand = isCloneLocked
-        end
-    end
-    
-    if isCloneLocked then
-        LockCloneBtn.Text = "🔒 Lock NPC Move: ON"
-        LockCloneBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-        InfoLabel.Text = "Status: NPC Movement Locked"
-    else
-        LockCloneBtn.Text = "🔒 Lock NPC Move: OFF"
-        LockCloneBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
-        InfoLabel.Text = "Status: NPC Movement Unlocked"
+CamCloneBtn.MouseButton1Click:Connect(function()
+    if activeClone and activeClone:FindFirstChildOfClass("Humanoid") then
+        Camera.CameraSubject = activeClone:FindFirstChildOfClass("Humanoid")
+        InfoLabel.Text = "Status: Camera on Clone (Player Bait)"
     end
 end)
 
-SwapPositionsBtn.MouseButton1Click:Connect(function()
-    local character = LocalPlayer.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") or not cloneChar or not cloneChar:FindFirstChild("HumanoidRootPart") then
-        InfoLabel.Text = "Status: Cannot swap, NPC or real body missing!"
-        return
-    end
-    
-    local realHrp = character.HumanoidRootPart
-    local realHumanoid = character:FindFirstChildOfClass("Humanoid")
-    local cloneHrp = cloneChar.HumanoidRootPart
-    local cloneHumanoid = cloneChar:FindFirstChildOfClass("Humanoid")
-    
-    local realCF = realHrp.CFrame
-    local cloneCF = cloneHrp.CFrame
-    
-    if antiTpConnection then antiTpConnection:Disconnect() end
-    
-    realHrp.AssemblyLinearVelocity = Vector3.zero
-    realHrp.AssemblyAngularVelocity = Vector3.zero
-    realHrp.CFrame = cloneCF
-    cloneHrp.CFrame = realCF
-    
-    if realHrp.Position.Y < 500 then
-        if realHumanoid then 
-            realHumanoid.Sit = false 
-            realHumanoid.PlatformStand = false 
-        end
-        InfoLabel.Text = "Status: Real Body Swapped to Ground!"
-    else
-        if realHumanoid then 
-            realHumanoid.Sit = true 
-        end
-        InfoLabel.Text = "Status: Real Body Swapped back to Sky Y=600 & Seated!"
-        
-        targetSkyCFrame = realHrp.CFrame
-        antiTpConnection = RunService.Heartbeat:Connect(function()
-            if skyPlatform and character and realHrp then
-                if realHrp.Position.Y > 500 and (realHrp.Position.Y < 580 or realHrp.Position.Y > 650) then
-                    realHrp.AssemblyLinearVelocity = Vector3.zero
-                    realHrp.AssemblyAngularVelocity = Vector3.zero
-                    realHrp.CFrame = targetSkyCFrame
-                    if realHumanoid then realHumanoid.Sit = true end
-                end
-            end
-        end)
-    end
-end)
-
+-- CLEANUP ON RESET
 LocalPlayer.CharacterAdded:Connect(function()
-    if antiTpConnection then antiTpConnection:Disconnect() antiTpConnection = nil end
-    if cloneMoveConnection then cloneMoveConnection:Disconnect() cloneMoveConnection = nil end
-    removeSkyPlatform()
-    if cloneChar then
-        cloneChar:Destroy()
-        cloneChar = nil
+    if realMoveConnection then realMoveConnection:Disconnect() realMoveConnection = nil end
+    if activeClone then
+        activeClone:Destroy()
+        activeClone = nil
     end
-    InfoLabel.Text = "Status: Character Reset - Normal Mode"
+    InfoLabel.Text = "Status: Reset - Normal Mode"
 end)
