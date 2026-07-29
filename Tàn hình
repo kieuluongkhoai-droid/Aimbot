@@ -3,26 +3,70 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
--- Đảm bảo có UI hoặc tạo biến giả lập nếu test độc lập
-local lockPosActive = false
-
--- Lấy hoặc tạo nút bấm (phòng hờ nếu chưa có sẵn trong GUI của bạn)
+-- Đảm bảo có UI hoặc tạo giao diện tự động
 local playerGui = player:WaitForChild("PlayerGui")
 local screenGui = playerGui:FindFirstChild("ScreenGui") or Instance.new("ScreenGui", playerGui)
-screenGui.Name = "AntiKnockbackGUI"
+screenGui.Name = "MultiToolGUI"
 
+-- 1. NÚT TÀN HÌNH (Invisibility Button)
+local invisBtn = screenGui:FindFirstChild("InvisBtn")
+if not invisBtn then
+    invisBtn = Instance.new("TextButton")
+    invisBtn.Name = "InvisBtn"
+    invisBtn.Size = UDim2.new(0, 200, 0, 45)
+    invisBtn.Position = UDim2.new(0, 50, 0, 50)
+    invisBtn.Text = "Tàn Hình: TẮT"
+    invisBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    invisBtn.TextColor3 = Color3.new(1, 1, 1)
+    invisBtn.Parent = screenGui
+end
+
+local invisActive = false
+invisBtn.MouseButton1Click:Connect(function()
+    invisActive = not invisActive
+    local char = player.Character
+    if char then
+        if invisActive then
+            invisBtn.Text = "Tàn Hình: BẬT"
+            invisBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+            -- Ẩn các bộ phận cơ thể (Transparency = 1) nhưng vẫn giữ va chạm và điều khiển
+            for _, v in pairs(char:GetDescendants()) do
+                if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then
+                    v.Transparency = 1
+                elseif v:IsA("Decal") then
+                    v.Transparency = 1
+                end
+            end
+        else
+            invisBtn.Text = "Tàn Hình: TẮT"
+            invisBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            -- Hiện lại bình thường
+            for _, v in pairs(char:GetDescendants()) do
+                if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then
+                    v.Transparency = 0
+                elseif v:IsA("Decal") then
+                    v.Transparency = 0
+                end
+            end
+        end
+    end
+end)
+
+
+-- 2. NÚT ANTI-KNOCKBACK / KHÓA VỊ TRÍ SIÊU NHẠY
 local lockPosBtn = screenGui:FindFirstChild("LockPosBtn")
 if not lockPosBtn then
     lockPosBtn = Instance.new("TextButton")
     lockPosBtn.Name = "LockPosBtn"
-    lockPosBtn.Size = UDim2.new(0, 200, 0, 50)
-    lockPosBtn.Position = UDim2.new(0, 50, 0, 50)
-    lockPosBtn.Text = "Anti-Ragdoll (Khóa Vị Trí): TẮT"
+    lockPosBtn.Size = UDim2.new(0, 200, 0, 45)
+    lockPosBtn.Position = UDim2.new(0, 50, 0, 105) -- Nằm ngay dưới nút tàn hình
+    lockPosBtn.Text = "Anti-Ragdoll: TẮT"
     lockPosBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     lockPosBtn.TextColor3 = Color3.new(1, 1, 1)
     lockPosBtn.Parent = screenGui
 end
 
+local lockPosActive = false
 local lockConnection = nil
 local lastSafeCFrame = nil
 
@@ -30,10 +74,10 @@ lockPosBtn.MouseButton1Click:Connect(function()
     lockPosActive = not lockPosActive
     
     if lockPosActive then
-        lockPosBtn.Text = "Anti-Ragdoll (Khóa Siêu Nhạy): BẬT"
+        lockPosBtn.Text = "Anti-Ragdoll (Siêu Nhạy): BẬT"
         lockPosBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
         
-        -- Khởi tạo vị trí an toàn ban đầu
+        -- Cập nhật tọa độ an toàn ngay khi bật
         local char = player.Character
         if char and char:FindFirstChild("HumanoidRootPart") then
             lastSafeCFrame = char.HumanoidRootPart.CFrame
@@ -50,10 +94,10 @@ lockPosBtn.MouseButton1Click:Connect(function()
                     local isMoving = moveDirection.Magnitude > 0
                     
                     if not humanoid.PlatformStand and humanoid.Health > 0 then
-                        -- Kiểm tra nếu bị đẩy lệch > 2 mét khi đứng yên
+                        -- Kiểm tra nếu bị đẩy lệch > 2.5 mét khi đứng yên
                         if not isMoving and lastSafeCFrame then
                             local distance = (rootPart.Position - lastSafeCFrame.Position).Magnitude
-                            if distance > 2 then 
+                            if distance > 2.5 then 
                                 rootPart.CFrame = lastSafeCFrame
                                 pcall(function()
                                     rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
@@ -61,14 +105,14 @@ lockPosBtn.MouseButton1Click:Connect(function()
                             end
                         end
                         
-                        -- Cập nhật mốc tọa độ an toàn khi di chuyển bình thường hoặc tốc độ thấp
-                        if isMoving or rootPart.AssemblyLinearVelocity.Magnitude < 15 then
+                        -- Cập nhật tọa độ an toàn khi di chuyển bình thường
+                        if isMoving or rootPart.AssemblyLinearVelocity.Magnitude < 20 then
                             lastSafeCFrame = rootPart.CFrame
                         end
                     end
                     
-                    -- Chống hất tung mạnh / bay lên trời
-                    if (humanoid.PlatformStand or rootPart.AssemblyLinearVelocity.Y > 30) and lastSafeCFrame then
+                    -- Chống hất tung mạnh / bay vút lên trời
+                    if (humanoid.PlatformStand or rootPart.AssemblyLinearVelocity.Y > 35) and lastSafeCFrame then
                         rootPart.CFrame = lastSafeCFrame
                         pcall(function()
                             rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
@@ -79,67 +123,7 @@ lockPosBtn.MouseButton1Click:Connect(function()
             end
         end)
     else
-        lockPosBtn.Text = "Anti-Ragdoll (Khóa Vị Trí): TẮT"
-        lockPosBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        if lockConnection then
-            lockConnection:Disconnect()
-            lockConnection = nil
-        end
-    end
-end)
--- Cập nhật phần Anti-Knockback siêu nhạy (Chống hất tung dù nhẹ hay nặng)
--- Bạn có thể thay thế đoạn code của nút lockPosBtn bằng đoạn dưới đây:
-
-local lockConnection = nil
-local lastSafeCFrame = nil
-local isLocked = false
-
-lockPosBtn.MouseButton1Click:Connect(function()
-    lockPosActive = not lockPosActive
-    
-    if lockPosActive then
-        lockPosBtn.Text = "Anti-Ragdoll (Khóa Siêu Nhạy): BẬT"
-        lockPosBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
-        
-        lockConnection = RunService.RenderStepped:Connect(function()
-            local character = player.Character
-            if character then
-                local rootPart = character:FindFirstChild("HumanoidRootPart")
-                local humanoid = character:FindFirstChildOfClass("Humanoid")
-                
-                if rootPart and humanoid then
-                    -- Kiểm tra xem người chơi có đang dùng phím di chuyển (WASD / Joystick) hay không
-                    local moveDirection = humanoid.MoveDirection
-                    local isMoving = moveDirection.Magnitude > 0
-                    
-                    -- Nếu đứng yên hoặc di chuyển bình thường, liên tục cập nhật tọa độ an toàn
-                    if not humanoid.PlatformStand and humanoid.Health > 0 then
-                        -- Nếu đứng yên (không bấm di chuyển) mà bị ép dịch chuyển đi một khoảng nhỏ > 2 mét -> Bị hất tung/đẩy lén!
-                        if not isMoving and lastSafeCFrame then
-                            local distance = (rootPart.Position - lastSafeCFrame.Position).Magnitude
-                            if distance > 2.5 then -- Ngưỡng siêu nhạy: chỉ cần dịch chuyển nhích nhẹ là kéo về ngay
-                                rootPart.CFrame = lastSafeCFrame
-                                rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                            end
-                        end
-                        
-                        -- Cập nhật mốc tọa độ an toàn liên tục khi bình thường
-                        if isMoving or rootPart.AssemblyLinearVelocity.Magnitude < 20 then
-                            lastSafeCFrame = rootPart.CFrame
-                        end
-                    end
-                    
-                    -- Xử lý trường hợp đang bay vút lên trời / bị hất tung mạnh
-                    if (humanoid.PlatformStand or rootPart.AssemblyLinearVelocity.Y > 35) and lastSafeCFrame then
-                        rootPart.CFrame = lastSafeCFrame
-                        rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                        humanoid.PlatformStand = false
-                    end
-                end
-            end
-        end)
-    else
-        lockPosBtn.Text = "Anti-Ragdoll (Khóa Vị Trí): TẮT"
+        lockPosBtn.Text = "Anti-Ragdoll: TẮT"
         lockPosBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
         if lockConnection then
             lockConnection:Disconnect()
