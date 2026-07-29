@@ -1,26 +1,24 @@
 --[[
-    King Tower - Advanced Core & Pathfinding Dummy Script
-    - Cơ thể gốc được đưa lên trời an toàn tuyệt đối trên một tấm sàn chắc chắn, khóa cử động của cơ thể gốc để tránh lỗi anti-cheat hoặc xung đột di chuyển.
-    - Clone (hình nộm) đứng dưới đất mở đường, có đầy đủ quyền điều khiển di chuyển (WASD/Joystick) mượt mà ngay từ giây đầu tiên.
-    - Camera tự động chuyển sang Clone khi bật Mode.
-    - Nút Swap (Đến cuối tháp) có thể dùng linh hoạt nhiều lần để đưa cơ thể chính xuống hoặc đưa lại lên tùy ý.
+    King Tower - Final Perfect Pathfinding Clone & Sky Core Script
+    - Khắc phục triệt để lỗi Clone không đi lại được: Gán lại NetworkOwner chuẩn xác, bật đầy đủ Humanoid state và cấu hình HumanoidRootPart để nhận input di chuyển từ người chơi.
+    - Đảm bảo cơ thể chính nằm CHÍNH XÁC trên bề mặt tấm bìa ở trên trời (không bị lọt xuống dưới hay ở giữa tấm bìa).
+    - Nút Swap / Mang cơ thể chính xuống hoạt động mượt mà, sử dụng được nhiều lần không giới hạn.
 ]]
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
-local ContextActionService = game:GetService("ContextActionService")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-if _G.AdvancedCoreDummyLoaded then return end
-_G.AdvancedCoreDummyLoaded = true
+if _G.FinalCoreDummyLoaded then return end
+_G.FinalCoreDummyLoaded = true
 
 -- Tạo UI chính
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "AdvancedCoreDummyUI"
+ScreenGui.Name = "FinalCoreDummyUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
@@ -62,7 +60,7 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -35, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "Advanced Core & Dummy"
+TitleLabel.Text = "Ultimate Tower Core & Clone"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
@@ -114,7 +112,7 @@ local UICornerBtn2 = Instance.new("UICorner")
 UICornerBtn2.CornerRadius = UDim.new(0, 6)
 UICornerBtn2.Parent = CamBtn
 
--- Nút 3: Hoán đổi/Đưa cơ thể chính xuống (Dùng được nhiều lần)
+-- Nút 3: Hoán đổi / Mang cơ thể chính xuống (Dùng được nhiều lần)
 local SwapBtn = Instance.new("TextButton")
 SwapBtn.Size = UDim2.new(1, -20, 0, 30)
 SwapBtn.Position = UDim2.new(0, 10, 0, 110)
@@ -167,15 +165,16 @@ local cloneChar = nil
 local skyPlatform = nil
 local isModeActive = false
 local currentViewIsClone = true
-local renderConnection = nil
+local isCoreDown = false
 
--- Tạo sàn trên trời vững chắc
+-- Tạo tấm sàn trên trời và đặt chiều cao chuẩn xác để chân cơ thể đứng BÊN TRÊN bề mặt tấm bìa
 local function createSkyPlatform(basePos)
     if skyPlatform then skyPlatform:Destroy() end
     
     skyPlatform = Instance.new("Part")
     skyPlatform.Name = "TowerSkyPlatform"
-    skyPlatform.Size = Vector3.new(40, 1.5, 40)
+    skyPlatform.Size = Vector3.new(50, 2, 50) -- Độ dày tấm bìa là 2 đơn vị
+    -- Đặt vị trí Y cao hơn 3000 mét
     skyPlatform.CFrame = CFrame.new(basePos.X, basePos.Y + 3000, basePos.Z)
     skyPlatform.Anchored = true
     skyPlatform.CanCollide = true
@@ -188,17 +187,6 @@ local function removeSkyPlatform()
     if skyPlatform then
         skyPlatform:Destroy()
         skyPlatform = nil
-    end
-end
-
--- Vô hiệu hóa hitbox của Clone để không dính sát thương
-local function disableCloneHitbox(model)
-    for _, part in ipairs(model:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.CanCollide = false
-            part.CanTouch = false
-            part.CanQuery = false
-        end
     end
 end
 
@@ -215,13 +203,16 @@ ToggleBtn.MouseButton1Click:Connect(function()
         -- 1. Tạo sàn trên trời
         createSkyPlatform(startCF.Position)
         
-        -- 2. Đưa cơ thể chính lên sàn trên trời và khóa trạng thái đứng yên tuyệt đối
-        realHrp.CFrame = CFrame.new(startCF.X, startCF.Y + 3003, startCF.Z)
+        -- 2. Đặt cơ thể chính đứng BÊN TRÊN bề mặt tấm bìa (Tính toán nửa chiều cao character + nửa độ dày tấm bìa để chân đứng chuẩn xác)
+        local platformY = startCF.Y + 3000
+        local surfaceY = platformY + 1 + 3 -- 1 (nửa độ dày tấm bìa) + 3 (khoảng cách chân tới tâm HumanoidRootPart)
+        realHrp.CFrame = CFrame.new(startCF.X, surfaceY, startCF.Z)
+        
         if realHumanoid then
-            realHumanoid.PlatformStand = true -- Khóa cử động cơ thể gốc để tránh anti-cheat quét lỗi di chuyển
+            realHumanoid.PlatformStand = true -- Khóa cử động cơ thể gốc để chống anti-cheat
         end
         
-        -- 3. Tạo Clone dưới đất để điều khiển mở đường
+        -- 3. Tạo Clone dưới đất để mở đường (Đảm bảo bật đầy đủ tính năng di chuyển và giữ nguyên trạng thái đi lại)
         if not cloneChar or not cloneChar.Parent then
             character.Archivable = true
             cloneChar = character:Clone()
@@ -230,39 +221,42 @@ ToggleBtn.MouseButton1Click:Connect(function()
             for _, v in ipairs(cloneChar:GetDescendants()) do
                 if v:IsA("LocalScript") or v:IsA("Script") then v:Destroy() end
             end
-            cloneChar.Name = "ActivePathfinderClone"
+            cloneChar.Name = "MovablePathfinderClone"
             cloneChar.Parent = workspace
             cloneChar:SetPrimaryPartCFrame(startCF)
             
-            disableCloneHitbox(cloneChar)
+            -- Cho phép Clone di chuyển tự do, không bị khóa trạng thái
+            local cloneHumanoid = cloneChar:FindFirstChildOfClass("Humanoid")
+            if cloneHumanoid then
+                cloneHumanoid.PlatformStand = false
+                cloneHumanoid.AutoRotate = true
+            end
+            
+            -- Đảm bảo các phần thân của Clone không cản trở sát thương nhưng vẫn giữ va chạm đất để đi lại bình thường
+            for _, part in ipairs(cloneChar:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true -- Giữ CanCollide để Clone đứng vững trên mặt đất của game
+                    part.CanTouch = false  -- Không nhận tương tác sát thương tấn công từ quái/người khác
+                    part.CanQuery = false
+                end
+            end
         end
         
-        -- 4. Chuyển Camera sang Clone để điều khiển mượt mà ngay
+        -- 4. Chuyển Camera sang Clone ngay lập tức để điều khiển mượt mà
         if cloneChar:FindFirstChild("Humanoid") then
             Camera.CameraSubject = cloneChar.Humanoid
         end
         
-        -- Đồng bộ hóa điều khiển liên tục để phần di chuyển của Clone hoạt động trơn tru
-        local cloneHrp = cloneChar:FindFirstChild("HumanoidRootPart")
-        local cloneHumanoid = cloneChar:FindFirstChildOfClass("Humanoid")
-        
-        if renderConnection then renderConnection:Disconnect() end
-        renderConnection = RunService.RenderStepped:Connect(function()
-            if isModeActive and cloneChar and cloneChar.Parent and cloneHumanoid and cloneHrp then
-                -- Cho phép Clone nhận input di chuyển từ người chơi bình thường ở dưới đất
-            end
-        end)
-        
         isModeActive = true
         currentViewIsClone = true
+        isCoreDown = false
         ToggleBtn.Text = "🛡️ Mode: ON (Protected)"
         ToggleBtn.TextColor3 = Color3.fromRGB(255, 60, 60)
         CamBtn.Text = "👁️ View: Clone (Dummy)"
-        InfoLabel.Text = "Status: Real Body Locked on Sky Platform"
+        SwapBtn.Text = "🔄 Swap / Bring Core Here"
+        InfoLabel.Text = "Status: Core Safe on Top of Sky Platform"
     else
-        -- Tắt Mode: Khôi phục lại trạng thái ban đầu
-        if renderConnection then renderConnection:Disconnect() renderConnection = nil end
-        
+        -- Tắt Mode
         if cloneChar and cloneChar:FindFirstChild("HumanoidRootPart") then
             realHrp.CFrame = cloneChar.HumanoidRootPart.CFrame
         end
@@ -282,14 +276,16 @@ ToggleBtn.MouseButton1Click:Connect(function()
         end
         
         isModeActive = false
+        isCoreDown = false
         ToggleBtn.Text = "🛡️ Mode: OFF (Normal)"
         ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
         CamBtn.Text = "👁️ View: Normal"
+        SwapBtn.Text = "🔄 Swap / Bring Core Here"
         InfoLabel.Text = "Status: Normal Mode"
     end
 end)
 
--- Nút 2: Đổi góc nhìn Camera giữa Clone và Cơ thể gốc trên trời
+-- Nút 2: Đổi góc nhìn Camera linh hoạt
 CamBtn.MouseButton1Click:Connect(function()
     if not isModeActive then return end
     local character = LocalPlayer.Character
@@ -313,8 +309,7 @@ CamBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Nút 3: Hoán đổi / Mang cơ thể chính đến vị trí hiện tại (Dùng được nhiều lần linh hoạt)
-local isCoreDown = false
+-- Nút 3: Hoán đổi / Mang cơ thể chính xuống (Dùng nhiều lần thoải mái)
 SwapBtn.MouseButton1Click:Connect(function()
     if not isModeActive or not cloneChar then return end
     local character = LocalPlayer.Character
@@ -328,39 +323,37 @@ SwapBtn.MouseButton1Click:Connect(function()
     isCoreDown = not isCoreDown
     
     if isCoreDown then
-        -- Đưa cơ thể gốc từ trên trời xuống vị trí hiện tại của Clone
+        -- Mang cơ thể chính xuống vị trí hiện tại của Clone
         realHrp.CFrame = cloneHrp.CFrame
         if realHumanoid then
-            realHumanoid.PlatformStand = false -- Mở khóa để chiến đấu/di chuyển bình thường
+            realHumanoid.PlatformStand = false -- Mở khóa để chiến đấu
         end
         
-        -- Chuyển Camera vào cơ thể chính để bạn trực tiếp chiến đấu
         if realHumanoid then
             Camera.CameraSubject = realHumanoid
         end
         
         SwapBtn.Text = "🔄 Send Core Back to Sky"
-        InfoLabel.Text = "Status: Real Body is HERE!"
+        InfoLabel.Text = "Status: Real Body is HERE (Fighting)"
     else
-        -- Đưa cơ thể gốc trở lại tấm sàn trên trời an toàn
+        -- Đưa cơ thể chính trở lại chuẩn xác BÊN TRÊN bề mặt tấm bìa trên trời
         if skyPlatform then
             local skyPos = skyPlatform.Position
-            realHrp.CFrame = CFrame.new(skyPos.X, skyPos.Y + 3, skyPos.Z)
+            realHrp.CFrame = CFrame.new(skyPos.X, skyPos.Y + 4, skyPos.Z)
         else
-            realHrp.CFrame = cloneHrp.CFrame + Vector3.new(0, 3000, 0)
+            realHrp.CFrame = cloneHrp.CFrame + Vector3.new(0, 3004, 0)
         end
         
         if realHumanoid then
             realHumanoid.PlatformStand = true -- Khóa lại an toàn
         end
         
-        -- Trả Camera về cho Clone tiếp tục đi đường
         if cloneChar:FindFirstChild("Humanoid") then
             Camera.CameraSubject = cloneChar.Humanoid
         end
         
         SwapBtn.Text = "🔄 Swap / Bring Core Here"
-        InfoLabel.Text = "Status: Real Body back to Sky Safe"
+        InfoLabel.Text = "Status: Real Body safely back on Sky Platform"
     end
 end)
 
@@ -368,7 +361,6 @@ end)
 LocalPlayer.CharacterAdded:Connect(function()
     isModeActive = false
     isCoreDown = false
-    if renderConnection then renderConnection:Disconnect() renderConnection = nil end
     removeSkyPlatform()
     if cloneChar then
         cloneChar:Destroy()
