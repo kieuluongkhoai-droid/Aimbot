@@ -1,12 +1,15 @@
 -- // Dịch vụ cơ bản
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
 
 -- // Trạng thái tính năng
 getgenv().AutoTeleportToBonds = false
 getgenv().AutoBringBonds = false
+getgenv().ESPBondsEnabled = false
+getgenv().LagReductionEnabled = false
 
 -- // Xóa UI cũ nếu có để tránh bị trùng lặp
 if CoreGui:FindFirstChild("BondsManagerUI") then
@@ -20,12 +23,12 @@ pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 240, 0, 160)
+MainFrame.Size = UDim2.new(0, 240, 0, 265)
 MainFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
-MainFrame.Draggable = true -- Kéo thả UI
+MainFrame.Draggable = true -- Cho phép kéo thả UI
 MainFrame.Parent = ScreenGui
 
 local UICorner = Instance.new("UICorner")
@@ -44,7 +47,7 @@ Title.Parent = MainFrame
 -- Nút Chức năng 1: Teleport đến Bonds
 local BtnTpTo = Instance.new("TextButton")
 BtnTpTo.Size = UDim2.new(0.9, 0, 0, 45)
-BtnTpTo.Position = UDim2.new(0.05, 0, 0.25, 0)
+BtnTpTo.Position = UDim2.new(0.05, 0, 0.15, 0)
 BtnTpTo.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
 BtnTpTo.Text = "TP đến Bonds: TẮT"
 BtnTpTo.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -59,7 +62,7 @@ Corner1.Parent = BtnTpTo
 -- Nút Chức năng 2: Kéo Bonds về người
 local BtnBring = Instance.new("TextButton")
 BtnBring.Size = UDim2.new(0.9, 0, 0, 45)
-BtnBring.Position = UDim2.new(0.05, 0, 0.58, 0)
+BtnBring.Position = UDim2.new(0.05, 0, 0.35, 0)
 BtnBring.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
 BtnBring.Text = "Kéo Bonds về tôi: TẮT"
 BtnBring.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -71,11 +74,41 @@ local Corner2 = Instance.new("UICorner")
 Corner2.CornerRadius = UDim.new(0, 6)
 Corner2.Parent = BtnBring
 
--- // Logic Bật/Tắt Chức năng 1
+-- Nút Chức năng 3: Bật/Tắt ESP
+local BtnESP = Instance.new("TextButton")
+BtnESP.Size = UDim2.new(0.9, 0, 0, 45)
+BtnESP.Position = UDim2.new(0.05, 0, 0.55, 0)
+BtnESP.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+BtnESP.Text = "ESP Bonds: TẮT"
+BtnESP.TextColor3 = Color3.fromRGB(255, 255, 255)
+BtnESP.TextSize = 13
+BtnESP.Font = Enum.Font.GothamBold
+BtnESP.Parent = MainFrame
+
+local Corner3 = Instance.new("UICorner")
+Corner3.CornerRadius = UDim.new(0, 6)
+Corner3.Parent = BtnESP
+
+-- Nút Chức năng 4: Giảm Lag (FPS Boost)
+local BtnLag = Instance.new("TextButton")
+BtnLag.Size = UDim2.new(0.9, 0, 0, 45)
+BtnLag.Position = UDim2.new(0.05, 0, 0.75, 0)
+BtnLag.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+BtnLag.Text = "Giảm Lag (FPS): TẮT"
+BtnLag.TextColor3 = Color3.fromRGB(255, 255, 255)
+BtnLag.TextSize = 13
+BtnLag.Font = Enum.Font.GothamBold
+BtnLag.Parent = MainFrame
+
+local Corner4 = Instance.new("UICorner")
+Corner4.CornerRadius = UDim.new(0, 6)
+Corner4.Parent = BtnLag
+
+-- // Logic Bật/Tắt Chức năng 1 (TP)
 BtnTpTo.MouseButton1Click:Connect(function()
     getgenv().AutoTeleportToBonds = not getgenv().AutoTeleportToBonds
     if getgenv().AutoTeleportToBonds then
-        getgenv().AutoBringBonds = false -- Tắt chức năng kia để tránh xung đột
+        getgenv().AutoBringBonds = false
         BtnBring.Text = "Kéo Bonds về tôi: TẮT"
         BtnBring.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
         
@@ -87,11 +120,11 @@ BtnTpTo.MouseButton1Click:Connect(function()
     end
 end)
 
--- // Logic Bật/Tắt Chức năng 2
+-- // Logic Bật/Tắt Chức năng 2 (Bring)
 BtnBring.MouseButton1Click:Connect(function()
     getgenv().AutoBringBonds = not getgenv().AutoBringBonds
     if getgenv().AutoBringBonds then
-        getgenv().AutoTeleportToBonds = false -- Tắt chức năng kia để tránh xung đột
+        getgenv().AutoTeleportToBonds = false
         BtnTpTo.Text = "TP đến Bonds: TẮT"
         BtnTpTo.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
         
@@ -103,12 +136,64 @@ BtnBring.MouseButton1Click:Connect(function()
     end
 end)
 
+-- // Logic Bật/Tắt Chức năng 3 (ESP)
+BtnESP.MouseButton1Click:Connect(function()
+    getgenv().ESPBondsEnabled = not getgenv().ESPBondsEnabled
+    if getgenv().ESPBondsEnabled then
+        BtnESP.Text = "ESP Bonds: BẬT"
+        BtnESP.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+    else
+        BtnESP.Text = "ESP Bonds: TẮT"
+        BtnESP.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if obj:FindFirstChild("TreasuryBondsESP") then
+                obj.TreasuryBondsESP:Destroy()
+            end
+        end
+    end
+end)
+
+-- // Logic Bật/Tắt Chức năng 4 (Giảm Lag)
+BtnLag.MouseButton1Click:Connect(function()
+    getgenv().LagReductionEnabled = not getgenv().LagReductionEnabled
+    if getgenv().LagReductionEnabled then
+        BtnLag.Text = "Giảm Lag (FPS): BẬT"
+        BtnLag.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+        
+        -- Thực hiện tối ưu hóa đồ họa
+        pcall(function()
+            Lighting.GlobalShadows = false
+            Lighting.FogEnd = 9e9
+            for _, v in ipairs(Lighting:GetChildren()) do
+                if v:IsA("PostEffect") or v:IsA("Atmosphere") then
+                    v.Enabled = false
+                end
+            end
+            for _, part in ipairs(Workspace:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.Material = Enum.Material.SmoothPlastic
+                    part.Reflectance = 0
+                elseif part:IsA("Decal") or part:IsA("Texture") then
+                    part.Transparency = 1
+                end
+            end
+        end)
+    else
+        BtnLag.Text = "Giảm Lag (FPS): TẮT"
+        BtnLag.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        pcall(function()
+            Lighting.GlobalShadows = true
+        end)
+    end
+end)
+
 local function getRootPart()
     local char = LocalPlayer.Character
     return char and char:FindFirstChild("HumanoidRootPart")
 end
 
--- // Luồng xử lý Chức năng 1: Teleport nhân vật đến vị trí Bonds
+-- // Luồng 1: Teleport nhân vật đến vị trí Bonds
 task.spawn(function()
     while true do
         task.wait(0.2)
@@ -146,7 +231,7 @@ task.spawn(function()
     end
 end)
 
--- // Luồng xử lý Chức năng 2: Kéo/Dịch chuyển Bonds về vị trí nhân vật
+-- // Luồng 2: Kéo/Dịch chuyển Bonds về vị trí nhân vật
 task.spawn(function()
     while true do
         task.wait(0.3)
@@ -168,13 +253,55 @@ task.spawn(function()
                         end
                         
                         if targetPart then
-                            -- Dịch chuyển vật phẩm về vị trí nhân vật
                             targetPart.CFrame = rootPart.CFrame + Vector3.new(0, 1, 0)
                             
                             local prompt = obj:FindFirstChildWhichIsA("ProximityPrompt", true)
                             if prompt then
                                 pcall(function() fireproximityprompt(prompt) end)
                             end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- // Luồng 3: Quét và hiển thị ESP Treasury Bonds liên tục
+task.spawn(function()
+    while true do
+        task.wait(1)
+        if getgenv().ESPBondsEnabled then
+            pcall(function()
+                for _, obj in ipairs(Workspace:GetDescendants()) do
+                    if not getgenv().ESPBondsEnabled then break end
+                    
+                    local nameLower = string.lower(obj.Name)
+                    if string.find(nameLower, "treasury") or string.find(nameLower, "bonds") then
+                        local targetPart = nil
+                        if obj:IsA("Model") then
+                            targetPart = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+                        elseif obj:IsA("BasePart") then
+                            targetPart = obj
+                        end
+                        
+                        if targetPart and not targetPart:FindFirstChild("TreasuryBondsESP") then
+                            local bill = Instance.new("BillboardGui")
+                            bill.Name = "TreasuryBondsESP"
+                            bill.Size = UDim2.new(0, 120, 0, 50)
+                            bill.AlwaysOnTop = true
+                            bill.Adornee = targetPart
+                            
+                            local txt = Instance.new("TextLabel")
+                            txt.Size = UDim2.new(1, 0, 1, 0)
+                            txt.BackgroundTransparency = 1
+                            txt.Text = "💰 [Bonds]"
+                            txt.TextColor3 = Color3.fromRGB(255, 215, 0)
+                            txt.TextSize = 13
+                            txt.Font = Enum.Font.GothamBold
+                            txt.Parent = bill
+                            
+                            bill.Parent = targetPart
                         end
                     end
                 end
