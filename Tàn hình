@@ -1,5 +1,5 @@
 --[[
-    King Tower - Advanced Multi-Tab Controller Script with Godmode Clone (Anti-Cheat Safe)
+    King Tower - Advanced Multi-Tab Controller Script with Godmode Clone & Infinite Dual-Cam Toggle
 ]]
 
 -- SERVICES: Load core Roblox services required for players, frame rendering, GUI, tween animations, and user inputs.
@@ -26,7 +26,7 @@ if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("Player
 
 -- MAIN FRAME: Create the draggable main control panel window.
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 260, 0, 260)
+MainFrame.Size = UDim2.new(0, 260, 0, 290)
 MainFrame.Position = UDim2.new(0, 50, 0, 150)
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
 MainFrame.BorderSizePixel = 0
@@ -120,14 +120,14 @@ UICornerCloneTab.Parent = CloneTabBtn
 
 -- CONTAINERS: Create separate UI containers for each tab's elements.
 local RealContainer = Instance.new("Frame")
-RealContainer.Size = UDim2.new(1, -20, 0, 155)
+RealContainer.Size = UDim2.new(1, -20, 0, 185)
 RealContainer.Position = UDim2.new(0, 10, 0, 68)
 RealContainer.BackgroundTransparency = 1
 RealContainer.Visible = true
 RealContainer.Parent = MainFrame
 
 local CloneContainer = Instance.new("Frame")
-CloneContainer.Size = UDim2.new(1, -20, 0, 155)
+CloneContainer.Size = UDim2.new(1, -20, 0, 185)
 CloneContainer.Position = UDim2.new(0, 10, 0, 68)
 CloneContainer.BackgroundTransparency = 1
 CloneContainer.Visible = false
@@ -136,7 +136,7 @@ CloneContainer.Parent = MainFrame
 -- STATUS LABEL: Bottom text label to display system statuses and messages.
 local InfoLabel = Instance.new("TextLabel")
 InfoLabel.Size = UDim2.new(1, -20, 0, 20)
-InfoLabel.Position = UDim2.new(0, 10, 0, 230)
+InfoLabel.Position = UDim2.new(0, 10, 0, 260)
 InfoLabel.BackgroundTransparency = 1
 InfoLabel.Text = "Status: System Ready"
 InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -194,6 +194,18 @@ SwapPositionsBtn.Text = "🔄 Swap Real Body <-> Clone"
 SwapPositionsBtn.Parent = RealContainer
 
 local UIC_P4 = Instance.new("UICorner") UIC_P4.CornerRadius = UDim.new(0, 6) UIC_P4.Parent = SwapPositionsBtn
+
+local CamRealBtn = Instance.new("TextButton")
+CamRealBtn.Size = UDim2.new(1, 0, 0, 32)
+CamRealBtn.Position = UDim2.new(0, 0, 0, 152)
+CamRealBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+CamRealBtn.TextColor3 = Color3.fromRGB(255, 220, 100)
+CamRealBtn.TextSize = 11
+CamRealBtn.Font = Enum.Font.GothamBold
+CamRealBtn.Text = "👁️ Focus Camera on Real Body"
+CamRealBtn.Parent = RealContainer
+
+local UIC_P5 = Instance.new("UICorner") UIC_P5.CornerRadius = UDim.new(0, 6) UIC_P5.Parent = CamRealBtn
 
 -- ==================== CLONE TAB CONTROLS ====================
 
@@ -272,7 +284,7 @@ MinimizeBtn.MouseButton1Click:Connect(function()
             CloneContainer.Visible = true
         end
         InfoLabel.Visible = true
-        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 260, 0, 260)}):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, 260, 0, 290)}):Play()
     end
 end)
 
@@ -291,15 +303,15 @@ local function createThickSkyPlatform(basePos)
     
     skyPlatform = Instance.new("Part")
     skyPlatform.Name = "TowerThickSkyPlatform"
-    skyPlatform.Size = Vector3.new(120, 10, 120) -- Thicker and wider to guarantee no falling through
-    skyPlatform.CFrame = CFrame.new(basePos.X, 350, basePos.Z) -- Fixed safe low height to bypass aggressive anti-cheat ceiling limits
+    skyPlatform.Size = Vector3.new(150, 12, 150)
+    skyPlatform.CFrame = CFrame.new(basePos.X, 350, basePos.Z)
     skyPlatform.Anchored = true
     skyPlatform.CanCollide = true
     skyPlatform.Transparency = 0.2
     skyPlatform.BrickColor = BrickColor.new("Dark stone grey")
     skyPlatform.Parent = workspace
     
-    return CFrame.new(basePos.X, 355, basePos.Z)
+    return CFrame.new(basePos.X, 356, basePos.Z)
 end
 
 local function removeSkyPlatform()
@@ -327,7 +339,6 @@ TpSkyBtn.MouseButton1Click:Connect(function()
         targetSkyCFrame = createThickSkyPlatform(realHrp.CFrame.Position)
     end
     
-    -- Neutralize velocity first to prevent anti-cheat velocity flags
     realHrp.AssemblyLinearVelocity = Vector3.zero
     realHrp.AssemblyAngularVelocity = Vector3.zero
     realHrp.CFrame = targetSkyCFrame
@@ -335,7 +346,7 @@ TpSkyBtn.MouseButton1Click:Connect(function()
     if antiTpConnection then antiTpConnection:Disconnect() end
     antiTpConnection = RunService.Heartbeat:Connect(function()
         if skyPlatform and character and realHrp then
-            if realHrp.Position.Y < (skyPlatform.Position.Y - 10) or realHrp.Position.Y > 500 then
+            if realHrp.Position.Y < 330 or realHrp.Position.Y > 400 then
                 realHrp.AssemblyLinearVelocity = Vector3.zero
                 realHrp.AssemblyAngularVelocity = Vector3.zero
                 realHrp.CFrame = targetSkyCFrame
@@ -388,7 +399,7 @@ SpawnCloneBtn.MouseButton1Click:Connect(function()
     end
     cloneChar.Name = "MovablePathfinderClone"
     cloneChar.Parent = workspace
-    cloneChar:SetPrimaryPartCFrame(startCF)
+    cloneChar:SetPrimaryPartCFrame(startCF + Vector3.new(0, 3, 0))
     
     local cloneHumanoid = cloneChar:FindFirstChildOfClass("Humanoid")
     local cloneHrp = cloneChar:FindFirstChild("HumanoidRootPart")
@@ -410,9 +421,14 @@ SpawnCloneBtn.MouseButton1Click:Connect(function()
     
     for _, part in ipairs(cloneChar:GetDescendants()) do
         if part:IsA("BasePart") then
-            part.CanCollide = true
-            part.CanTouch = false
-            part.CanQuery = false
+            if part.Name == "HumanoidRootPart" then
+                part.CanCollide = false
+                part.Transparency = 1
+            else
+                part.CanCollide = true
+                part.CanTouch = false
+                part.CanQuery = false
+            end
         end
     end
     
@@ -445,16 +461,27 @@ SpawnCloneBtn.MouseButton1Click:Connect(function()
         end
     end)
     
-    InfoLabel.Text = "Status: Clone Spawned with Godmode!"
+    InfoLabel.Text = "Status: Clone Spawned & Walkable!"
 end)
 
--- EVENT: Focus camera view onto the clone.
+-- EVENT: Focus camera view onto the clone (Infinite unrestricted toggle).
 CamCloneBtn.MouseButton1Click:Connect(function()
     if cloneChar and cloneChar:FindFirstChild("Humanoid") then
         Camera.CameraSubject = cloneChar.Humanoid
         InfoLabel.Text = "Status: Camera Focused on Clone"
     else
         InfoLabel.Text = "Status: Clone not found!"
+    end
+end)
+
+-- EVENT: Focus camera view onto the Real Body (Infinite unrestricted toggle).
+CamRealBtn.MouseButton1Click:Connect(function()
+    local character = LocalPlayer.Character
+    if character and character:FindFirstChildOfClass("Humanoid") then
+        Camera.CameraSubject = character:FindFirstChildOfClass("Humanoid")
+        InfoLabel.Text = "Status: Camera Focused on Real Body"
+    else
+        InfoLabel.Text = "Status: Real Body not found!"
     end
 end)
 
@@ -504,17 +531,15 @@ SwapPositionsBtn.MouseButton1Click:Connect(function()
     
     if realHrp.Position.Y < 250 then
         if realHumanoid then realHumanoid.PlatformStand = false end
-        if realHumanoid then Camera.CameraSubject = realHumanoid end
         InfoLabel.Text = "Status: Real Body Swapped to Ground!"
     else
         if realHumanoid then realHumanoid.PlatformStand = true end
-        if cloneHumanoid then Camera.CameraSubject = cloneHumanoid end
         InfoLabel.Text = "Status: Real Body Swapped back to Sky!"
         
         targetSkyCFrame = realHrp.CFrame
         antiTpConnection = RunService.Heartbeat:Connect(function()
             if skyPlatform and character and realHrp then
-                if realHrp.Position.Y > 250 and (realHrp.Position.Y < (skyPlatform.Position.Y - 10) or realHrp.Position.Y > 500) then
+                if realHrp.Position.Y > 250 and (realHrp.Position.Y < 330 or realHrp.Position.Y > 400) then
                     realHrp.AssemblyLinearVelocity = Vector3.zero
                     realHrp.AssemblyAngularVelocity = Vector3.zero
                     realHrp.CFrame = targetSkyCFrame
