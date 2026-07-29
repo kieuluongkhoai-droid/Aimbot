@@ -3,15 +3,16 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
 
 -- Xóa UI cũ nếu có
-if CoreGui:FindFirstChild("UpGhostUI") then
-    CoreGui.UpGhostUI:Destroy()
+if CoreGui:FindFirstChild("PerfectGhostUI") then
+    CoreGui.PerfectGhostUI:Destroy()
 end
 
 -- Tạo Giao Diện UI chính
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "UpGhostUI"
+screenGui.Name = "PerfectGhostUI"
 screenGui.Parent = CoreGui
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
@@ -31,7 +32,7 @@ uiCorner.Parent = mainFrame
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, 0, 0, 35)
 titleLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-titleLabel.Text = "MENU BÓNG MA ĐẨY CAO"
+titleLabel.Text = "MENU BÓNG MA HOÀN HẢO"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextSize = 12
 titleLabel.Font = Enum.Font.GothamBold
@@ -70,10 +71,10 @@ local function createButton(posY, defaultText)
     return btn
 end
 
-local upGhostBtn = createButton(45, "Bóng Ma Đẩy Cao: TẮT")
+local ghostBtn = createButton(45, "Bóng Ma Hoàn Hảo: TẮT")
 local resetBtn = createButton(95, "Khôi Phục / Reset")
 
-local elementsToToggle = {upGhostBtn, resetBtn}
+local elementsToToggle = {ghostBtn, resetBtn}
 local isMinimized = false
 
 minBtn.MouseButton1Click:Connect(function()
@@ -93,53 +94,91 @@ minBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-local upGhostActive = false
-local upConnection = nil
+local ghostActive = false
+local cloneModel = nil
+local connection = nil
 
-upGhostBtn.MouseButton1Click:Connect(function()
-    upGhostActive = not upGhostActive
+ghostBtn.MouseButton1Click:Connect(function()
+    ghostActive = not ghostActive
     local char = player.Character
     if not char then return end
     local rootPart = char:FindFirstChild("HumanoidRootPart")
-    if not rootPart then return end
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if not rootPart or not humanoid then return end
     
-    if upGhostActive then
-        upGhostBtn.Text = "Bóng Ma Đẩy Cao: BẬT"
-        upGhostBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+    if ghostActive then
+        ghostBtn.Text = "Bóng Ma Hoàn Hảo: BẬT"
+        ghostBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
         
-        -- 1. Biến nhân vật thành tàng hình và tắt va chạm hoàn toàn
-        for _, v in pairs(char:GetDescendants()) do
+        -- 1. Lưu lại đối tượng camera hiện tại để không bị lỗi góc nhìn
+        local originalCameraSubject = camera.CameraSubject
+        
+        -- 2. Tạo một bản sao hình ảnh (Visual Clone) đặt ngay tại chỗ đứng để lừa mắt đối thủ
+        char.Archivable = true
+        cloneModel = char:Clone()
+        cloneModel.Name = "VisualGhostClone"
+        
+        -- Xóa các script phụ bên trong bản sao để nó đứng im làm "vật phẩm tàng hình/tượng"
+        for _, scriptChild in pairs(cloneModel:GetDescendants()) do
+            if scriptChild:IsA("Script") or scriptChild:IsA("LocalScript") then
+                scriptChild:Destroy()
+            end
+        end
+        
+        -- Làm tàng hình bản sao và vô hiệu hóa va chạm hoàn toàn
+        for _, v in pairs(cloneModel:GetDescendants()) do
             if v:IsA("BasePart") then
                 v.Transparency = 1
                 v.CanCollide = false
+                v.Anchored = true
             elseif v:IsA("Decal") then
                 v.Transparency = 1
             elseif v:IsA("Accessory") then
                 local handle = v:FindFirstChild("Handle")
                 if handle then
                     handle.Transparency = 1
-                    handle.CanCollide = false
                 end
             end
         end
+        cloneModel.Parent = workspace
         
-        -- 2. Đẩy hitbox lệch lên phía trên không trung một khoảng nhỏ (ví dụ +4 mét)
-        upConnection = RunService.RenderStepped:Connect(function()
-            if char and rootPart then
+        -- 3. Ẩn nhân vật thật đi (chỉ để bạn thao tác ngầm) và đưa lên cao an toàn khỏi tầm đánh
+        for _, v in pairs(char:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.Transparency = 1
+            elseif v:IsA("Decal") then
+                v.Transparency = 1
+            end
+        end
+        
+        -- 4. Vòng lặp đồng bộ vị trí: Cố định hitbox thật ở trên cao (+6 mét so với bản sao giả lập), đồng thời giữ camera mượt mà
+        connection = RunService.RenderStepped:Connect(function()
+            if char and rootPart and cloneModel then
                 pcall(function()
-                    -- Dịch chuyển tâm nhận sát thương lên cao hơn vị trí hiển thị thật
-                    rootPart.CFrame = rootPart.CFrame + Vector3.new(0, 4, 0)
+                    -- Cập nhật vị trí bản sao giả lập khớp với di chuyển của bạn để đánh lừa thị giác người khác
+                    local cloneRoot = cloneModel:FindFirstChild("HumanoidRootPart")
+                    if cloneRoot then
+                        cloneRoot.CFrame = rootPart.CFrame - Vector3.new(0, 6, 0) -- Bản sao ở dưới đất, nhân vật thật ở trên cao +6m
+                    end
+                    
+                    -- Khóa vận tốc nhân vật thật để không bị đẩy văng hay rơi rớt
                     rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                    rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
                 end)
             end
         end)
     else
-        upGhostBtn.Text = "Bóng Ma Đẩy Cao: TẮT"
-        upGhostBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        ghostBtn.Text = "Bóng Ma Hoàn Hảo: TẮT"
+        ghostBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
         
-        if upConnection then
-            upConnection:Disconnect()
-            upConnection = nil
+        if connection then
+            connection:Disconnect()
+            connection = nil
+        end
+        
+        if cloneModel then
+            cloneModel:Destroy()
+            cloneModel = nil
         end
         
         player.Character:BreakJoints()
@@ -148,9 +187,10 @@ end)
 
 -- Nút Reset
 resetBtn.MouseButton1Click:Connect(function()
+    if cloneModel then cloneModel:Destroy() end
     if player.Character then
         player.Character:BreakJoints()
     end
 end)
 
-print("Đã tải xong Script gambler_chance invisible immortal !")
+print("Đã tải xong Script Bóng Ma Hoàn Hảo!")
