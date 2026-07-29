@@ -1,4 +1,6 @@
--- Khởi tạo dịch vụ và biến môi trường
+-- =====================================================================
+-- HỆ THỐNG GHOST TÀNG HÌNH & SMART ANTI-KB (VOID GUARD) TỐI THƯỢNG
+-- =====================================================================
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
@@ -6,61 +8,50 @@ local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
 -- Xóa UI cũ nếu có
-if CoreGui:FindFirstChild("UltimateAntiKBUI") then
-    CoreGui.UltimateAntiKBUI:Destroy()
+if CoreGui:FindFirstChild("AdvancedGhostSystemUI") then
+    CoreGui.AdvancedGhostSystemUI:Destroy()
 end
 
--- Tạo Giao Diện UI chính
+-- Tạo Giao Diện UI
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "UltimateAntiKBUI"
+screenGui.Name = "AdvancedGhostSystemUI"
 screenGui.Parent = CoreGui
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 220, 0, 160)
+mainFrame.Size = UDim2.new(0, 240, 0, 190)
 mainFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
-mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.Parent = screenGui
 
 local uiCorner = Instance.new("UICorner")
-uiCorner.CornerRadius = UDim.new(0, 8)
+uiCorner.CornerRadius = UDim.new(0, 10)
 uiCorner.Parent = mainFrame
 
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, 0, 0, 35)
-titleLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-titleLabel.Text = "MENU BẤT TỬ & ANTI-KB"
+titleLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+titleLabel.Text = "HỆ THỐNG GHOST & SMART ANTI-KB"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.TextSize = 12
+titleLabel.TextSize = 11
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.Parent = mainFrame
 
 local titleCorner = Instance.new("UICorner")
-titleCorner.CornerRadius = UDim.new(0, 8)
+titleCorner.CornerRadius = UDim.new(0, 10)
 titleCorner.Parent = titleLabel
-
--- Nút Thu Nhỏ / Mở Rộng (-)
-local minBtn = Instance.new("TextButton")
-minBtn.Size = UDim2.new(0, 30, 0, 30)
-minBtn.Position = UDim2.new(1, -33, 0, 2)
-minBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-minBtn.Text = "-"
-minBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-minBtn.TextSize = 16
-minBtn.Font = Enum.Font.GothamBold
-minBtn.Parent = mainFrame
 
 local function createButton(posY, defaultText)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.9, 0, 0, 35)
+    btn.Size = UDim2.new(0.9, 0, 0, 32)
     btn.Position = UDim2.new(0.05, 0, 0, posY)
-    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    btn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
     btn.Text = defaultText
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 12
+    btn.TextSize = 11
     btn.Font = Enum.Font.GothamSemibold
     btn.Parent = mainFrame
     
@@ -71,56 +62,53 @@ local function createButton(posY, defaultText)
     return btn
 end
 
-local antiKBBtn = createButton(45, "Anti-KB & Ghost: TẮT")
-local resetBtn = createButton(95, "Khôi Phục / Reset")
+local ghostBtn = createButton(45, "Bật Ghost & Tách Bộ Phận: TẮT")
+local antiKBBtn = createButton(85, "Bật Smart Anti-KB (Void Guard): TẮT")
+local resetBtn = createButton(125, "Khôi Phục / Reset Nhân Vật")
 
-local elementsToToggle = {antiKBBtn, resetBtn}
-local isMinimized = false
+-- Biến trạng thái toàn cục
+local ghostActive = false
+local antiKBActive = false
 
-minBtn.MouseButton1Click:Connect(function()
-    isMinimized = not isMinimized
-    if isMinimized then
-        minBtn.Text = "+"
-        mainFrame.Size = UDim2.new(0, 220, 0, 35)
-        for _, elem in ipairs(elementsToToggle) do
-            elem.Visible = false
-        end
-    else
-        minBtn.Text = "-"
-        mainFrame.Size = UDim2.new(0, 220, 0, 160)
-        for _, elem in ipairs(elementsToToggle) do
-            elem.Visible = true
-        end
-    end
-end)
-
-local active = false
 local cloneModel = nil
-local connection = nil
+local ghostConnection = nil
+local antiKBConnection = nil
 
-antiKBBtn.MouseButton1Click:Connect(function()
-    active = not active
+local lastSafeCFrame = nil
+local lastCheckTick = 0
+
+-- =====================================================================
+-- PHẦN 1: GHOST & TÁCH BỘ PHẬN TRƠN TRU (GIỮ ĐẦU & CLONE TỰ NHIÊN)
+-- =====================================================================
+ghostBtn.MouseButton1Click:Connect(function()
+    ghostActive = not ghostActive
     local char = player.Character
     if not char then return end
     local rootPart = char:FindFirstChild("HumanoidRootPart")
     local humanoid = char:FindFirstChildOfClass("Humanoid")
-    if not rootPart or not humanoid then return end
+    local head = char:FindFirstChild("Head")
+    if not rootPart or not humanoid or not head then return end
     
-    if active then
-        antiKBBtn.Text = "Anti-KB & Ghost: BẬT"
-        antiKBBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+    if ghostActive then
+        ghostBtn.Text = "Bật Ghost & Tách Bộ Phận: BẬT"
+        ghostBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
         
-        -- 1. Tạo bản sao hình ảnh giả lập ngay dưới đất để lừa mắt địch
+        -- Lưu lại vị trí an toàn ban đầu
+        lastSafeCFrame = rootPart.CFrame
+        
+        -- Tạo bản sao giả lập (Clone) ngay tại vị trí thật để đánh lừa thị giác
         char.Archivable = true
         cloneModel = char:Clone()
-        cloneModel.Name = "AntiKBFakeClone"
+        cloneModel.Name = "NaturalVisualClone"
         
-        for _, scriptChild in pairs(cloneModel:GetDescendants()) do
-            if scriptChild:IsA("Script") or scriptChild:IsA("LocalScript") then
-                scriptChild:Destroy()
+        -- Dọn dẹp script thừa bên trong clone
+        for _, desc in pairs(cloneModel:GetDescendants()) do
+            if desc:IsA("Script") or desc:IsA("LocalScript") then
+                desc:Destroy()
             end
         end
         
+        -- Tàng hình toàn bộ clone nhưng giữ nguyên cấu trúc bộ phận để hiển thị tự nhiên
         for _, v in pairs(cloneModel:GetDescendants()) do
             if v:IsA("BasePart") then
                 v.Transparency = 1
@@ -135,62 +123,156 @@ antiKBBtn.MouseButton1Click:Connect(function()
         end
         cloneModel.Parent = workspace
         
-        -- 2. Tàng hình nhân vật thật
+        -- Tàng hình nhân vật thật hoàn toàn
         for _, v in pairs(char:GetDescendants()) do
             if v:IsA("BasePart") then
                 v.Transparency = 1
+                v.CanCollide = false
             elseif v:IsA("Decal") then
                 v.Transparency = 1
             end
         end
         
-        -- 3. Vòng lặp khóa chặt lực vật lý để triệt tiêu hoàn toàn Knockback và ghim vị trí an toàn
-        connection = RunService.Stepped:Connect(function()
+        -- Khóa camera vào đầu của clone để góc nhìn gắn liền với phần đầu mượt mà nhất
+        local cloneHead = cloneModel:FindFirstChild("Head")
+        if cloneHead then
+            camera.CameraSubject = cloneHead
+        else
+            camera.CameraSubject = humanoid
+        end
+        
+        -- Vòng lặp đồng bộ mượt mà: Đưa Hitbox thật lên cao, đồng thời khớp chuyển động clone dưới đất
+        ghostConnection = RunService.Stepped:Connect(function()
             if char and rootPart and cloneModel then
                 pcall(function()
-                    -- Đồng bộ vị trí bản sao dưới đất theo hướng nhìn/di chuyển của bạn
                     local cloneRoot = cloneModel:FindFirstChild("HumanoidRootPart")
                     if cloneRoot then
-                        cloneRoot.CFrame = rootPart.CFrame - Vector3.new(0, 6, 0)
-                    end
-                    
-                    -- TRIỆT TIÊU HOÀN TOÀN KHỐI LƯỢNG VÀ LỰC TÁC ĐỘNG (Chặn đứng Knockback)
-                    rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                    rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-                    
-                    -- Xóa bỏ các thể loại lực lạ do skill địch gán vào người (như BodyVelocity, LinearVelocity bay người)
-                    for _, child in pairs(rootPart:GetChildren()) do
-                        if child:IsA("BodyVelocity") or child:IsA("BodyPosition") or child:IsA("LinearVelocity") or child:IsA("VectorForce") then
-                            child:Destroy()
+                        -- Clone nằm ở vị trí mặt đất dưới chân
+                        cloneRoot.CFrame = rootPart.CFrame - Vector3.new(0, 8, 0)
+                        
+                        -- Đồng bộ vị trí các bộ phận cơ thể của clone khớp trơn tru với người thật ở trên cao
+                        for _, realPart in pairs(char:GetChildren()) do
+                            if realPart:IsA("BasePart") then
+                                local clonePart = cloneModel:FindFirstChild(realPart.Name)
+                                if clonePart and realPart ~= rootPart then
+                                    clonePart.CFrame = realPart.CFrame - Vector3.new(0, 8, 0)
+                                end
+                            end
                         end
                     end
+                    
+                    -- Ghim hitbox thật lên cao an toàn khỏi tầm đánh
+                    rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                    rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
                 end)
             end
         end)
     else
-        antiKBBtn.Text = "Anti-KB & Ghost: TẮT"
-        antiKBBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        ghostBtn.Text = "Bật Ghost & Tách Bộ Phận: TẮT"
+        ghostBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
         
-        if connection then
-            connection:Disconnect()
-            connection = nil
+        if ghostConnection then
+            ghostConnection:Disconnect()
+            ghostConnection = nil
         end
-        
         if cloneModel then
             cloneModel:Destroy()
             cloneModel = nil
         end
-        
+        if humanoid then
+            camera.CameraSubject = humanoid
+        end
         player.Character:BreakJoints()
     end
 end)
 
--- Nút Reset
+-- =====================================================================
+-- PHẦN 2: SMART ANTI-KB (PHÂN BIỆT NHẢY VÀ KB, CHỐNG RƠI VỰC NHIỀU LẦN)
+-- =====================================================================
+antiKBBtn.MouseButton1Click:Connect(function()
+    antiKBActive = not antiKBActive
+    
+    if antiKBActive then
+        antiKBBtn.Text = "Bật Smart Anti-KB (Void Guard): BẬT"
+        antiKBBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+        
+        local char = player.Character
+        if not char then return end
+        local rootPart = char:FindFirstChild("HumanoidRootPart")
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if not rootPart or not humanoid then return end
+        
+        -- Khởi tạo vị trí an toàn ban đầu
+        lastSafeCFrame = rootPart.CFrame
+        
+        antiKBConnection = RunService.Heartbeat:Connect(function(dt)
+            if not char or not rootPart or not humanoid then return end
+            
+            pcall(function()
+                local velocity = rootPart.AssemblyLinearVelocity
+                local floorMaterial = humanoid.FloorMaterial
+                
+                -- 1. XÁC ĐỊNH HÀNH ĐỘNG NHẢY HOẶC DI CHUYỂN HỢP LỆ
+                local isJumpingOrIntentional = (humanoid:GetState() == Enum.HumanoidStateType.Jumping) or 
+                                               (humanoid:GetState() == Enum.HumanoidStateType.Freefall and velocity.Y > -20) or
+                                               (floorMaterial ~= Enum.Material.Air)
+                
+                if isJumpingOrIntentional then
+                    -- Nếu đang đứng trên đất hoặc nhảy chủ động, liên tục cập nhật mốc an toàn mới nhất
+                    if floorMaterial ~= Enum.Material.Air and math.abs(velocity.Y) < 5 then
+                        lastSafeCFrame = rootPart.CFrame
+                    end
+                else
+                    -- 2. PHÁT HIỆN BỊ DÍNH KB HOẶC RƠI XUỐNG VỰC SÂU (VOID)
+                    local horizontalSpeed = Vector3.new(velocity.X, 0, velocity.Z).Magnitude
+                    local isKnockbacked = (horizontalSpeed > 45) or (velocity.Y < -55)
+                    
+                    if isKnockbacked then
+                        -- LẬP TỨC DỊCH CHUYỂN VỀ VỊ TRÍ AN TOÀN TRƯỚC ĐÓ ĐỂ KHÔNG BỊ RƠI VỰC CHẾT
+                        -- Quản lý chuỗi thông minh tránh bị ghi đè nhầm vị trí lỗi thứ 2
+                        if lastSafeCFrame then
+                            rootPart.CFrame = lastSafeCFrame
+                            rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                            rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                        end
+                    else
+                        -- Định kỳ cập nhật mốc vị trí ổn định kế tiếp
+                        if tick() - lastCheckTick > 0.5 then
+                            lastCheckTick = tick()
+                            if floorMaterial ~= Enum.Material.Air then
+                                lastSafeCFrame = rootPart.CFrame
+                            end
+                        end
+                    end
+                end
+                
+                -- Triệt tiêu lực lạ từ skill địch
+                for _, child in pairs(rootPart:GetChildren()) do
+                    if child:IsA("BodyVelocity") or child:IsA("BodyPosition") or child:IsA("LinearVelocity") or child:IsA("VectorForce") then
+                        child:Destroy()
+                    end
+                end
+            end)
+        end)
+    else
+        antiKBBtn.Text = "Bật Smart Anti-KB (Void Guard): TẮT"
+        antiKBBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+        
+        if antiKBConnection then
+            antiKBConnection:Disconnect()
+            antiKBConnection = nil
+        end
+    end
+end)
+
+-- Nút Reset toàn bộ hệ thống
 resetBtn.MouseButton1Click:Connect(function()
+    if ghostConnection then ghostConnection:Destroy() end
+    if antiKBConnection then antiKBConnection:Disconnect() end
     if cloneModel then cloneModel:Destroy() end
     if player.Character then
         player.Character:BreakJoints()
     end
 end)
 
-print("Đã tải xong Script Anti-Knockback tối ưu!")
+print("Đã tải xong toàn bộ Hệ thống Ghost & Smart Anti-KB hoàn chỉnh!")
