@@ -1,10 +1,10 @@
 --[[
-    King Tower - Final AI Mirror (Legal Pathfinding Anti-Cheat Bypass) Hub
+    King Tower - Final AI Mirror (Ghost Walk NoClip & Speed-Spoof Bypass) Hub
+    Khắc phục triệt để lỗi xuyên tường vùng kín & quét tốc độ của Anti-Cheat
 ]]
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local PathfindingService = game:GetService("PathfindingService")
 local CoreGui = game:GetService("CoreGui")
 
 local LocalPlayer = Players.LocalPlayer
@@ -60,7 +60,7 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -40, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "📱 Legal Pathfinding Bypass Hub"
+TitleLabel.Text = "📱 Ultimate Ghost Walk Bypass Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 10
 TitleLabel.Font = Enum.Font.GothamBold
@@ -119,7 +119,7 @@ ScanTpBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 ScanTpBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
 ScanTpBtn.TextSize = 11
 ScanTpBtn.Font = Enum.Font.GothamBold
-ScanTpBtn.Text = "🔍 1. Scan Enclosed 4-Wall Safe Spot"
+ScanTpBtn.Text = "🔍 1. Ghost Walk to Enclosed Spot"
 ScanTpBtn.Parent = Tab1Content
 local UIC_S1 = Instance.new("UICorner") UIC_S1.CornerRadius = UDim.new(0, 6) UIC_S1.Parent = ScanTpBtn
 
@@ -141,7 +141,7 @@ SwapRealBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 SwapRealBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
 SwapRealBtn.TextSize = 11
 SwapRealBtn.Font = Enum.Font.GothamBold
-SwapRealBtn.Text = "🔄 Swap Positions (Real <-> Clone)"
+SwapRealBtn.Text = "🔄 Swap (Ghost Walk to Clone)"
 SwapRealBtn.Parent = Tab1Content
 local UIC_S3 = Instance.new("UICorner") UIC_S3.CornerRadius = UDim.new(0, 6) UIC_S3.Parent = SwapRealBtn
 
@@ -192,7 +192,7 @@ SwapCloneBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 SwapCloneBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
 SwapCloneBtn.TextSize = 11
 SwapCloneBtn.Font = Enum.Font.GothamBold
-SwapCloneBtn.Text = "🔄 Swap Positions (Clone <-> Real)"
+SwapCloneBtn.Text = "🔄 Swap (Ghost Walk to Clone)"
 SwapCloneBtn.Parent = Tab2Content
 local UIC_C3 = Instance.new("UICorner") UIC_C3.CornerRadius = UDim.new(0, 6) UIC_C3.Parent = SwapCloneBtn
 
@@ -223,62 +223,78 @@ local cloneLocked = false
 local isMinimized = false
 local lockedPos = nil
 
--- HÀM LEGAL PATHFINDING (Tự động tìm đường và chạy bộ hợp pháp - 100% không sợ Anti-Cheat)
-local function LegalMoveTo(character, targetCFrame)
+-- HÀM GHOST WALK: Giải quyết vĩnh viễn Lỗi kẹt tường + Lỗi SpeedHack
+local function GhostWalkTP(character, targetCFrame)
     local hrp = character:FindFirstChild("HumanoidRootPart")
     local hum = character:FindFirstChildOfClass("Humanoid")
     if not hrp or not hum then return end
 
-    local dist = (hrp.Position - targetCFrame.Position).Magnitude
+    local startPos = hrp.Position
+    local endPos = targetCFrame.Position
+    local dist = (startPos - endPos).Magnitude
     
-    -- Nếu khoảng cách ngắn, dịch chuyển trực tiếp an toàn
-    if dist < 15 then
+    if dist < 10 then
         hrp.CFrame = targetCFrame
         return
     end
 
-    InfoLabel.Text = "Status: Running safely via Legal Pathfinding..."
+    -- CHỐNG LỖI 2 (SPEEDHACK): Bắt buộc di chuyển bằng đúng tốc độ đi bộ tối đa (18 studs/sec).
+    -- Mất thời gian để đi đến đích, nhưng Server sẽ thấy đây là dữ liệu ĐI BỘ BÌNH THƯỜNG.
+    local safeSpeed = 18 
+    local duration = dist / safeSpeed
+    
+    local startTime = tick()
+    local connection
+    
+    connection = RunService.Heartbeat:Connect(function()
+        local elapsed = tick() - startTime
+        local alpha = math.clamp(elapsed / duration, 0, 1)
 
-    local path = PathfindingService:CreatePath({
-        AgentRadius = 2,
-        AgentHeight = 5,
-        AgentCanJump = true
-    })
-
-    local success, errorMessage = pcall(function()
-        path:ComputeAsync(hrp.Position, targetCFrame.Position)
-    end)
-
-    if success and path.Status == Enum.PathStatus.Success then
-        local waypoints = path:GetWaypoints()
-        for _, waypoint in ipairs(waypoints) do
-            hum:MoveTo(waypoint.Position)
-            if waypoint.Action == Enum.PathWaypointAction.Jump then
-                hum.Jump = true
+        -- CHỐNG LỖI 1 (KẸT TƯỜNG): Liên tục tắt va chạm để chui xuyên qua bất kỳ bức tường nào.
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
             end
-            -- Chờ nhân vật chạy đến waypoint hiện tại
-            local reached = false
-            local conn
-            conn = hum.MoveToFinished:Connect(function(reachedSuccessfully)
-                reached = true
-                if conn then conn:Disconnect() end
-            end)
-            
-            local timeout = tick()
-            while not reached and tick() - timeout < 2 do
-                task.wait(0.1)
-                if not character or not character.Parent then break end
-            end
-            if conn then conn:Disconnect() end
         end
-    else
-        -- Fallback nếu không tính được đường đi: Dùng MoveTo trực tiếp thẳng tới đích
-        hum:MoveTo(targetCFrame.Position)
-        task.wait(math.min(dist / 16, 3))
+        
+        -- Di chuyển tuyến tính siêu mượt
+        local currentPos = startPos:Lerp(endPos, alpha)
+        
+        -- Cập nhật CFrame với hướng nhìn chính xác
+        local lookAt = Vector3.new(endPos.X, currentPos.Y, endPos.Z)
+        if (currentPos - lookAt).Magnitude > 0.1 then
+            hrp.CFrame = CFrame.new(currentPos, lookAt)
+        else
+            hrp.CFrame = CFrame.new(currentPos)
+        end
+        
+        -- ĐÁNH LỪA SERVER (GROUND CHECK):
+        -- Ép 1 lực Y cực nhỏ (-0.1) xuống để vật lý Server ghi nhận nhân vật đang chạm bề mặt.
+        -- Đưa vận tốc X, Z về 0 để không kích hoạt check gia tốc.
+        hrp.AssemblyLinearVelocity = Vector3.new(0, -0.1, 0)
+        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+        
+        -- Giữ trạng thái đang chạy thay vì lơ lửng
+        hum:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
+
+        if alpha >= 1 then
+            if connection then connection:Disconnect() end
+        end
+    end)
+    
+    -- Tạm ngưng thread chính để nhân vật có đủ thời gian đi hết quãng đường
+    while tick() - startTime < duration do
+        if not character or not character.Parent or hum.Health <= 0 then break end
+        InfoLabel.Text = string.format("Status: Ghost Walking... %.1fs left", duration - (tick() - startTime))
+        task.wait(0.1)
     end
     
+    if connection then connection:Disconnect() end
+    
     hrp.CFrame = targetCFrame
-    InfoLabel.Text = "Status: Arrived safely!"
+    hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    hum:ChangeState(Enum.HumanoidStateType.Running)
+    InfoLabel.Text = "Status: Arrived safely at target!"
 end
 
 MinimizeBtn.MouseButton1Click:Connect(function()
@@ -365,13 +381,13 @@ ScanTpBtn.MouseButton1Click:Connect(function()
             task.wait(0.05) 
         end
         
-        LegalMoveTo(character, targetCF)
+        -- Dùng GhostWalk thay cho Pathfinding và Teleport hỏng
+        GhostWalkTP(character, targetCF)
         
         if wasLocked then 
             lockedPos = targetCF 
             realLocked = true 
         end
-        InfoLabel.Text = "Status: Real Body safely ran to Safe Spot!"
     else
         InfoLabel.Text = "Status: No safe spot found."
     end
@@ -518,18 +534,16 @@ local function performSwap()
         task.wait(0.05)
     end
     
-    -- Clone là giả (phía client), dịch chuyển tức thời thoải mái
+    -- Clone là giả (phía client), có thể dịch chuyển tức thời thoải mái ngay lập tức
     cloneHrp.CFrame = tempCF
     
-    -- Cơ thể thật chạy đến vị trí clone bằng Legal Pathfinding
-    LegalMoveTo(character, targetCF)
+    -- Cơ thể thật đổi chỗ sang clone sẽ dùng cơ chế Ghost Walk Noclip Tốc độ an toàn
+    GhostWalkTP(character, targetCF)
     
     if wasLocked then
         lockedPos = targetCF
         realLocked = true
     end
-    
-    InfoLabel.Text = "Status: Swapped successfully with Legal Pathfinding!"
 end
 
 SwapRealBtn.MouseButton1Click:Connect(performSwap)
