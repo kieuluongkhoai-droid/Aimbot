@@ -1,11 +1,10 @@
 --[[
-    King Tower - Mobile AI Input Mirror, Dual Swap & Y-Axis Smart Scan Hub
+    King Tower - Optimized Mobile AI Mirror, Anti-Cheat Bypass & Dual Swap Hub
 ]]
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
-local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -60,7 +59,7 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -40, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "📱 Mobile AI Mirror & Swap Hub"
+TitleLabel.Text = "📱 Mobile AI Mirror & Bypass Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
@@ -274,7 +273,6 @@ ScanTpBtn.MouseButton1Click:Connect(function()
     local currentY = hrp.Position.Y
     InfoLabel.Text = "Status: Scanning Y-axis (Current Y: " .. math.floor(currentY) .. ")..."
     
-    -- Tìm điểm spawn game để tránh quá gần
     local spawnPos = Vector3.new(0, currentY, 0)
     for _, obj in ipairs(workspace:GetDescendants()) do
         if obj:IsA("SpawnLocation") then
@@ -292,7 +290,6 @@ ScanTpBtn.MouseButton1Click:Connect(function()
             local diffY = math.abs(pos.Y - currentY)
             local distToSpawn = (pos - spawnPos).Magnitude
             
-            -- Điều kiện: Không quá cao, không quá thấp, ít lệch tầng Y nhất, và không quá gần spawn (> 30 đơn vị)
             if diffY < 15 and diffY < minDiffY and distToSpawn > 30 then
                 minDiffY = diffY
                 bestPart = obj
@@ -304,13 +301,11 @@ ScanTpBtn.MouseButton1Click:Connect(function()
         hrp.CFrame = CFrame.new(bestPart.Position.X + 25, bestPart.Position.Y + 3, bestPart.Position.Z + 25)
         InfoLabel.Text = "Status: Real Body TP to safe Y-level match!"
     else
-        -- Fallback an toàn nếu không tìm thấy khớp hoàn hảo
         hrp.CFrame = hrp.CFrame + Vector3.new(60, 0, 60)
         InfoLabel.Text = "Status: Real Body moved (Fallback offset)."
     end
 end)
 
--- Spawn Clone tại điểm spawn game
 SpawnCloneBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then
@@ -338,31 +333,36 @@ SpawnCloneBtn.MouseButton1Click:Connect(function()
     InfoLabel.Text = "Status: Clone spawned at game spawn."
 end)
 
--- Khóa Real Body và Kích hoạt AI đọc điều khiển di chuyển di động (Mobile Input Mirror)
+-- Khóa Real Body và Kích hoạt AI đọc điều khiển từ Mobile (Bypass Anti-Cheat Kill)
 RealLockBtn.MouseButton1Click:Connect(function()
     realLocked = not realLocked
     local character = LocalPlayer.Character
-    if character then
-        for _, part in ipairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.Anchored = realLocked
-            end
-        end
-    end
     
     if realLocked then
         RealLockBtn.Text = "🔒 Lock Real (AI Mirror Control): [ ON ]"
         RealLockBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
-        InfoLabel.Text = "Status: Real Body locked. AI reading mobile input for Clone."
+        InfoLabel.Text = "Status: Real Body locked safely. AI controlling Clone."
         
-        -- AI đọc điều khiển từ điện thoại và áp dụng cho Clone
+        -- Thay vì Anchor toàn bộ gây chết bởi Anti-cheat, sử dụng chế độ khóa vị trí an toàn qua vòng lặp bù tọa độ
         if _G.MobileAIConnection then _G.MobileAIConnection:Disconnect() end
+        local lockedPos = character and character:FindFirstChild("HumanoidRootPart") and character.HumanoidRootPart.CFrame
+        
         _G.MobileAIConnection = RunService.RenderStepped:Connect(function()
+            if character and character:FindFirstChild("HumanoidRootPart") and lockedPos then
+                if not realLocked then return end
+                -- Giữ nguyên vị trí Real Body để chống anti-cheat kill do dịch chuyển bất thường
+                character.HumanoidRootPart.CFrame = lockedPos
+                character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+            end
+            
             if activeClone and activeClone:FindFirstChildOfClass("Humanoid") and activeClone:FindFirstChild("HumanoidRootPart") then
                 local cloneHum = activeClone:FindFirstChildOfClass("Humanoid")
-                local moveDir = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") and LocalPlayer.Character:FindFirstChildOfClass("Humanoid").MoveDirection or Vector3.new(0,0,0)
-                if moveDir.Magnitude > 0 then
-                    cloneHum:Move(moveDir, true)
+                local realHum = character and character:FindFirstChildOfClass("Humanoid")
+                if realHum then
+                    local moveDir = realHum.MoveDirection
+                    if moveDir.Magnitude > 0 then
+                        cloneHum:Move(moveDir, true)
+                    end
                 end
             end
         end)
@@ -377,7 +377,6 @@ RealLockBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Khóa Clone
 CloneLockBtn.MouseButton1Click:Connect(function()
     cloneLocked = not cloneLocked
     if activeClone then
@@ -400,7 +399,6 @@ CloneLockBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Hàm thực hiện Swap trực tiếp vị trí 2 bên
 local function performSwap()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") or not activeClone or not activeClone:FindFirstChild("HumanoidRootPart") then
@@ -421,7 +419,6 @@ end
 SwapRealBtn.MouseButton1Click:Connect(performSwap)
 SwapCloneBtn.MouseButton1Click:Connect(performSwap)
 
--- Camera Views
 ViewRealBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if character and character:FindFirstChildOfClass("Humanoid") then
