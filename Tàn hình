@@ -1,5 +1,5 @@
 --[[
-    King Tower - Final AI Mirror (Move + Jump), Wall Enclosure TP & Swap Hub
+    King Tower - Final AI Mirror (Optimized Smooth Movement & Stable Animation Sync), Wall Enclosure TP & Swap Hub
 ]]
 
 local Players = game:GetService("Players")
@@ -59,7 +59,7 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -40, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "📱 Ultimate AI Mirror & Enclosed Hub"
+TitleLabel.Text = "📱 Ultra-Smooth AI Mirror Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
@@ -129,7 +129,7 @@ RealLockBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 RealLockBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
 RealLockBtn.TextSize = 11
 RealLockBtn.Font = Enum.Font.GothamBold
-RealLockBtn.Text = "🔒 Lock Real (AI Mirror Move+Jump): [ OFF ]"
+RealLockBtn.Text = "🔒 Lock Real (Smooth Mirror): [ OFF ]"
 RealLockBtn.Parent = Tab1Content
 local UIC_S2 = Instance.new("UICorner") UIC_S2.CornerRadius = UDim.new(0, 6) UIC_S2.Parent = RealLockBtn
 
@@ -261,7 +261,6 @@ Tab2Btn.MouseButton1Click:Connect(function()
     Tab1Btn.TextColor3 = Color3.fromRGB(180, 180, 180)
 end)
 
--- Quét vị trí tầng hiện tại và tìm khu vực kín (được bao quanh bởi nhiều vật thể/bường) xa hơn để TP Real Body đến ẩn nấp
 ScanTpBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then
@@ -281,7 +280,6 @@ ScanTpBtn.MouseButton1Click:Connect(function()
             local pos = obj.Position
             local diffY = math.abs(pos.Y - currentY)
             
-            -- Kiểm tra xem xung quanh điểm này có nhiều bức tường/vật cản bao quanh không (khu vực kín)
             if diffY < 20 then
                 local surroundingCount = 0
                 for _, checkPart in ipairs(workspace:GetDescendants()) do
@@ -334,46 +332,79 @@ SpawnCloneBtn.MouseButton1Click:Connect(function()
     InfoLabel.Text = "Status: Clone spawned at game spawn."
 end)
 
--- Khóa Real Body và Kích hoạt AI đọc chính xác di chuyển (Move) và nhảy (Jump) áp lên Clone
+-- Sửa lỗi khựng chuyển động: Tối ưu hóa mượt mà luồng Heartbeat & Đồng bộ Animation thông minh
 RealLockBtn.MouseButton1Click:Connect(function()
     realLocked = not realLocked
     local character = LocalPlayer.Character
     
     if realLocked then
-        RealLockBtn.Text = "🔒 Lock Real (AI Mirror Move+Jump): [ ON ]"
+        RealLockBtn.Text = "🔒 Lock Real (Smooth Mirror): [ ON ]"
         RealLockBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
-        InfoLabel.Text = "Status: Real Body locked. AI mirroring Move & Jump to Clone."
+        InfoLabel.Text = "Status: Ultra-smooth movement & sync active."
         
         if _G.MobileAIConnection then _G.MobileAIConnection:Disconnect() end
         local lockedPos = character and character:FindFirstChild("HumanoidRootPart") and character.HumanoidRootPart.CFrame
         
-        _G.MobileAIConnection = RunService.RenderStepped:Connect(function()
+        local cachedTracks = {}
+        
+        _G.MobileAIConnection = RunService.Heartbeat:Connect(function(dt)
             if character and character:FindFirstChild("HumanoidRootPart") and lockedPos then
                 if not realLocked then return end
                 character.HumanoidRootPart.CFrame = lockedPos
-                character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+                character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
             end
             
             if activeClone and activeClone:FindFirstChildOfClass("Humanoid") and activeClone:FindFirstChild("HumanoidRootPart") then
                 local cloneHum = activeClone:FindFirstChildOfClass("Humanoid")
                 local realHum = character and character:FindFirstChildOfClass("Humanoid")
+                
                 if realHum then
-                    -- Đọc chính xác hướng di chuyển
+                    -- Điều khiển hướng di chuyển trơn tru dựa trên Humanoid thực tế
                     local moveDir = realHum.MoveDirection
-                    if moveDir.Magnitude > 0 then
-                        cloneHum:Move(moveDir, true)
-                    end
-                    -- Đọc trạng thái nhảy (Jump) từ Real Body áp sang Clone
-                    if realHum.Jump then
-                        cloneHum.Jump = true
+                    cloneHum:Move(moveDir, false)
+                    cloneHum.Jump = realHum.Jump
+
+                    -- XỬ LÝ ĐỒNG BỘ HOẠT ẢNH HOÀN TOÀN MƯỢT MÀ (KHÔNG BỊ GIẬT CỤC)
+                    local realAnimator = realHum:FindFirstChildOfClass("Animator")
+                    local cloneAnimator = cloneHum:FindFirstChildOfClass("Animator")
+                    
+                    if realAnimator and cloneAnimator then
+                        local realTracks = realAnimator:GetPlayingAnimationTracks()
+                        
+                        for _, rTrack in ipairs(realTracks) do
+                            local animId = rTrack.Animation.AnimationId
+                            local cloneTrack = cachedTracks[animId]
+                            
+                            if not cloneTrack then
+                                local success, result = pcall(function()
+                                    return cloneAnimator:LoadAnimation(rTrack.Animation)
+                                end)
+                                if success and result then
+                                    cloneTrack = result
+                                    cachedTracks[animId] = cloneTrack
+                                    cloneTrack:Play()
+                                end
+                            end
+                            
+                            if cloneTrack then
+                                if not cloneTrack.IsPlaying then
+                                    cloneTrack:Play()
+                                end
+                                -- Khớp thời gian và tốc độ khung hình với người thật để không bị lệch cử động
+                                if math.abs(cloneTrack.TimePosition - rTrack.TimePosition) > 0.15 then
+                                    cloneTrack.TimePosition = rTrack.TimePosition
+                                end
+                                cloneTrack:AdjustSpeed(rTrack.Speed)
+                            end
+                        end
                     end
                 end
             end
         end)
     else
-        RealLockBtn.Text = "🔒 Lock Real (AI Mirror Move+Jump): [ OFF ]"
+        RealLockBtn.Text = "🔒 Lock Real (Smooth Mirror): [ OFF ]"
         RealLockBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
-        InfoLabel.Text = "Status: Real Body unlocked. AI control stopped."
+        InfoLabel.Text = "Status: Mirror stopped."
         if _G.MobileAIConnection then
             _G.MobileAIConnection:Disconnect()
             _G.MobileAIConnection = nil
@@ -403,7 +434,6 @@ CloneLockBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Nút Swap một chạm đổi chỗ trực tiếp vị trí Real Body và Clone cho nhau
 local function performSwap()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") or not activeClone or not activeClone:FindFirstChild("HumanoidRootPart") then
