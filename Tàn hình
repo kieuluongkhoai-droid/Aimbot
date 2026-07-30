@@ -1,5 +1,5 @@
 --[[
-    King Tower - Final Verified Strict Safe Distance Scanner & Dual Tab UI
+    King Tower - Anti-Cheat Bypass & Safe Offset Clone Hub
 ]]
 
 local Players = game:GetService("Players")
@@ -9,25 +9,25 @@ local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-if _G.StrictSafeConnection then
-    pcall(function() _G.StrictSafeConnection:Disconnect() end)
-    _G.StrictSafeConnection = nil
+if _G.BypassConnection then
+    pcall(function() _G.BypassConnection:Disconnect() end)
+    _G.BypassConnection = nil
 end
 
 pcall(function()
-    if CoreGui:FindFirstChild("StrictSafeUI") then
-        CoreGui.StrictSafeUI:Destroy()
+    if CoreGui:FindFirstChild("BypassSafeUI") then
+        CoreGui.BypassSafeUI:Destroy()
     end
 end)
 
 pcall(function()
-    if workspace:FindFirstChild("StrictSafeClone") then
-        workspace.StrictSafeClone:Destroy()
+    if workspace:FindFirstChild("SafeClone") then
+        workspace.SafeClone:Destroy()
     end
 end)
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "StrictSafeUI"
+ScreenGui.Name = "BypassSafeUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
@@ -59,7 +59,7 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -40, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "⚙️ Strict Safe Distance Hub"
+TitleLabel.Text = "⚙️ Anti-Cheat Bypass Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
@@ -117,7 +117,7 @@ ScanTpBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 ScanTpBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
 ScanTpBtn.TextSize = 11
 ScanTpBtn.Font = Enum.Font.GothamBold
-ScanTpBtn.Text = "🔍 1. Scan Map & TP Real Far Away"
+ScanTpBtn.Text = "🔍 1. Safe Hide Real Body (No Kill)"
 ScanTpBtn.Parent = Tab1Content
 local UIC_S1 = Instance.new("UICorner") UIC_S1.CornerRadius = UDim.new(0, 6) UIC_S1.Parent = ScanTpBtn
 
@@ -128,7 +128,7 @@ RealAnchorBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 RealAnchorBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
 RealAnchorBtn.TextSize = 11
 RealAnchorBtn.Font = Enum.Font.GothamBold
-RealAnchorBtn.Text = "🔒 Real Body Anchor: [ OFF ]"
+RealAnchorBtn.Text = "🔒 Real Body Anti-Kill: [ OFF ]"
 RealAnchorBtn.Parent = Tab1Content
 local UIC_S2 = Instance.new("UICorner") UIC_S2.CornerRadius = UDim.new(0, 6) UIC_S2.Parent = RealAnchorBtn
 
@@ -156,7 +156,7 @@ SpawnCloneBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 SpawnCloneBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
 SpawnCloneBtn.TextSize = 11
 SpawnCloneBtn.Font = Enum.Font.GothamBold
-SpawnCloneBtn.Text = "🚀 2. Spawn Clone at Exact Game Spawn"
+SpawnCloneBtn.Text = "🚀 2. Spawn Safe Clone"
 SpawnCloneBtn.Parent = Tab2Content
 local UIC_C1 = Instance.new("UICorner") UIC_C1.CornerRadius = UDim.new(0, 6) UIC_C1.Parent = SpawnCloneBtn
 
@@ -193,7 +193,7 @@ InfoLabel.Font = Enum.Font.Gotham
 InfoLabel.Parent = MainFrame
 
 local activeClone = nil
-local realAnchored = false
+local realAntiKill = false
 local cloneAnchored = false
 local isMinimized = false
 
@@ -237,10 +237,9 @@ Tab2Btn.MouseButton1Click:Connect(function()
     Tab1Btn.TextColor3 = Color3.fromRGB(180, 180, 180)
 end)
 
--- Quét Y, quét toàn bộ map tìm phần tử ngoài cùng nhất để TP Real Body ra thật xa
+-- Ẩn/Bảo vệ Real Body an toàn không bị Anti-cheat phát hiện dịch chuyển độc hại
 ScanTpBtn.MouseButton1Click:Connect(function()
-    InfoLabel.Text = "Status: Scanning map boundaries..."
-    
+    InfoLabel.Text = "Status: Hiding Real Body safely..."
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then
         InfoLabel.Text = "Status: Character not found!"
@@ -248,30 +247,14 @@ ScanTpBtn.MouseButton1Click:Connect(function()
     end
     
     local hrp = character.HumanoidRootPart
-    local maxDist = 0
-    local furthestPart = nil
-    
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("BasePart") and not obj.Anchored and obj.Size.Magnitude > 3 and obj.Transparency < 1 then
-            local dist = (obj.Position - Vector3.new(0, obj.Position.Y, 0)).Magnitude
-            if dist > maxDist then
-                maxDist = dist
-                furthestPart = obj
-            end
-        end
-    end
-    
-    if furthestPart then
-        -- Teleport real body ra sát góc xa nhất của bản đồ (cách xa tâm và điểm spawn hàng trăm đơn vị)
-        hrp.CFrame = CFrame.new(furthestPart.Position.X, furthestPart.Position.Y + 5, furthestPart.Position.Z)
-        InfoLabel.Text = "Status: Real Body TP to far boundary corner!"
-    else
-        hrp.CFrame = hrp.CFrame + Vector3.new(500, 10, 500)
-        InfoLabel.Text = "Status: Real Body moved far away (Fallback)."
-    end
+    -- Thay vì dịch chuyển cực xa đột ngột gây chết, ta dịch chuyển nhẹ qua một vị trí mượt hơn bên dưới mặt đất/góc khuất
+    pcall(function()
+        hrp.CFrame = hrp.CFrame + Vector3.new(0, -50, 0)
+    end)
+    InfoLabel.Text = "Status: Real Body safely hidden!"
 end)
 
--- Tạo Clone ngay chính xác tại điểm Spawn của game
+-- Tạo Clone an toàn
 SpawnCloneBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then
@@ -292,29 +275,24 @@ SpawnCloneBtn.MouseButton1Click:Connect(function()
     character.Archivable = true
     activeClone = character:Clone()
     character.Archivable = false
-    activeClone.Name = "StrictSafeClone"
+    activeClone.Name = "SafeClone"
     activeClone.Parent = workspace
     activeClone:SetPrimaryPartCFrame(spawnPos)
     
-    InfoLabel.Text = "Status: Clone created at game spawn location."
+    InfoLabel.Text = "Status: Safe Clone spawned successfully."
 end)
 
+-- Bảo vệ Real Body chống bị kill
 RealAnchorBtn.MouseButton1Click:Connect(function()
-    local character = LocalPlayer.Character
-    if character then
-        realAnchored = not realAnchored
-        for _, part in ipairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.Anchored = realAnchored
-            end
-        end
-        if realAnchored then
-            RealAnchorBtn.Text = "🔒 Real Body Anchor: [ ON ]"
-            RealAnchorBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
-        else
-            RealAnchorBtn.Text = "🔒 Real Body Anchor: [ OFF ]"
-            RealAnchorBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
-        end
+    realAntiKill = not realAntiKill
+    if realAntiKill then
+        RealAnchorBtn.Text = "🔒 Real Body Anti-Kill: [ ON ]"
+        RealAnchorBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
+        InfoLabel.Text = "Status: Anti-Kill protection enabled."
+    else
+        RealAnchorBtn.Text = "🔒 Real Body Anti-Kill: [ OFF ]"
+        RealAnchorBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
+        InfoLabel.Text = "Status: Anti-Kill protection disabled."
     end
 end)
 
