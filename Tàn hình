@@ -1,5 +1,5 @@
 --[[
-    King Tower - Absolute Touch Immunity Ghost Body
+    King Tower - AI Decoy & Stable Ghost Body Script
 ]]
 
 local Players = game:GetService("Players")
@@ -28,7 +28,7 @@ pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 280, 0, 210)
+MainFrame.Size = UDim2.new(0, 280, 0, 240)
 MainFrame.Position = UDim2.new(0, 50, 0, 150)
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 MainFrame.BorderSizePixel = 0
@@ -48,45 +48,58 @@ UIStroke.Parent = MainFrame
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, 0, 0, 35)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "Ultimate Ghost & Decoy Hub"
+TitleLabel.Text = "AI Decoy & Ghost Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 12
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.Parent = MainFrame
 
 local Container = Instance.new("Frame")
-Container.Size = UDim2.new(1, -20, 0, 120)
+Container.Size = UDim2.new(1, -20, 0, 150)
 Container.Position = UDim2.new(0, 10, 0, 40)
 Container.BackgroundTransparency = 1
 Container.Parent = MainFrame
 
 local DeployBtn = Instance.new("TextButton")
-DeployBtn.Size = UDim2.new(1, 0, 0, 36)
+DeployBtn.Size = UDim2.new(1, 0, 0, 32)
 DeployBtn.Position = UDim2.new(0, 0, 0, 0)
 DeployBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 DeployBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
 DeployBtn.TextSize = 11
 DeployBtn.Font = Enum.Font.GothamBold
-DeployBtn.Text = "🎯 Spawn Ultimate Decoy"
+DeployBtn.Text = "🎯 Spawn AI Decoy & Ghost"
 DeployBtn.Parent = Container
 
 local UIC_1 = Instance.new("UICorner") UIC_1.CornerRadius = UDim.new(0, 6) UIC_1.Parent = DeployBtn
 
+-- NÚT BẬT/TẮT AI CHO CLONE
+local AIToggleBtn = Instance.new("TextButton")
+AIToggleBtn.Size = UDim2.new(1, 0, 0, 32)
+AIToggleBtn.Position = UDim2.new(0, 0, 0, 38)
+AIToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+AIToggleBtn.TextColor3 = Color3.fromRGB(255, 200, 100)
+AIToggleBtn.TextSize = 11
+AIToggleBtn.Font = Enum.Font.GothamBold
+AIToggleBtn.Text = "🤖 AI Mode: [ OFF ]"
+AIToggleBtn.Parent = Container
+
+local UIC_AI = Instance.new("UICorner") UIC_AI.CornerRadius = UDim.new(0, 6) UIC_AI.Parent = AIToggleBtn
+
 local CamToggleBtn = Instance.new("TextButton")
-CamToggleBtn.Size = UDim2.new(1, 0, 0, 36)
-CamToggleBtn.Position = UDim2.new(0, 0, 0, 42)
+CamToggleBtn.Size = UDim2.new(1, 0, 0, 32)
+CamToggleBtn.Position = UDim2.new(0, 0, 0, 76)
 CamToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 CamToggleBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
 CamToggleBtn.TextSize = 11
 CamToggleBtn.Font = Enum.Font.GothamBold
-CamToggleBtn.Text = "👁️ Switch Camera"
+CamToggleBtn.Text = "👁️ Switch Camera [ Ghost / Decoy ]"
 CamToggleBtn.Parent = Container
 
 local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2.Parent = CamToggleBtn
 
 local ResetBtn = Instance.new("TextButton")
-ResetBtn.Size = UDim2.new(1, 0, 0, 36)
-ResetBtn.Position = UDim2.new(0, 0, 0, 84)
+ResetBtn.Size = UDim2.new(1, 0, 0, 32)
+ResetBtn.Position = UDim2.new(0, 0, 0, 114)
 ResetBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 ResetBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
 ResetBtn.TextSize = 11
@@ -98,7 +111,7 @@ local UIC_3 = Instance.new("UICorner") UIC_3.CornerRadius = UDim.new(0, 6) UIC_3
 
 local InfoLabel = Instance.new("TextLabel")
 InfoLabel.Size = UDim2.new(1, -20, 0, 25)
-InfoLabel.Position = UDim2.new(0, 10, 0, 175)
+InfoLabel.Position = UDim2.new(0, 10, 0, 205)
 InfoLabel.BackgroundTransparency = 1
 InfoLabel.Text = "Status: Ready."
 InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -107,7 +120,8 @@ InfoLabel.Font = Enum.Font.Gotham
 InfoLabel.Parent = MainFrame
 
 local activeDecoy = nil
-local isCameraOnDecoy = false
+local fixedHeightY = 0
+local isAIActive = false
 
 DeployBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
@@ -117,6 +131,7 @@ DeployBtn.MouseButton1Click:Connect(function()
     end
     
     local startCF = character.HumanoidRootPart.CFrame
+    fixedHeightY = startCF.Y
     local realHumanoid = character:FindFirstChildOfClass("Humanoid")
     local realHrp = character.HumanoidRootPart
     
@@ -125,23 +140,20 @@ DeployBtn.MouseButton1Click:Connect(function()
         activeDecoy = nil
     end
     
-    -- 1. XỬ LÝ CƠ THỂ GỐC: VÔ HIỆU HÓA HOÀN TOÀN TÍNH CHẤT CHẠM VÀ SÁT THƯƠNG
+    -- 1. XỬ LÝ CƠ THỂ GỐC (GHOST BODY)
     character.Name = "GhostRealBody"
-    
-    if realHumanoid then
-        realHumanoid:Destroy()
-    end
+    if realHumanoid then realHumanoid:Destroy() end
     
     for _, part in ipairs(character:GetDescendants()) do
         if part:IsA("BasePart") then
             part.CanCollide = false
-            part.CanTouch = false -- Chặn đứng mọi sự kiện chạm từ kill block hoặc vũ khí
+            part.CanTouch = false
             part.CanQuery = false
-            part.Transparency = 0.6
+            part.Transparency = 0.5
         end
     end
     
-    -- 2. TẠO CLONE MỒI NHỬ: ĐÓN NHẬN MỌI VA CHẠM VÀ SÁT THƯƠNG THAY CHO THÂN THẬT
+    -- 2. TẠO CLONE MỒI NHỬ (DECOY)
     character.Archivable = true
     activeDecoy = character:Clone()
     character.Archivable = false
@@ -151,8 +163,12 @@ DeployBtn.MouseButton1Click:Connect(function()
     activeDecoy:SetPrimaryPartCFrame(startCF + Vector3.new(3, 0, 0))
     
     local decoyHumanoid = activeDecoy:FindFirstChildOfClass("Humanoid")
+    local decoyHrp = activeDecoy:FindFirstChild("HumanoidRootPart")
+    
     if decoyHumanoid then
-        decoyHumanoid.Sit = true 
+        decoyHumanoid.PlatformStand = false
+        decoyHumanoid.AutoRotate = true
+        decoyHumanoid.Sit = false -- Cho phép đứng dậy để AI điều khiển đi lại
         decoyHumanoid.MaxHealth = math.huge
         decoyHumanoid.Health = math.huge
         decoyHumanoid.HealthChanged:Connect(function()
@@ -165,21 +181,21 @@ DeployBtn.MouseButton1Click:Connect(function()
     for _, part in ipairs(activeDecoy:GetDescendants()) do
         if part:IsA("BasePart") then
             part.CanCollide = true
-            part.CanTouch = true -- Mồi nhử sẽ hứng trọn va chạm và sát thương từ kill brick hoặc đòn đánh
+            part.CanTouch = true
             part.CanQuery = true
             part.Transparency = 0
             pcall(function() part:SetNetworkOwner(LocalPlayer) end)
         end
     end
     
-    if decoyHumanoid then 
-        Camera.CameraSubject = decoyHumanoid 
-        isCameraOnDecoy = true
+    if realHrp then 
+        Camera.CameraSubject = realHrp 
     end
     
-    -- 3. VÒNG LẶP ĐIỀU KHIỂN CƠ THỂ GỐC (DI CHUYỂN TỰ DO XUYÊN KHÔNG GIAN)
+    -- 3. VÒNG LẶP ĐIỀU KHIỂN CƠ THỂ GỐC & HỆ THỐNG AI CHO CLONE
     if _G.MasterDecoyConnection then _G.MasterDecoyConnection:Disconnect() end
     _G.MasterDecoyConnection = RunService.RenderStepped:Connect(function(dt)
+        -- Điều khiển Ghost Body bằng bàn phím
         if character and character.Parent and realHrp then
             local moveDir = Vector3.zero
             if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.Up) then
@@ -202,39 +218,86 @@ DeployBtn.MouseButton1Click:Connect(function()
                 camRight = Vector3.new(camRight.X, 0, camRight.Z).Unit
                 
                 local worldDir = (camRight * moveDir.X + camLook * -moveDir.Z).Unit
+                local currentPos = realHrp.Position
+                local targetPos = currentPos + (worldDir * (30 * dt))
                 
-                realHrp.AssemblyLinearVelocity = worldDir * 35
-                realHrp.CFrame = realHrp.CFrame + (worldDir * (35 * dt))
-            else
+                realHrp.CFrame = CFrame.new(targetPos.X, fixedHeightY, targetPos.Z)
                 realHrp.AssemblyLinearVelocity = Vector3.zero
+            else
+                local currentPos = realHrp.Position
+                realHrp.CFrame = CFrame.new(currentPos.X, fixedHeightY, currentPos.Z)
+                realHrp.AssemblyLinearVelocity = Vector3.zero
+            end
+        end
+        
+        -- HỆ THỐNG AI TỰ ĐỘNG CHO CLONE (Tự động tìm và đi theo mục tiêu gần nhất)
+        if isAIActive and activeDecoy and decoyHumanoid and decoyHrp then
+            local nearestTarget = nil
+            local shortestDist = math.huge
+            
+            -- Quét tất cả người chơi khác trong server làm mục tiêu cho AI
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    local targetHrp = player.Character.HumanoidRootPart
+                    local dist = (targetHrp.Position - decoyHrp.Position).Magnitude
+                    if dist < shortestDist then
+                        shortestDist = dist
+                        nearestTarget = targetHrp
+                    end
+                end
+            end
+            
+            -- Nếu tìm thấy mục tiêu, AI điều khiển Clone di chuyển đuổi theo
+            if nearestTarget then
+                decoyHumanoid:MoveTo(nearestTarget.Position)
+            else
+                -- Nếu không có ai, AI cho Clone đi quanh quẩn gần Ghost Body
+                if character and character.Parent and character:FindFirstChild("HumanoidRootPart") then
+                    local ghostHrp = character.HumanoidRootPart
+                    if (ghostHrp.Position - decoyHrp.Position).Magnitude > 15 then
+                        decoyHumanoid:MoveTo(ghostHrp.Position + Vector3.new(math.random(-5, 5), 0, math.random(-5, 5)))
+                    end
+                end
             end
         end
     end)
     
-    InfoLabel.Text = "Status: Absolute Touch Immunity Active!"
+    InfoLabel.Text = "Status: AI Decoy & Ghost Active!"
 end)
 
-CamToggleBtn.MouseButton1Click:Connect(function()
-    if not activeDecoy or not activeDecoy:FindFirstChildOfClass("Humanoid") then
-        InfoLabel.Text = "Status: Spawn decoy first!"
-        return
-    end
-    
-    local realChar = workspace:FindFirstChild("GhostRealBody")
-    local decoyHumanoid = activeDecoy:FindFirstChildOfClass("Humanoid")
-    
-    if isCameraOnDecoy then
-        if realChar and realChar:FindFirstChild("HumanoidRootPart") then
-            Camera.CameraSubject = realChar.HumanoidRootPart
-        end
-        InfoLabel.Text = "Status: Camera on Ghost Body"
-        isCameraOnDecoy = false
+-- BẬT / TẮT AI MODE
+AIToggleBtn.MouseButton1Click:Connect(function()
+    isAIActive = not isAIActive
+    if isAIActive then
+        AIToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+        AIToggleBtn.Text = "🤖 AI Mode: [ ACTIVE ]"
+        InfoLabel.Text = "Status: AI Bot Controller Enabled."
     else
+        AIToggleBtn.TextColor3 = Color3.fromRGB(255, 200, 100)
+        AIToggleBtn.Text = "🤖 AI Mode: [ OFF ]"
+        InfoLabel.Text = "Status: AI Bot Controller Disabled."
+        if activeDecoy and activeDecoy:FindFirstChildOfClass("Humanoid") then
+            activeDecoy:FindFirstChildOfClass("Humanoid"):MoveTo(activeDecoy.HumanoidRootPart.Position)
+        end
+    end
+end)
+
+local toggleState = false
+CamToggleBtn.MouseButton1Click:Connect(function()
+    toggleState = not toggleState
+    local realChar = workspace:FindFirstChild("GhostRealBody")
+    local decoyHumanoid = activeDecoy and activeDecoy:FindFirstChildOfClass("Humanoid")
+    
+    if toggleState then
         if decoyHumanoid then 
             Camera.CameraSubject = decoyHumanoid 
+            InfoLabel.Text = "Status: Camera on Decoy Clone"
         end
-        InfoLabel.Text = "Status: Camera on Decoy Clone"
-        isCameraOnDecoy = true
+    else
+        if realChar and realChar:FindFirstChild("HumanoidRootPart") then
+            Camera.CameraSubject = realChar.HumanoidRootPart
+            InfoLabel.Text = "Status: Camera on Ghost Body"
+        end
     end
 end)
 
@@ -247,6 +310,7 @@ ResetBtn.MouseButton1Click:Connect(function()
         activeDecoy:Destroy()
         activeDecoy = nil
     end
+    isAIActive = false
     InfoLabel.Text = "Status: Reset completed."
 end)
 
@@ -259,4 +323,5 @@ LocalPlayer.CharacterAdded:Connect(function()
         activeDecoy:Destroy()
         activeDecoy = nil
     end
+    isAIActive = false
 end)
