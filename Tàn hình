@@ -1,5 +1,5 @@
 --[[
-    King Tower - Chaos Godmode & Server Damage Breaker Hub
+    King Tower - Ultimate Safe Noclip & Bypass Hub
 ]]
 
 local Players = game:GetService("Players")
@@ -8,25 +8,25 @@ local CoreGui = game:GetService("CoreGui")
 
 local LocalPlayer = Players.LocalPlayer
 
-if _G.ChaosGodConnection then
-    pcall(function() _G.ChaosGodConnection:Disconnect() end)
-    _G.ChaosGodConnection = nil
+if _G.BypassConnection then
+    pcall(function() _G.BypassConnection:Disconnect() end)
+    _G.BypassConnection = nil
 end
 
 pcall(function()
-    if CoreGui:FindFirstChild("ChaosGodUI") then
-        CoreGui.ChaosGodUI:Destroy()
+    if CoreGui:FindFirstChild("BypassHubUI") then
+        CoreGui.BypassHubUI:Destroy()
     end
 end)
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "ChaosGodUI"
+ScreenGui.Name = "BypassHubUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 260, 0, 180)
+MainFrame.Size = UDim2.new(0, 260, 0, 160)
 MainFrame.Position = UDim2.new(0, 50, 0, 150)
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 MainFrame.BorderSizePixel = 0
@@ -40,39 +40,39 @@ UICornerMain.Parent = MainFrame
 
 local UIStroke = Instance.new("UIStroke")
 UIStroke.Thickness = 2
-UIStroke.Color = Color3.fromRGB(255, 50, 50)
+UIStroke.Color = Color3.fromRGB(0, 255, 128)
 UIStroke.Parent = MainFrame
 
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, 0, 0, 35)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "🔥 Chaos Godmode Hub"
+TitleLabel.Text = "🛡️ Safe Noclip & Bypass Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.Parent = MainFrame
 
 local Container = Instance.new("Frame")
-Container.Size = UDim2.new(1, -20, 0, 90)
+Container.Size = UDim2.new(1, -20, 0, 80)
 Container.Position = UDim2.new(0, 10, 0, 40)
 Container.BackgroundTransparency = 1
 Container.Parent = MainFrame
 
-local GodToggleBtn = Instance.new("TextButton")
-GodToggleBtn.Size = UDim2.new(1, 0, 0, 38)
-GodToggleBtn.Position = UDim2.new(0, 0, 0, 0)
-GodToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-GodToggleBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
-GodToggleBtn.TextSize = 11
-GodToggleBtn.Font = Enum.Font.GothamBold
-GodToggleBtn.Text = "💀 Chaos Godmode: [ OFF ]"
-GodToggleBtn.Parent = Container
+local NoclipBtn = Instance.new("TextButton")
+NoclipBtn.Size = UDim2.new(1, 0, 0, 35)
+NoclipBtn.Position = UDim2.new(0, 0, 0, 0)
+NoclipBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+NoclipBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+NoclipBtn.TextSize = 11
+NoclipBtn.Font = Enum.Font.GothamBold
+NoclipBtn.Text = "👻 Safe Noclip Mode: [ OFF ]"
+NoclipBtn.Parent = Container
 
-local UIC_1 = Instance.new("UICorner") UIC_1.CornerRadius = UDim.new(0, 6) UIC_1.Parent = GodToggleBtn
+local UIC_1 = Instance.new("UICorner") UIC_1.CornerRadius = UDim.new(0, 6) UIC_1.Parent = NoclipBtn
 
 local ResetBtn = Instance.new("TextButton")
-ResetBtn.Size = UDim2.new(1, 0, 0, 38)
-ResetBtn.Position = UDim2.new(0, 0, 0, 46)
+ResetBtn.Size = UDim2.new(1, 0, 0, 35)
+ResetBtn.Position = UDim2.new(0, 0, 0, 42)
 ResetBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 ResetBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
 ResetBtn.TextSize = 11
@@ -84,7 +84,7 @@ local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2
 
 local InfoLabel = Instance.new("TextLabel")
 InfoLabel.Size = UDim2.new(1, -20, 0, 25)
-InfoLabel.Position = UDim2.new(0, 10, 0, 140)
+InfoLabel.Position = UDim2.new(0, 10, 0, 125)
 InfoLabel.BackgroundTransparency = 1
 InfoLabel.Text = "Status: Ready."
 InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -92,84 +92,68 @@ InfoLabel.TextSize = 10
 InfoLabel.Font = Enum.Font.Gotham
 InfoLabel.Parent = MainFrame
 
-local isGodActive = false
+local isNoclipActive = false
 
-GodToggleBtn.MouseButton1Click:Connect(function()
-    isGodActive = not isGodActive
+NoclipBtn.MouseButton1Click:Connect(function()
+    isNoclipActive = not isNoclipActive
     local character = LocalPlayer.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then
+    if not character then 
         InfoLabel.Text = "Status: Character not found!"
-        return
+        return 
     end
     
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
-    
-    if isGodActive then
-        GodToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-        GodToggleBtn.Text = "💀 Chaos Godmode: [ ACTIVE ]"
-        InfoLabel.Text = "Status: Server damage calculation blinded!"
+    if isNoclipActive then
+        NoclipBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+        NoclipBtn.Text = "👻 Safe Noclip Mode: [ ACTIVE ]"
+        InfoLabel.Text = "Status: Noclip Active (Bypassing obstacles & traps)."
         
-        if humanoid then
-            humanoid.MaxHealth = math.huge
-            humanoid.Health = math.huge
-            humanoid.BreakJointsOnDeath = false
-        end
+        if _G.BypassConnection then _G.BypassConnection:Disconnect() end
         
-        -- Chặn đứng mọi kết nối va chạm vật lý truyền về server gây mất máu
-        for _, part in ipairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanTouch = false
-                part.CanQuery = false
-            end
-        end
-        
-        -- Vòng lặp "ép xác" server: khóa cứng máu ở mức vô hạn liên tục từng mili-giây
-        if _G.ChaosGodConnection then _G.ChaosGodConnection:Disconnect() end
-        _G.ChaosGodConnection = RunService.Heartbeat:Connect(function()
-            if character and character.Parent and humanoid then
-                if humanoid.Health < humanoid.MaxHealth then
-                    humanoid.Health = humanoid.MaxHealth
-                end
-                -- Nếu server cố tình ép chết nhân vật, lập tức can thiệp xóa trạng thái chết
-                if humanoid:GetState() == Enum.HumanoidStateType.Dead then
-                    humanoid:ChangeState(Enum.HumanoidStateType.Running)
+        -- Vòng lặp liên tục tắt va chạm toàn bộ cơ thể để không chạm vào Kill Brick dưới sàn
+        _G.BypassConnection = RunService.Stepped:Connect(function()
+            if character and character.Parent then
+                for _, part in ipairs(character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
                 end
             end
         end)
     else
-        GodToggleBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
-        GodToggleBtn.Text = "💀 Chaos Godmode: [ OFF ]"
-        InfoLabel.Text = "Status: Chaos Mode Disabled."
+        NoclipBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+        NoclipBtn.Text = "👻 Safe Noclip Mode: [ OFF ]"
+        InfoLabel.Text = "Status: Noclip Disabled."
         
-        if _G.ChaosGodConnection then
-            _G.ChaosGodConnection:Disconnect()
-            _G.ChaosGodConnection = nil
+        if _G.BypassConnection then
+            _G.BypassConnection:Disconnect()
+            _G.BypassConnection = nil
         end
         
-        for _, part in ipairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanTouch = true
-                part.CanQuery = true
+        if character then
+            for _, part in ipairs(character:GetDescendants()) do
+                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                    part.CanCollide = true
+                end
             end
         end
     end
 end)
 
 ResetBtn.MouseButton1Click:Connect(function()
-    if _G.ChaosGodConnection then
-        _G.ChaosGodConnection:Disconnect()
-        _G.ChaosGodConnection = nil
+    if _G.BypassConnection then
+        _G.BypassConnection:Disconnect()
+        _G.BypassConnection = nil
     end
-    isGodActive = false
-    GodToggleBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
-    GodToggleBtn.Text = "💀 Chaos Godmode: [ OFF ]"
+    isNoclipActive = false
+    NoclipBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+    NoclipBtn.Text = "👻 Safe Noclip Mode: [ OFF ]"
     InfoLabel.Text = "Status: Reset completed."
 end)
 
-LocalPlayer.CharacterAdded:Connect(function()
-    if _G.ChaosGodConnection then
-        _G.ChaosGodConnection:Disconnect()
-        _G.ChaosGodConnection = nil
+LocalPlayer.CharacterAdded:Connect(function(newChar)
+    if _G.BypassConnection then
+        _G.BypassConnection:Disconnect()
+        _G.BypassConnection = nil
     end
-    isGodActive = false
+    isNoclipActive = false
 end)
