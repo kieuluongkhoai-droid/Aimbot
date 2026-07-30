@@ -1,5 +1,5 @@
 --[[
-    King Tower - Optimized Mobile AI Mirror, Anti-Cheat Bypass & Dual Swap Hub
+    King Tower - Final AI Mirror (Move + Jump), Wall Enclosure TP & Swap Hub
 ]]
 
 local Players = game:GetService("Players")
@@ -59,7 +59,7 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -40, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "📱 Mobile AI Mirror & Bypass Hub"
+TitleLabel.Text = "📱 Ultimate AI Mirror & Enclosed Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
@@ -118,7 +118,7 @@ ScanTpBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 ScanTpBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
 ScanTpBtn.TextSize = 11
 ScanTpBtn.Font = Enum.Font.GothamBold
-ScanTpBtn.Text = "🔍 1. Smart Y-Axis Scan & TP Real"
+ScanTpBtn.Text = "🔍 1. Scan Enclosed 4-Wall Safe Spot"
 ScanTpBtn.Parent = Tab1Content
 local UIC_S1 = Instance.new("UICorner") UIC_S1.CornerRadius = UDim.new(0, 6) UIC_S1.Parent = ScanTpBtn
 
@@ -129,7 +129,7 @@ RealLockBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 RealLockBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
 RealLockBtn.TextSize = 11
 RealLockBtn.Font = Enum.Font.GothamBold
-RealLockBtn.Text = "🔒 Lock Real (AI Mirror Control): [ OFF ]"
+RealLockBtn.Text = "🔒 Lock Real (AI Mirror Move+Jump): [ OFF ]"
 RealLockBtn.Parent = Tab1Content
 local UIC_S2 = Instance.new("UICorner") UIC_S2.CornerRadius = UDim.new(0, 6) UIC_S2.Parent = RealLockBtn
 
@@ -261,7 +261,7 @@ Tab2Btn.MouseButton1Click:Connect(function()
     Tab1Btn.TextColor3 = Color3.fromRGB(180, 180, 180)
 end)
 
--- Quét trục Y tầng hiện tại và tìm nơi ít lệch tầng nhất, không quá gần spawn để TP Real Body đến
+-- Quét vị trí tầng hiện tại và tìm khu vực kín (được bao quanh bởi nhiều vật thể/bường) xa hơn để TP Real Body đến ẩn nấp
 ScanTpBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then
@@ -271,38 +271,39 @@ ScanTpBtn.MouseButton1Click:Connect(function()
     
     local hrp = character.HumanoidRootPart
     local currentY = hrp.Position.Y
-    InfoLabel.Text = "Status: Scanning Y-axis (Current Y: " .. math.floor(currentY) .. ")..."
-    
-    local spawnPos = Vector3.new(0, currentY, 0)
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("SpawnLocation") then
-            spawnPos = obj.Position
-            break
-        end
-    end
+    InfoLabel.Text = "Status: Scanning Y-axis & 4-Wall Enclosed Area..."
     
     local bestPart = nil
-    local minDiffY = math.huge
+    local maxSurroundScore = -1
     
     for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("BasePart") and not obj.Anchored and obj.Size.Magnitude > 4 and obj.Transparency < 1 then
+        if obj:IsA("BasePart") and not obj.Anchored and obj.Size.Magnitude > 5 and obj.Transparency < 1 then
             local pos = obj.Position
             local diffY = math.abs(pos.Y - currentY)
-            local distToSpawn = (pos - spawnPos).Magnitude
             
-            if diffY < 15 and diffY < minDiffY and distToSpawn > 30 then
-                minDiffY = diffY
-                bestPart = obj
+            -- Kiểm tra xem xung quanh điểm này có nhiều bức tường/vật cản bao quanh không (khu vực kín)
+            if diffY < 20 then
+                local surroundingCount = 0
+                for _, checkPart in ipairs(workspace:GetDescendants()) do
+                    if checkPart:IsA("BasePart") and (checkPart.Position - pos).Magnitude < 15 then
+                        surroundingCount = surroundingCount + 1
+                    end
+                end
+                
+                if surroundingCount > maxSurroundScore then
+                    maxSurroundScore = surroundingCount
+                    bestPart = obj
+                end
             end
         end
     end
     
     if bestPart then
-        hrp.CFrame = CFrame.new(bestPart.Position.X + 25, bestPart.Position.Y + 3, bestPart.Position.Z + 25)
-        InfoLabel.Text = "Status: Real Body TP to safe Y-level match!"
+        hrp.CFrame = CFrame.new(bestPart.Position.X, bestPart.Position.Y + 3, bestPart.Position.Z)
+        InfoLabel.Text = "Status: Real Body TP to 4-Wall Enclosed Safe Spot!"
     else
-        hrp.CFrame = hrp.CFrame + Vector3.new(60, 0, 60)
-        InfoLabel.Text = "Status: Real Body moved (Fallback offset)."
+        hrp.CFrame = hrp.CFrame + Vector3.new(100, 0, 100)
+        InfoLabel.Text = "Status: Real Body moved far away (Fallback)."
     end
 end)
 
@@ -333,24 +334,22 @@ SpawnCloneBtn.MouseButton1Click:Connect(function()
     InfoLabel.Text = "Status: Clone spawned at game spawn."
 end)
 
--- Khóa Real Body và Kích hoạt AI đọc điều khiển từ Mobile (Bypass Anti-Cheat Kill)
+-- Khóa Real Body và Kích hoạt AI đọc chính xác di chuyển (Move) và nhảy (Jump) áp lên Clone
 RealLockBtn.MouseButton1Click:Connect(function()
     realLocked = not realLocked
     local character = LocalPlayer.Character
     
     if realLocked then
-        RealLockBtn.Text = "🔒 Lock Real (AI Mirror Control): [ ON ]"
+        RealLockBtn.Text = "🔒 Lock Real (AI Mirror Move+Jump): [ ON ]"
         RealLockBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
-        InfoLabel.Text = "Status: Real Body locked safely. AI controlling Clone."
+        InfoLabel.Text = "Status: Real Body locked. AI mirroring Move & Jump to Clone."
         
-        -- Thay vì Anchor toàn bộ gây chết bởi Anti-cheat, sử dụng chế độ khóa vị trí an toàn qua vòng lặp bù tọa độ
         if _G.MobileAIConnection then _G.MobileAIConnection:Disconnect() end
         local lockedPos = character and character:FindFirstChild("HumanoidRootPart") and character.HumanoidRootPart.CFrame
         
         _G.MobileAIConnection = RunService.RenderStepped:Connect(function()
             if character and character:FindFirstChild("HumanoidRootPart") and lockedPos then
                 if not realLocked then return end
-                -- Giữ nguyên vị trí Real Body để chống anti-cheat kill do dịch chuyển bất thường
                 character.HumanoidRootPart.CFrame = lockedPos
                 character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
             end
@@ -359,15 +358,20 @@ RealLockBtn.MouseButton1Click:Connect(function()
                 local cloneHum = activeClone:FindFirstChildOfClass("Humanoid")
                 local realHum = character and character:FindFirstChildOfClass("Humanoid")
                 if realHum then
+                    -- Đọc chính xác hướng di chuyển
                     local moveDir = realHum.MoveDirection
                     if moveDir.Magnitude > 0 then
                         cloneHum:Move(moveDir, true)
+                    end
+                    -- Đọc trạng thái nhảy (Jump) từ Real Body áp sang Clone
+                    if realHum.Jump then
+                        cloneHum.Jump = true
                     end
                 end
             end
         end)
     else
-        RealLockBtn.Text = "🔒 Lock Real (AI Mirror Control): [ OFF ]"
+        RealLockBtn.Text = "🔒 Lock Real (AI Mirror Move+Jump): [ OFF ]"
         RealLockBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
         InfoLabel.Text = "Status: Real Body unlocked. AI control stopped."
         if _G.MobileAIConnection then
@@ -399,6 +403,7 @@ CloneLockBtn.MouseButton1Click:Connect(function()
     end
 end)
 
+-- Nút Swap một chạm đổi chỗ trực tiếp vị trí Real Body và Clone cho nhau
 local function performSwap()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") or not activeClone or not activeClone:FindFirstChild("HumanoidRootPart") then
