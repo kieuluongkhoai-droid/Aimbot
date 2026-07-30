@@ -1,6 +1,6 @@
 --[[
-    King Tower - Final AI Mirror (Ghost Walk NoClip & Speed-Spoof Bypass) Hub
-    Khắc phục triệt để lỗi xuyên tường vùng kín & quét tốc độ của Anti-Cheat
+    King Tower - Fake Respawn Bypass Hub (Anti-Cheat Bypass)
+    Ý tưởng: Lợi dụng lúc Anti-Cheat chưa khởi động khi vừa hồi sinh để ép vị trí mới.
 ]]
 
 local Players = game:GetService("Players")
@@ -21,12 +21,6 @@ pcall(function()
     end
 end)
 
-pcall(function()
-    if workspace:FindFirstChild("MobileAICone") then
-        workspace.MobileAICone:Destroy()
-    end
-end)
-
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "MobileAISwapUI"
 ScreenGui.ResetOnSpawn = false
@@ -34,7 +28,7 @@ pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 320, 0, 310)
+MainFrame.Size = UDim2.new(0, 320, 0, 350)
 MainFrame.Position = UDim2.new(0, 50, 0, 150)
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 MainFrame.BorderSizePixel = 0
@@ -42,526 +36,267 @@ MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
-local UICornerMain = Instance.new("UICorner")
-UICornerMain.CornerRadius = UDim.new(0, 12)
-UICornerMain.Parent = MainFrame
+local UICornerMain = Instance.new("UICorner") UICornerMain.CornerRadius = UDim.new(0, 12) UICornerMain.Parent = MainFrame
+local UIStroke = Instance.new("UIStroke") UIStroke.Thickness = 2 UIStroke.Color = Color3.fromRGB(255, 80, 80) UIStroke.Parent = MainFrame
 
-local UIStroke = Instance.new("UIStroke")
-UIStroke.Thickness = 2
-UIStroke.Color = Color3.fromRGB(0, 255, 128)
-UIStroke.Parent = MainFrame
-
-local TopBar = Instance.new("Frame")
-TopBar.Size = UDim2.new(1, 0, 0, 35)
-TopBar.BackgroundTransparency = 1
-TopBar.Parent = MainFrame
+local TopBar = Instance.new("Frame") TopBar.Size = UDim2.new(1, 0, 0, 35) TopBar.BackgroundTransparency = 1 TopBar.Parent = MainFrame
 
 local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, -40, 1, 0)
-TitleLabel.Position = UDim2.new(0, 10, 0, 0)
-TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "📱 Ultimate Ghost Walk Bypass Hub"
-TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.TextSize = 10
-TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-TitleLabel.Parent = TopBar
+TitleLabel.Size = UDim2.new(1, -40, 1, 0) TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+TitleLabel.BackgroundTransparency = 1 TitleLabel.Text = "💀 Fake Respawn Bypass Hub"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255) TitleLabel.TextSize = 11
+TitleLabel.Font = Enum.Font.GothamBold TitleLabel.TextXAlignment = Enum.TextXAlignment.Left TitleLabel.Parent = TopBar
 
 local MinimizeBtn = Instance.new("TextButton")
-MinimizeBtn.Size = UDim2.new(0, 30, 0, 30)
-MinimizeBtn.Position = UDim2.new(1, -35, 0, 2)
-MinimizeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-MinimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-MinimizeBtn.TextSize = 12
-MinimizeBtn.Font = Enum.Font.GothamBold
-MinimizeBtn.Text = "-"
-MinimizeBtn.Parent = TopBar
+MinimizeBtn.Size = UDim2.new(0, 30, 0, 30) MinimizeBtn.Position = UDim2.new(1, -35, 0, 2)
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50) MinimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeBtn.TextSize = 12 MinimizeBtn.Font = Enum.Font.GothamBold MinimizeBtn.Text = "-" MinimizeBtn.Parent = TopBar
 local UIC_Min = Instance.new("UICorner") UIC_Min.CornerRadius = UDim.new(0, 6) UIC_Min.Parent = MinimizeBtn
 
-local TabBar = Instance.new("Frame")
-TabBar.Size = UDim2.new(1, -20, 0, 30)
-TabBar.Position = UDim2.new(0, 10, 0, 40)
-TabBar.BackgroundTransparency = 1
-TabBar.Parent = MainFrame
+local TabBar = Instance.new("Frame") TabBar.Size = UDim2.new(1, -20, 0, 30) TabBar.Position = UDim2.new(0, 10, 0, 40) TabBar.BackgroundTransparency = 1 TabBar.Parent = MainFrame
 
 local Tab1Btn = Instance.new("TextButton")
-Tab1Btn.Size = UDim2.new(0.5, -3, 1, 0)
-Tab1Btn.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
-Tab1Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-Tab1Btn.TextSize = 11
-Tab1Btn.Font = Enum.Font.GothamBold
-Tab1Btn.Text = "👤 Real Body"
-Tab1Btn.Parent = TabBar
+Tab1Btn.Size = UDim2.new(0.5, -3, 1, 0) Tab1Btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+Tab1Btn.TextColor3 = Color3.fromRGB(255, 255, 255) Tab1Btn.TextSize = 11 Tab1Btn.Font = Enum.Font.GothamBold
+Tab1Btn.Text = "📍 Custom Spot" Tab1Btn.Parent = TabBar
 local UIC_T1 = Instance.new("UICorner") UIC_T1.CornerRadius = UDim.new(0, 6) UIC_T1.Parent = Tab1Btn
 
 local Tab2Btn = Instance.new("TextButton")
-Tab2Btn.Size = UDim2.new(0.5, -3, 1, 0)
-Tab2Btn.Position = UDim2.new(0.5, 3, 0, 0)
-Tab2Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-Tab2Btn.TextColor3 = Color3.fromRGB(180, 180, 180)
-Tab2Btn.TextSize = 11
-Tab2Btn.Font = Enum.Font.GothamBold
-Tab2Btn.Text = "🤖 Clone Hub"
-Tab2Btn.Parent = TabBar
+Tab2Btn.Size = UDim2.new(0.5, -3, 1, 0) Tab2Btn.Position = UDim2.new(0.5, 3, 0, 0)
+Tab2Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45) Tab2Btn.TextColor3 = Color3.fromRGB(180, 180, 180)
+Tab2Btn.TextSize = 11 Tab2Btn.Font = Enum.Font.GothamBold Tab2Btn.Text = "🤖 Clone Spot" Tab2Btn.Parent = TabBar
 local UIC_T2 = Instance.new("UICorner") UIC_T2.CornerRadius = UDim.new(0, 6) UIC_T2.Parent = Tab2Btn
 
--- Tab 1 Content
+-- Biến lưu trữ chiến thuật
+local customSafeCF = nil
+local activeClone = nil
+local respawnMode = "None" -- "Custom", "Clone", "None"
+
+-- Tab 1 Content (Custom Spot)
 local Tab1Content = Instance.new("Frame")
-Tab1Content.Size = UDim2.new(1, -20, 0, 170)
-Tab1Content.Position = UDim2.new(0, 10, 0, 80)
-Tab1Content.BackgroundTransparency = 1
-Tab1Content.Visible = true
-Tab1Content.Parent = MainFrame
+Tab1Content.Size = UDim2.new(1, -20, 0, 210) Tab1Content.Position = UDim2.new(0, 10, 0, 80)
+Tab1Content.BackgroundTransparency = 1 Tab1Content.Visible = true Tab1Content.Parent = MainFrame
 
-local ScanTpBtn = Instance.new("TextButton")
-ScanTpBtn.Size = UDim2.new(1, 0, 0, 30)
-ScanTpBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-ScanTpBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-ScanTpBtn.TextSize = 11
-ScanTpBtn.Font = Enum.Font.GothamBold
-ScanTpBtn.Text = "🔍 1. Ghost Walk to Enclosed Spot"
-ScanTpBtn.Parent = Tab1Content
-local UIC_S1 = Instance.new("UICorner") UIC_S1.CornerRadius = UDim.new(0, 6) UIC_S1.Parent = ScanTpBtn
+local SetSpotBtn = Instance.new("TextButton")
+SetSpotBtn.Size = UDim2.new(1, 0, 0, 35) SetSpotBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+SetSpotBtn.TextColor3 = Color3.fromRGB(0, 255, 128) SetSpotBtn.TextSize = 11 SetSpotBtn.Font = Enum.Font.GothamBold
+SetSpotBtn.Text = "📌 1. Mark Current Pos as Respawn Point" SetSpotBtn.Parent = Tab1Content
+local UIC_S1 = Instance.new("UICorner") UIC_S1.CornerRadius = UDim.new(0, 6) UIC_S1.Parent = SetSpotBtn
 
-local RealLockBtn = Instance.new("TextButton")
-RealLockBtn.Size = UDim2.new(1, 0, 0, 30)
-RealLockBtn.Position = UDim2.new(0, 0, 0, 36)
-RealLockBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-RealLockBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
-RealLockBtn.TextSize = 11
-RealLockBtn.Font = Enum.Font.GothamBold
-RealLockBtn.Text = "🔒 Lock Real (Smooth Mirror): [ OFF ]"
-RealLockBtn.Parent = Tab1Content
-local UIC_S2 = Instance.new("UICorner") UIC_S2.CornerRadius = UDim.new(0, 6) UIC_S2.Parent = RealLockBtn
+local AutoRespawnCustomBtn = Instance.new("TextButton")
+AutoRespawnCustomBtn.Size = UDim2.new(1, 0, 0, 35) AutoRespawnCustomBtn.Position = UDim2.new(0, 0, 0, 45)
+AutoRespawnCustomBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40) AutoRespawnCustomBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
+AutoRespawnCustomBtn.TextSize = 11 AutoRespawnCustomBtn.Font = Enum.Font.GothamBold
+AutoRespawnCustomBtn.Text = "⚙️ 2. Auto-Respawn Here: [ OFF ]" AutoRespawnCustomBtn.Parent = Tab1Content
+local UIC_S2 = Instance.new("UICorner") UIC_S2.CornerRadius = UDim.new(0, 6) UIC_S2.Parent = AutoRespawnCustomBtn
 
-local SwapRealBtn = Instance.new("TextButton")
-SwapRealBtn.Size = UDim2.new(1, 0, 0, 30)
-SwapRealBtn.Position = UDim2.new(0, 0, 0, 72)
-SwapRealBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-SwapRealBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
-SwapRealBtn.TextSize = 11
-SwapRealBtn.Font = Enum.Font.GothamBold
-SwapRealBtn.Text = "🔄 Swap (Ghost Walk to Clone)"
-SwapRealBtn.Parent = Tab1Content
-local UIC_S3 = Instance.new("UICorner") UIC_S3.CornerRadius = UDim.new(0, 6) UIC_S3.Parent = SwapRealBtn
+local SuicideCustomBtn = Instance.new("TextButton")
+SuicideCustomBtn.Size = UDim2.new(1, 0, 0, 35) SuicideCustomBtn.Position = UDim2.new(0, 0, 0, 90)
+SuicideCustomBtn.BackgroundColor3 = Color3.fromRGB(80, 20, 20) SuicideCustomBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SuicideCustomBtn.TextSize = 11 SuicideCustomBtn.Font = Enum.Font.GothamBold
+SuicideCustomBtn.Text = "💀 3. Die & Respawn at Custom Spot" SuicideCustomBtn.Parent = Tab1Content
+local UIC_S3 = Instance.new("UICorner") UIC_S3.CornerRadius = UDim.new(0, 6) UIC_S3.Parent = SuicideCustomBtn
 
-local ViewRealBtn = Instance.new("TextButton")
-ViewRealBtn.Size = UDim2.new(1, 0, 0, 30)
-ViewRealBtn.Position = UDim2.new(0, 0, 0, 108)
-ViewRealBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-ViewRealBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ViewRealBtn.TextSize = 11
-ViewRealBtn.Font = Enum.Font.GothamBold
-ViewRealBtn.Text = "👁️ View Camera: Real Body"
-ViewRealBtn.Parent = Tab1Content
-local UIC_S4 = Instance.new("UICorner") UIC_S4.CornerRadius = UDim.new(0, 6) UIC_S4.Parent = ViewRealBtn
-
--- Tab 2 Content
+-- Tab 2 Content (Clone Spot)
 local Tab2Content = Instance.new("Frame")
-Tab2Content.Size = UDim2.new(1, -20, 0, 170)
-Tab2Content.Position = UDim2.new(0, 10, 0, 80)
-Tab2Content.BackgroundTransparency = 1
-Tab2Content.Visible = false
-Tab2Content.Parent = MainFrame
+Tab2Content.Size = UDim2.new(1, -20, 0, 210) Tab2Content.Position = UDim2.new(0, 10, 0, 80)
+Tab2Content.BackgroundTransparency = 1 Tab2Content.Visible = false Tab2Content.Parent = MainFrame
 
 local SpawnCloneBtn = Instance.new("TextButton")
-SpawnCloneBtn.Size = UDim2.new(1, 0, 0, 30)
-SpawnCloneBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-SpawnCloneBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-SpawnCloneBtn.TextSize = 11
-SpawnCloneBtn.Font = Enum.Font.GothamBold
-SpawnCloneBtn.Text = "🚀 2. Spawn Clone at Game Spawn"
-SpawnCloneBtn.Parent = Tab2Content
+SpawnCloneBtn.Size = UDim2.new(1, 0, 0, 35) SpawnCloneBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+SpawnCloneBtn.TextColor3 = Color3.fromRGB(0, 255, 128) SpawnCloneBtn.TextSize = 11 SpawnCloneBtn.Font = Enum.Font.GothamBold
+SpawnCloneBtn.Text = "🚀 1. Drop Clone Here" SpawnCloneBtn.Parent = Tab2Content
 local UIC_C1 = Instance.new("UICorner") UIC_C1.CornerRadius = UDim.new(0, 6) UIC_C1.Parent = SpawnCloneBtn
 
-local CloneLockBtn = Instance.new("TextButton")
-CloneLockBtn.Size = UDim2.new(1, 0, 0, 30)
-CloneLockBtn.Position = UDim2.new(0, 0, 0, 36)
-CloneLockBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-CloneLockBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
-CloneLockBtn.TextSize = 11
-CloneLockBtn.Font = Enum.Font.GothamBold
-CloneLockBtn.Text = "🔒 Lock Clone Movement: [ OFF ]"
-CloneLockBtn.Parent = Tab2Content
-local UIC_C2 = Instance.new("UICorner") UIC_C2.CornerRadius = UDim.new(0, 6) UIC_C2.Parent = CloneLockBtn
+local AutoRespawnCloneBtn = Instance.new("TextButton")
+AutoRespawnCloneBtn.Size = UDim2.new(1, 0, 0, 35) AutoRespawnCloneBtn.Position = UDim2.new(0, 0, 0, 45)
+AutoRespawnCloneBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40) AutoRespawnCloneBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
+AutoRespawnCloneBtn.TextSize = 11 AutoRespawnCloneBtn.Font = Enum.Font.GothamBold
+AutoRespawnCloneBtn.Text = "⚙️ 2. Auto-Respawn at Clone: [ OFF ]" AutoRespawnCloneBtn.Parent = Tab2Content
+local UIC_C2 = Instance.new("UICorner") UIC_C2.CornerRadius = UDim.new(0, 6) UIC_C2.Parent = AutoRespawnCloneBtn
 
-local SwapCloneBtn = Instance.new("TextButton")
-SwapCloneBtn.Size = UDim2.new(1, 0, 0, 30)
-SwapCloneBtn.Position = UDim2.new(0, 0, 0, 72)
-SwapCloneBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-SwapCloneBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
-SwapCloneBtn.TextSize = 11
-SwapCloneBtn.Font = Enum.Font.GothamBold
-SwapCloneBtn.Text = "🔄 Swap (Ghost Walk to Clone)"
-SwapCloneBtn.Parent = Tab2Content
-local UIC_C3 = Instance.new("UICorner") UIC_C3.CornerRadius = UDim.new(0, 6) UIC_C3.Parent = SwapCloneBtn
+local SuicideCloneBtn = Instance.new("TextButton")
+SuicideCloneBtn.Size = UDim2.new(1, 0, 0, 35) SuicideCloneBtn.Position = UDim2.new(0, 0, 0, 90)
+SuicideCloneBtn.BackgroundColor3 = Color3.fromRGB(80, 20, 20) SuicideCloneBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SuicideCloneBtn.TextSize = 11 SuicideCloneBtn.Font = Enum.Font.GothamBold
+SuicideCloneBtn.Text = "💀 3. Die & Respawn at Clone" SuicideCloneBtn.Parent = Tab2Content
+local UIC_C3 = Instance.new("UICorner") UIC_C3.CornerRadius = UDim.new(0, 6) UIC_C3.Parent = SuicideCloneBtn
 
 local ViewCloneBtn = Instance.new("TextButton")
-ViewCloneBtn.Size = UDim2.new(1, 0, 0, 30)
-ViewCloneBtn.Position = UDim2.new(0, 0, 0, 108)
-ViewCloneBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-ViewCloneBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ViewCloneBtn.TextSize = 11
-ViewCloneBtn.Font = Enum.Font.GothamBold
-ViewCloneBtn.Text = "👁️ View Camera: Clone"
-ViewCloneBtn.Parent = Tab2Content
+ViewCloneBtn.Size = UDim2.new(1, 0, 0, 35) ViewCloneBtn.Position = UDim2.new(0, 0, 0, 135)
+ViewCloneBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40) ViewCloneBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
+ViewCloneBtn.TextSize = 11 ViewCloneBtn.Font = Enum.Font.GothamBold
+ViewCloneBtn.Text = "👁️ Toggle Camera (Real / Clone)" ViewCloneBtn.Parent = Tab2Content
 local UIC_C4 = Instance.new("UICorner") UIC_C4.CornerRadius = UDim.new(0, 6) UIC_C4.Parent = ViewCloneBtn
 
 local InfoLabel = Instance.new("TextLabel")
-InfoLabel.Size = UDim2.new(1, -20, 0, 25)
-InfoLabel.Position = UDim2.new(0, 10, 0, 270)
-InfoLabel.BackgroundTransparency = 1
-InfoLabel.Text = "Status: Ready."
-InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-InfoLabel.TextSize = 10
-InfoLabel.Font = Enum.Font.Gotham
-InfoLabel.Parent = MainFrame
+InfoLabel.Size = UDim2.new(1, -20, 0, 25) InfoLabel.Position = UDim2.new(0, 10, 0, 310)
+InfoLabel.BackgroundTransparency = 1 InfoLabel.Text = "Status: Bypass Ready."
+InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200) InfoLabel.TextSize = 10 InfoLabel.Font = Enum.Font.Gotham InfoLabel.Parent = MainFrame
 
-local activeClone = nil
-local realLocked = false
-local cloneLocked = false
-local isMinimized = false
-local lockedPos = nil
+-- TÍNH NĂNG CỐT LÕI: CHIẾM QUYỀN HỒI SINH (ON-SPAWN OVERRIDE)
+LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    if respawnMode == "None" then return end
 
--- HÀM GHOST WALK: Giải quyết vĩnh viễn Lỗi kẹt tường + Lỗi SpeedHack
-local function GhostWalkTP(character, targetCFrame)
-    local hrp = character:FindFirstChild("HumanoidRootPart")
-    local hum = character:FindFirstChildOfClass("Humanoid")
-    if not hrp or not hum then return end
+    local targetCFrame = nil
 
-    local startPos = hrp.Position
-    local endPos = targetCFrame.Position
-    local dist = (startPos - endPos).Magnitude
-    
-    if dist < 10 then
-        hrp.CFrame = targetCFrame
-        return
+    if respawnMode == "Custom" and customSafeCF then
+        targetCFrame = customSafeCF
+    elseif respawnMode == "Clone" and activeClone and activeClone:FindFirstChild("HumanoidRootPart") then
+        targetCFrame = activeClone.HumanoidRootPart.CFrame
     end
 
-    -- CHỐNG LỖI 2 (SPEEDHACK): Bắt buộc di chuyển bằng đúng tốc độ đi bộ tối đa (18 studs/sec).
-    -- Mất thời gian để đi đến đích, nhưng Server sẽ thấy đây là dữ liệu ĐI BỘ BÌNH THƯỜNG.
-    local safeSpeed = 18 
-    local duration = dist / safeSpeed
-    
-    local startTime = tick()
-    local connection
-    
-    connection = RunService.Heartbeat:Connect(function()
-        local elapsed = tick() - startTime
-        local alpha = math.clamp(elapsed / duration, 0, 1)
-
-        -- CHỐNG LỖI 1 (KẸT TƯỜNG): Liên tục tắt va chạm để chui xuyên qua bất kỳ bức tường nào.
-        for _, part in ipairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
+    if targetCFrame then
+        -- Vòng lặp ép CFrame cực gắt trong 0.5s đầu tiên để đè lên bệ đá hồi sinh của Server
+        local connection
+        local startTime = tick()
+        connection = RunService.Heartbeat:Connect(function()
+            local hrp = newCharacter:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                -- Bám vào vị trí giả định liên tục trước khi AntiCheat bật lên
+                hrp.CFrame = targetCFrame
+                hrp.AssemblyLinearVelocity = Vector3.new(0,0,0)
             end
-        end
-        
-        -- Di chuyển tuyến tính siêu mượt
-        local currentPos = startPos:Lerp(endPos, alpha)
-        
-        -- Cập nhật CFrame với hướng nhìn chính xác
-        local lookAt = Vector3.new(endPos.X, currentPos.Y, endPos.Z)
-        if (currentPos - lookAt).Magnitude > 0.1 then
-            hrp.CFrame = CFrame.new(currentPos, lookAt)
-        else
-            hrp.CFrame = CFrame.new(currentPos)
-        end
-        
-        -- ĐÁNH LỪA SERVER (GROUND CHECK):
-        -- Ép 1 lực Y cực nhỏ (-0.1) xuống để vật lý Server ghi nhận nhân vật đang chạm bề mặt.
-        -- Đưa vận tốc X, Z về 0 để không kích hoạt check gia tốc.
-        hrp.AssemblyLinearVelocity = Vector3.new(0, -0.1, 0)
-        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-        
-        -- Giữ trạng thái đang chạy thay vì lơ lửng
-        hum:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
-
-        if alpha >= 1 then
-            if connection then connection:Disconnect() end
-        end
-    end)
-    
-    -- Tạm ngưng thread chính để nhân vật có đủ thời gian đi hết quãng đường
-    while tick() - startTime < duration do
-        if not character or not character.Parent or hum.Health <= 0 then break end
-        InfoLabel.Text = string.format("Status: Ghost Walking... %.1fs left", duration - (tick() - startTime))
-        task.wait(0.1)
+            
+            -- Giải phóng sau 0.5 giây (Lúc này nhân vật đã load xong hoàn toàn ở điểm mới)
+            if tick() - startTime > 0.5 then
+                connection:Disconnect()
+                InfoLabel.Text = "Status: Successfully Bypassed Respawn!"
+            end
+        end)
     end
-    
-    if connection then connection:Disconnect() end
-    
-    hrp.CFrame = targetCFrame
-    hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-    hum:ChangeState(Enum.HumanoidStateType.Running)
-    InfoLabel.Text = "Status: Arrived safely at target!"
-end
+end)
 
+-- UI Toggles & Logic
+local isMinimized = false
 MinimizeBtn.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
     if isMinimized then
         MainFrame.Size = UDim2.new(0, 320, 0, 40)
-        TabBar.Visible = false
-        Tab1Content.Visible = false
-        Tab2Content.Visible = false
-        InfoLabel.Visible = false
+        TabBar.Visible = false Tab1Content.Visible = false Tab2Content.Visible = false InfoLabel.Visible = false
         MinimizeBtn.Text = "+"
     else
-        MainFrame.Size = UDim2.new(0, 320, 0, 310)
+        MainFrame.Size = UDim2.new(0, 320, 0, 350)
         TabBar.Visible = true
-        if Tab1Btn.BackgroundColor3 == Color3.fromRGB(0, 170, 127) then
-            Tab1Content.Visible = true
-        else
-            Tab2Content.Visible = true
-        end
-        InfoLabel.Visible = true
-        MinimizeBtn.Text = "-"
+        if Tab1Btn.BackgroundColor3 == Color3.fromRGB(200, 50, 50) then Tab1Content.Visible = true else Tab2Content.Visible = true end
+        InfoLabel.Visible = true MinimizeBtn.Text = "-"
     end
 end)
 
 Tab1Btn.MouseButton1Click:Connect(function()
-    Tab1Content.Visible = true
-    Tab2Content.Visible = false
-    Tab1Btn.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
-    Tab1Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Tab2Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-    Tab2Btn.TextColor3 = Color3.fromRGB(180, 180, 180)
+    Tab1Content.Visible = true Tab2Content.Visible = false
+    Tab1Btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) Tab1Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Tab2Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45) Tab2Btn.TextColor3 = Color3.fromRGB(180, 180, 180)
 end)
 
 Tab2Btn.MouseButton1Click:Connect(function()
-    Tab1Content.Visible = false
-    Tab2Content.Visible = true
-    Tab2Btn.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
-    Tab2Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Tab1Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-    Tab1Btn.TextColor3 = Color3.fromRGB(180, 180, 180)
+    Tab1Content.Visible = false Tab2Content.Visible = true
+    Tab2Btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) Tab2Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Tab1Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45) Tab1Btn.TextColor3 = Color3.fromRGB(180, 180, 180)
 end)
 
-ScanTpBtn.MouseButton1Click:Connect(function()
+-- Tab 1: Custom Spot Logic
+SetSpotBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then
-        InfoLabel.Text = "Status: Character not found!"
-        return
-    end
-    
-    local hrp = character.HumanoidRootPart
-    local currentY = hrp.Position.Y
-    InfoLabel.Text = "Status: Scanning Y-axis & 4-Wall Enclosed Area..."
-    
-    local bestPart = nil
-    local maxSurroundScore = -1
-    
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("BasePart") and not obj.Anchored and obj.Size.Magnitude > 5 and obj.Transparency < 1 then
-            local pos = obj.Position
-            local diffY = math.abs(pos.Y - currentY)
-            
-            if diffY < 20 then
-                local surroundingCount = 0
-                for _, checkPart in ipairs(workspace:GetDescendants()) do
-                    if checkPart:IsA("BasePart") and (checkPart.Position - pos).Magnitude < 15 then
-                        surroundingCount = surroundingCount + 1
-                    end
-                end
-                
-                if surroundingCount > maxSurroundScore then
-                    maxSurroundScore = surroundingCount
-                    bestPart = obj
-                end
-            end
-        end
-    end
-    
-    if bestPart then
-        local targetCF = CFrame.new(bestPart.Position.X, bestPart.Position.Y + 3, bestPart.Position.Z)
-        
-        local wasLocked = realLocked
-        if wasLocked then 
-            realLocked = false 
-            task.wait(0.05) 
-        end
-        
-        -- Dùng GhostWalk thay cho Pathfinding và Teleport hỏng
-        GhostWalkTP(character, targetCF)
-        
-        if wasLocked then 
-            lockedPos = targetCF 
-            realLocked = true 
-        end
-    else
-        InfoLabel.Text = "Status: No safe spot found."
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        customSafeCF = character.HumanoidRootPart.CFrame
+        InfoLabel.Text = "Status: Respawn Point Marked!"
     end
 end)
 
+AutoRespawnCustomBtn.MouseButton1Click:Connect(function()
+    if respawnMode == "Custom" then
+        respawnMode = "None"
+        AutoRespawnCustomBtn.Text = "⚙️ 2. Auto-Respawn Here: [ OFF ]"
+        AutoRespawnCustomBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
+        InfoLabel.Text = "Status: Fake Respawn disabled."
+    else
+        if not customSafeCF then InfoLabel.Text = "Status: Mark a point first!" return end
+        respawnMode = "Custom"
+        AutoRespawnCustomBtn.Text = "⚙️ 2. Auto-Respawn Here: [ ON ]"
+        AutoRespawnCustomBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+        AutoRespawnCloneBtn.Text = "⚙️ 2. Auto-Respawn at Clone: [ OFF ]"
+        AutoRespawnCloneBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
+        InfoLabel.Text = "Status: Will respawn at Custom Spot on death."
+    end
+end)
+
+SuicideCustomBtn.MouseButton1Click:Connect(function()
+    if not customSafeCF then InfoLabel.Text = "Status: Mark a point first!" return end
+    respawnMode = "Custom"
+    AutoRespawnCustomBtn.Text = "⚙️ 2. Auto-Respawn Here: [ ON ]"
+    AutoRespawnCustomBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+    AutoRespawnCloneBtn.Text = "⚙️ 2. Auto-Respawn at Clone: [ OFF ]"
+    AutoRespawnCloneBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
+    
+    local character = LocalPlayer.Character
+    if character and character:FindFirstChildOfClass("Humanoid") then
+        character:FindFirstChildOfClass("Humanoid").Health = 0
+        InfoLabel.Text = "Status: Dying to bypass AC..."
+    end
+end)
+
+-- Tab 2: Clone Logic
 SpawnCloneBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then
-        InfoLabel.Text = "Status: Character not found!"
-        return
-    end
+    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     
-    local spawnPos = CFrame.new(0, 10, 0)
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("SpawnLocation") then
-            spawnPos = obj.CFrame + Vector3.new(0, 3, 0)
-            break
-        end
-    end
-    
-    if activeClone then pcall(function() activeClone:Destroy() end) activeClone = nil end
+    if activeClone then pcall(function() activeClone:Destroy() end) end
     
     character.Archivable = true
     activeClone = character:Clone()
     character.Archivable = false
-    activeClone.Name = "MobileAICone"
+    activeClone.Name = "FakeRespawnClone"
     activeClone.Parent = workspace
-    activeClone:SetPrimaryPartCFrame(spawnPos)
+    activeClone:SetPrimaryPartCFrame(character.HumanoidRootPart.CFrame)
     
-    InfoLabel.Text = "Status: Clone spawned at game spawn."
+    InfoLabel.Text = "Status: Clone Dropped!"
 end)
 
-RealLockBtn.MouseButton1Click:Connect(function()
-    realLocked = not realLocked
-    local character = LocalPlayer.Character
-    
-    if realLocked then
-        RealLockBtn.Text = "🔒 Lock Real (Smooth Mirror): [ ON ]"
-        RealLockBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
-        InfoLabel.Text = "Status: Ultra-smooth movement & sync active."
-        
-        if _G.MobileAIConnection then _G.MobileAIConnection:Disconnect() end
-        lockedPos = character and character:FindFirstChild("HumanoidRootPart") and character.HumanoidRootPart.CFrame
-        
-        local cachedTracks = {}
-        
-        _G.MobileAIConnection = RunService.Heartbeat:Connect(function(dt)
-            if character and character:FindFirstChild("HumanoidRootPart") and lockedPos then
-                if not realLocked then return end
-                character.HumanoidRootPart.CFrame = lockedPos
-                character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-            end
-            
-            if activeClone and activeClone:FindFirstChildOfClass("Humanoid") and activeClone:FindFirstChild("HumanoidRootPart") then
-                local cloneHum = activeClone:FindFirstChildOfClass("Humanoid")
-                local realHum = character and character:FindFirstChildOfClass("Humanoid")
-                
-                if realHum then
-                    local moveDir = realHum.MoveDirection
-                    cloneHum:Move(moveDir, false)
-                    cloneHum.Jump = realHum.Jump
-
-                    local realAnimator = realHum:FindFirstChildOfClass("Animator")
-                    local cloneAnimator = cloneHum:FindFirstChildOfClass("Animator")
-                    
-                    if realAnimator and cloneAnimator then
-                        local realTracks = realAnimator:GetPlayingAnimationTracks()
-                        for _, rTrack in ipairs(realTracks) do
-                            local animId = rTrack.Animation.AnimationId
-                            local cloneTrack = cachedTracks[animId]
-                            
-                            if not cloneTrack then
-                                local success, result = pcall(function()
-                                    return cloneAnimator:LoadAnimation(rTrack.Animation)
-                                end)
-                                if success and result then
-                                    cloneTrack = result
-                                    cachedTracks[animId] = cloneTrack
-                                    cloneTrack:Play()
-                                end
-                            end
-                            
-                            if cloneTrack then
-                                if not cloneTrack.IsPlaying then cloneTrack:Play() end
-                                if math.abs(cloneTrack.TimePosition - rTrack.TimePosition) > 0.15 then
-                                    cloneTrack.TimePosition = rTrack.TimePosition
-                                end
-                                cloneTrack:AdjustSpeed(rTrack.Speed)
-                            end
-                        end
-                    end
-                end
-            end
-        end)
+AutoRespawnCloneBtn.MouseButton1Click:Connect(function()
+    if respawnMode == "Clone" then
+        respawnMode = "None"
+        AutoRespawnCloneBtn.Text = "⚙️ 2. Auto-Respawn at Clone: [ OFF ]"
+        AutoRespawnCloneBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
+        InfoLabel.Text = "Status: Fake Respawn disabled."
     else
-        RealLockBtn.Text = "🔒 Lock Real (Smooth Mirror): [ OFF ]"
-        RealLockBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
-        InfoLabel.Text = "Status: Mirror stopped."
-        if _G.MobileAIConnection then
-            _G.MobileAIConnection:Disconnect()
-            _G.MobileAIConnection = nil
-        end
+        if not activeClone then InfoLabel.Text = "Status: Drop a clone first!" return end
+        respawnMode = "Clone"
+        AutoRespawnCloneBtn.Text = "⚙️ 2. Auto-Respawn at Clone: [ ON ]"
+        AutoRespawnCloneBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+        AutoRespawnCustomBtn.Text = "⚙️ 2. Auto-Respawn Here: [ OFF ]"
+        AutoRespawnCustomBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
+        InfoLabel.Text = "Status: Will respawn at Clone on death."
     end
 end)
 
-CloneLockBtn.MouseButton1Click:Connect(function()
-    cloneLocked = not cloneLocked
-    if activeClone then
-        for _, part in ipairs(activeClone:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.Anchored = cloneLocked
-            end
-        end
-        if cloneLocked then
-            CloneLockBtn.Text = "🔒 Lock Clone Movement: [ ON ]"
-            CloneLockBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
-            InfoLabel.Text = "Status: Clone movement locked."
-        else
-            CloneLockBtn.Text = "🔒 Lock Clone Movement: [ OFF ]"
-            CloneLockBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
-            InfoLabel.Text = "Status: Clone movement unlocked."
-        end
-    else
-        InfoLabel.Text = "Status: No clone available!"
-    end
-end)
-
-local function performSwap()
-    local character = LocalPlayer.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") or not activeClone or not activeClone:FindFirstChild("HumanoidRootPart") then
-        InfoLabel.Text = "Status: Spawn clone and real body first!"
-        return
-    end
+SuicideCloneBtn.MouseButton1Click:Connect(function()
+    if not activeClone then InfoLabel.Text = "Status: Drop a clone first!" return end
+    respawnMode = "Clone"
+    AutoRespawnCloneBtn.Text = "⚙️ 2. Auto-Respawn at Clone: [ ON ]"
+    AutoRespawnCloneBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+    AutoRespawnCustomBtn.Text = "⚙️ 2. Auto-Respawn Here: [ OFF ]"
+    AutoRespawnCustomBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
     
-    local realHrp = character.HumanoidRootPart
-    local cloneHrp = activeClone.HumanoidRootPart
-    
-    local targetCF = cloneHrp.CFrame
-    local tempCF = realHrp.CFrame
-    
-    local wasLocked = realLocked
-    if wasLocked then 
-        realLocked = false
-        task.wait(0.05)
-    end
-    
-    -- Clone là giả (phía client), có thể dịch chuyển tức thời thoải mái ngay lập tức
-    cloneHrp.CFrame = tempCF
-    
-    -- Cơ thể thật đổi chỗ sang clone sẽ dùng cơ chế Ghost Walk Noclip Tốc độ an toàn
-    GhostWalkTP(character, targetCF)
-    
-    if wasLocked then
-        lockedPos = targetCF
-        realLocked = true
-    end
-end
-
-SwapRealBtn.MouseButton1Click:Connect(performSwap)
-SwapCloneBtn.MouseButton1Click:Connect(performSwap)
-
-ViewRealBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if character and character:FindFirstChildOfClass("Humanoid") then
-        Camera.CameraSubject = character:FindFirstChildOfClass("Humanoid")
-        InfoLabel.Text = "Status: Camera viewing Real Body."
+        character:FindFirstChildOfClass("Humanoid").Health = 0
+        InfoLabel.Text = "Status: Dying to bypass AC..."
     end
 end)
 
+local viewingClone = false
 ViewCloneBtn.MouseButton1Click:Connect(function()
-    if activeClone and activeClone:FindFirstChildOfClass("Humanoid") then
+    viewingClone = not viewingClone
+    if viewingClone and activeClone and activeClone:FindFirstChildOfClass("Humanoid") then
         Camera.CameraSubject = activeClone:FindFirstChildOfClass("Humanoid")
-        InfoLabel.Text = "Status: Camera viewing Clone."
+        InfoLabel.Text = "Status: Viewing Clone."
     else
-        InfoLabel.Text = "Status: No clone available to view!"
+        local character = LocalPlayer.Character
+        if character and character:FindFirstChildOfClass("Humanoid") then
+            Camera.CameraSubject = character:FindFirstChildOfClass("Humanoid")
+            InfoLabel.Text = "Status: Viewing Real Body."
+        end
+        viewingClone = false
     end
 end)
