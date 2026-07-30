@@ -1,5 +1,5 @@
 --[[
-    King Tower - Final Proxy & Gravity Control Hub
+    King Tower - Perfect Swap Hub (Seated Real Body <-> AI Clone)
 ]]
 
 local Players = game:GetService("Players")
@@ -9,25 +9,31 @@ local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-if _G.UltimateProxyConnection then
-    pcall(function() _G.UltimateProxyConnection:Disconnect() end)
-    _G.UltimateProxyConnection = nil
+if _G.SwapProxyConnection then
+    pcall(function() _G.SwapProxyConnection:Disconnect() end)
+    _G.SwapProxyConnection = nil
 end
 
 pcall(function()
-    if CoreGui:FindFirstChild("UltimateProxyUI") then
-        CoreGui.UltimateProxyUI:Destroy()
+    if CoreGui:FindFirstChild("SwapProxyUI") then
+        CoreGui.SwapProxyUI:Destroy()
+    end
+end)
+
+pcall(function()
+    if workspace:FindFirstChild("HiddenArmorSeat") then
+        workspace.HiddenArmorSeat:Destroy()
     end
 end)
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "UltimateProxyUI"
+ScreenGui.Name = "SwapProxyUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 270, 0, 230)
+MainFrame.Size = UDim2.new(0, 270, 0, 220)
 MainFrame.Position = UDim2.new(0, 50, 0, 150)
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 MainFrame.BorderSizePixel = 0
@@ -47,19 +53,19 @@ UIStroke.Parent = MainFrame
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, 0, 0, 30)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "🛡️ Ultimate Proxy & Gravity Hub"
+TitleLabel.Text = "🔄 Perfect Swap Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.Parent = MainFrame
 
 local Container = Instance.new("Frame")
-Container.Size = UDim2.new(1, -20, 0, 160)
+Container.Size = UDim2.new(1, -20, 0, 150)
 Container.Position = UDim2.new(0, 10, 0, 35)
 Container.BackgroundTransparency = 1
 Container.Parent = MainFrame
 
--- Nút 1: Spawn Clone & Ẩn thân
+-- Nút 1: Khởi tạo hệ thống (Spawn ghế + ngồi + tạo clone AI)
 local SpawnBtn = Instance.new("TextButton")
 SpawnBtn.Size = UDim2.new(1, 0, 0, 32)
 SpawnBtn.Position = UDim2.new(0, 0, 0, 0)
@@ -67,21 +73,21 @@ SpawnBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 SpawnBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
 SpawnBtn.TextSize = 11
 SpawnBtn.Font = Enum.Font.GothamBold
-SpawnBtn.Text = "🚀 Spawn Clone & Hide Real"
+SpawnBtn.Text = "🚀 1. Spawn Seated Real & AI Clone"
 SpawnBtn.Parent = Container
 local UIC_1 = Instance.new("UICorner") UIC_1.CornerRadius = UDim.new(0, 6) UIC_1.Parent = SpawnBtn
 
--- Nút 2: Bật/Tắt Trọng lực Real Body (Nút riêng theo yêu cầu)
-local GravityBtn = Instance.new("TextButton")
-GravityBtn.Size = UDim2.new(1, 0, 0, 32)
-GravityBtn.Position = UDim2.new(0, 0, 0, 38)
-GravityBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-GravityBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
-GravityBtn.TextSize = 11
-GravityBtn.Font = Enum.Font.GothamBold
-GravityBtn.Text = "🪂 Real Body Gravity: [ OFF ]"
-GravityBtn.Parent = Container
-local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2.Parent = GravityBtn
+-- Nút 2: Nút Swap vị trí qua lại theo ý bạn
+local SwapBtn = Instance.new("TextButton")
+SwapBtn.Size = UDim2.new(1, 0, 0, 32)
+SwapBtn.Position = UDim2.new(0, 0, 0, 38)
+SwapBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+SwapBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
+SwapBtn.TextSize = 11
+SwapBtn.Font = Enum.Font.GothamBold
+SwapBtn.Text = "🔄 2. Swap Pos: [ CURRENT: SEATED ]"
+SwapBtn.Parent = Container
+local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2.Parent = SwapBtn
 
 -- Nút 3: Đổi góc nhìn Camera
 local SwitchCamBtn = Instance.new("TextButton")
@@ -91,7 +97,7 @@ SwitchCamBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 SwitchCamBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
 SwitchCamBtn.TextSize = 11
 SwitchCamBtn.Font = Enum.Font.GothamBold
-SwitchCamBtn.Text = "👁️ View: [ CLONE PROXY ]"
+SwitchCamBtn.Text = "👁️ 3. View: [ CLONE ]"
 SwitchCamBtn.Parent = Container
 local UIC_3 = Instance.new("UICorner") UIC_3.CornerRadius = UDim.new(0, 6) UIC_3.Parent = SwitchCamBtn
 
@@ -109,7 +115,7 @@ local UIC_4 = Instance.new("UICorner") UIC_4.CornerRadius = UDim.new(0, 6) UIC_4
 
 local InfoLabel = Instance.new("TextLabel")
 InfoLabel.Size = UDim2.new(1, -20, 0, 25)
-InfoLabel.Position = UDim2.new(0, 10, 0, 200)
+InfoLabel.Position = UDim2.new(0, 10, 0, 190)
 InfoLabel.BackgroundTransparency = 1
 InfoLabel.Text = "Status: Ready."
 InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -118,62 +124,70 @@ InfoLabel.Font = Enum.Font.Gotham
 InfoLabel.Parent = MainFrame
 
 local activeClone = nil
+local activeSeat = nil
 local viewingClone = true
-local realGravityOff = true -- Mặc định tắt trọng lực real body để chống rơi void
+local isRealSeated = true -- true: Real body đang ngồi ở ghế, false: Real body đang đứng ở vị trí clone
 
 SpawnBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then
+    if not character or not character:FindFirstChild("HumanoidRootPart") or not character:FindFirstChildOfClass("Humanoid") then
         InfoLabel.Text = "Status: Character not found!"
         return
     end
     
     local hrp = character.HumanoidRootPart
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
     local currentCF = hrp.CFrame
     
-    if activeClone then
-        pcall(function() activeClone:Destroy() end)
-        activeClone = nil
-    end
+    if activeClone then pcall(function() activeClone:Destroy() end) activeClone = nil end
+    if activeSeat then pcall(function() activeSeat:Destroy() end) activeSeat = nil end
     
-    -- Tạo Clone hiển thị trên mặt đất
-    character.Archivable = true
-    activeClone = character:Clone()
-    character.Archivable = false
-    activeClone.Name = "AI_Ultimate_Clone"
-    activeClone.Parent = workspace
-    activeClone:SetPrimaryPartCFrame(currentCF)
+    -- 1. Tạo ghế ô tô ẩn ngay dưới vị trí hiện tại
+    activeSeat = Instance.new("Seat")
+    activeSeat.Name = "HiddenArmorSeat"
+    activeSeat.Size = Vector3.new(3, 1, 3)
+    activeSeat.CFrame = currentCF
+    activeSeat.Anchored = false
+    activeSeat.CanCollide = false
+    activeSeat.Transparency = 1
+    activeSeat.Parent = workspace
     
-    local cloneHrp = activeClone:FindFirstChild("HumanoidRootPart")
-    local cloneHum = activeClone:FindFirstChildOfClass("Humanoid")
+    -- Cho nhân vật thật ngồi xuống ghế
+    humanoid.Sit = true
+    task.wait(0.1)
+    activeSeat:Sit(humanoid)
     
-    -- Tàng hình và vô hiệu hóa va chạm cơ thể thật
+    -- Tàng hình nhân vật thật
     for _, part in ipairs(character:GetDescendants()) do
         if part:IsA("BasePart") then
-            part.CanCollide = false
             part.Transparency = 1
         end
     end
     
+    -- 2. Tạo Clone xuất hiện trên mặt đất (cách một khoảng nhỏ)
+    character.Archivable = true
+    activeClone = character:Clone()
+    character.Archivable = false
+    activeClone.Name = "AI_Swap_Clone"
+    activeClone.Parent = workspace
+    activeClone:SetPrimaryPartCFrame(currentCF + Vector3.new(0, 3, 0))
+    
+    local cloneHrp = activeClone:FindFirstChild("HumanoidRootPart")
+    local cloneHum = activeClone:FindFirstChildOfClass("Humanoid")
+    
     if cloneHum then Camera.CameraSubject = cloneHum end
     viewingClone = true
-    SwitchCamBtn.Text = "👁️ View: [ CLONE PROXY ]"
-    SwitchCamBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-    InfoLabel.Text = "Status: Clone active, Real body secured."
+    isRealSeated = true
     
-    if _G.UltimateProxyConnection then _G.UltimateProxyConnection:Disconnect() end
+    SwitchCamBtn.Text = "👁️ 3. View: [ CLONE ]"
+    SwapBtn.Text = "🔄 2. Swap Pos: [ REAL BODY: SEATED ]"
+    InfoLabel.Text = "Status: Real body seated securely. Clone active."
     
-    -- Vòng lặp đồng bộ vị trí và kiểm soát trọng lực Real Body
-    _G.UltimateProxyConnection = RunService.RenderStepped:Connect(function()
-        if character and character.Parent and activeClone and cloneHum and hrp and cloneHrp then
-            if realGravityOff then
-                -- Nếu tắt trọng lực: Ghim chặt chân thật lơ lửng ngay dưới chân clone (cách 3 stud) và triệt tiêu vận tốc rơi
-                hrp.CFrame = cloneHrp.CFrame - Vector3.new(0, 3, 0)
-                hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-            end
-            
-            -- AI điều khiển Clone di chuyển tìm mục tiêu
+    if _G.SwapProxyConnection then _G.SwapProxyConnection:Disconnect() end
+    
+    -- 3. AI điều khiển Clone săn mục tiêu
+    _G.SwapProxyConnection = RunService.RenderStepped:Connect(function()
+        if activeClone and cloneHum and cloneHrp then
             local targetHrp = nil
             local minDist = math.huge
             for _, plr in ipairs(Players:GetPlayers()) do
@@ -192,24 +206,62 @@ SpawnBtn.MouseButton1Click:Connect(function()
     end)
 end)
 
--- Nút riêng biệt bật/tắt trọng lực Real Body
-GravityBtn.MouseButton1Click:Connect(function()
-    realGravityOff = not realGravityOff
-    if realGravityOff then
-        GravityBtn.Text = "🪂 Real Body Gravity: [ OFF ]"
-        GravityBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
-        InfoLabel.Text = "Status: Real body gravity OFF (Floating safe)."
+-- Nút SWAP vị trí qua lại cực kỳ linh hoạt
+SwapBtn.MouseButton1Click:Connect(function()
+    local character = LocalPlayer.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") or not activeClone or not activeSeat then
+        InfoLabel.Text = "Status: Spawn system first!"
+        return
+    end
+    
+    local realHrp = character.HumanoidRootPart
+    local realHum = character:FindFirstChildOfClass("Humanoid")
+    local cloneHrp = activeClone:FindFirstChild("HumanoidRootPart")
+    
+    if isRealSeated then
+        -- TRƯỜNG HỢP 1: Từ Real Body (Đang ngồi ghế) -> Đổi chỗ với Clone
+        -- Hủy trạng thái ngồi của Real body, dịch chuyển Real body lên vị trí của Clone
+        realHum.Sit = false
+        task.wait(0.05)
+        realHrp.CFrame = cloneHrp.CFrame
+        
+        -- Mang ghế và bắt Clone dịch chuyển xuống dưới ngồi vào ghế
+        activeSeat.CFrame = realHrp.CFrame - Vector3.new(0, 3, 0)
+        local cloneHum = activeClone:FindFirstChildOfClass("Humanoid")
+        if cloneHum then
+            cloneHum.Sit = true
+            activeSeat:Sit(cloneHum)
+        end
+        
+        isRealSeated = false
+        SwapBtn.Text = "🔄 2. Swap Pos: [ REAL BODY: STANDING ]"
+        SwapBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+        InfoLabel.Text = "Status: Swapped! Real body is now at Clone pos."
     else
-        GravityBtn.Text = "🪂 Real Body Gravity: [ ON ]"
-        GravityBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-        InfoLabel.Text = "Status: Real body gravity ON (Normal physics)."
+        -- TRƯỜNG HỢP 2: Từ vị trí Clone -> Trở lại vị trí Real Body (Ngồi ghế)
+        local cloneHum = activeClone:FindFirstChildOfClass("Humanoid")
+        if cloneHum then cloneHum.Sit = false end
+        task.wait(0.05)
+        
+        -- Đưa Clone ra chỗ khác hoặc cho nó đứng dậy
+        cloneHrp.CFrame = realHrp.CFrame + Vector3.new(0, 3, 0)
+        
+        -- Kéo Real body trở lại vị trí chiếc ghế ở dưới và cho ngồi xuống cố định
+        realHrp.CFrame = activeSeat.CFrame + Vector3.new(0, 2, 0)
+        realHum.Sit = true
+        activeSeat:Sit(realHum)
+        
+        isRealSeated = true
+        SwapBtn.Text = "🔄 2. Swap Pos: [ REAL BODY: SEATED ]"
+        SwapBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
+        InfoLabel.Text = "Status: Swapped back! Real body is safely seated."
     end
 end)
 
 SwitchCamBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not activeClone then
-        InfoLabel.Text = "Status: Spawn clone first!"
+        InfoLabel.Text = "Status: Spawn system first!"
         return
     end
     
@@ -219,46 +271,42 @@ SwitchCamBtn.MouseButton1Click:Connect(function()
     
     if viewingClone then
         if cloneHum then Camera.CameraSubject = cloneHum end
-        SwitchCamBtn.Text = "👁️ View: [ CLONE PROXY ]"
-        SwitchCamBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-        InfoLabel.Text = "Status: Watching Clone Proxy"
+        SwitchCamBtn.Text = "👁️ 3. View: [ CLONE ]"
+        SwitchCamBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
+        InfoLabel.Text = "Status: Viewing Clone"
     else
         if realHum then Camera.CameraSubject = realHum end
-        SwitchCamBtn.Text = "👁️ View: [ REAL BODY ]"
+        SwitchCamBtn.Text = "👁️ 3. View: [ REAL BODY ]"
         SwitchCamBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
-        InfoLabel.Text = "Status: Watching Real Body"
+        InfoLabel.Text = "Status: Viewing Real Body"
     end
 end)
 
 ResetBtn.MouseButton1Click:Connect(function()
-    if _G.UltimateProxyConnection then
-        _G.UltimateProxyConnection:Disconnect()
-        _G.UltimateProxyConnection = nil
+    if _G.SwapProxyConnection then
+        _G.SwapProxyConnection:Disconnect()
+        _G.SwapProxyConnection = nil
     end
-    if activeClone then
-        pcall(function() activeClone:Destroy() end)
-        activeClone = nil
-    end
+    if activeClone then pcall(function() activeClone:Destroy() end) activeClone = nil end
+    if activeSeat then pcall(function() activeSeat:Destroy() end) activeSeat = nil end
     
     local character = LocalPlayer.Character
     if character then
-        local hrp = character:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            hrp.CFrame = hrp.CFrame + Vector3.new(0, 5, 0)
-        end
         for _, part in ipairs(character:GetDescendants()) do
             if part:IsA("BasePart") then
-                part.CanCollide = true
                 part.Transparency = 0
             end
         end
         local realHum = character:FindFirstChildOfClass("Humanoid")
-        if realHum then Camera.CameraSubject = realHum end
+        if realHum then 
+            realHum.Sit = false
+            Camera.CameraSubject = realHum 
+        end
     end
     
     viewingClone = false
-    realGravityOff = false
-    GravityBtn.Text = "🪂 Real Body Gravity: [ ON ]"
-    SwitchCamBtn.Text = "👁️ View: [ REAL BODY ]"
+    isRealSeated = true
+    SwapBtn.Text = "🔄 2. Swap Pos: [ REAL BODY: SEATED ]"
+    SwitchCamBtn.Text = "👁️ 3. View: [ REAL BODY ]"
     InfoLabel.Text = "Status: Reset completed."
 end)
