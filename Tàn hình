@@ -1,6 +1,6 @@
 --[[
-    King Tower - Ultimate Puppet Master Swap Script 
-    (Clone = Real Player Tag + Hitbox | Real Body = Object Tag + Camera Anchor)
+    King Tower - Perfect Visible Replicated Clone Script
+    (Clone = Real Player Tag + Hitbox + Network Owner Replication + Seated State)
 ]]
 
 local Players = game:GetService("Players")
@@ -12,18 +12,18 @@ local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-if _G.UltimatePuppetMasterLoaded then return end
-_G.UltimatePuppetMasterLoaded = true
+if _G.PerfectReplicatedCloneLoaded then return end
+_G.PerfectReplicatedCloneLoaded = true
 
 -- UI SETUP
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "UltimatePuppetUI"
+ScreenGui.Name = "ReplicatedCloneUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 260, 0, 210)
+MainFrame.Size = UDim2.new(0, 260, 0, 180)
 MainFrame.Position = UDim2.new(0, 50, 0, 150)
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
 MainFrame.BorderSizePixel = 0
@@ -57,7 +57,7 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -35, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "Ultimate Puppet Hub"
+TitleLabel.Text = "Replicated Clone Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
@@ -65,16 +65,16 @@ TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
 
 local Container = Instance.new("Frame")
-Container.Size = UDim2.new(1, -20, 0, 120)
+Container.Size = UDim2.new(1, -20, 0, 90)
 Container.Position = UDim2.new(0, 10, 0, 40)
 Container.BackgroundTransparency = 1
 Container.Parent = MainFrame
 
 local InfoLabel = Instance.new("TextLabel")
 InfoLabel.Size = UDim2.new(1, -20, 0, 25)
-InfoLabel.Position = UDim2.new(0, 10, 0, 175)
+InfoLabel.Position = UDim2.new(0, 10, 0, 145)
 InfoLabel.BackgroundTransparency = 1
-InfoLabel.Text = "Status: Ready for Ultimate Swap"
+InfoLabel.Text = "Status: Ready to Deploy Replicated Clone"
 InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 InfoLabel.TextSize = 10
 InfoLabel.Font = Enum.Font.Gotham
@@ -82,46 +82,33 @@ InfoLabel.TextXAlignment = Enum.TextXAlignment.Center
 InfoLabel.Parent = MainFrame
 
 -- BUTTONS
-local ActivateBtn = Instance.new("TextButton")
-ActivateBtn.Size = UDim2.new(1, 0, 0, 35)
-ActivateBtn.Position = UDim2.new(0, 0, 0, 0)
-ActivateBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-ActivateBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-ActivateBtn.TextSize = 11
-ActivateBtn.Font = Enum.Font.GothamBold
-ActivateBtn.Text = "🎭 Deploy Clone Player & Object Body"
-ActivateBtn.Parent = Container
+local DeployBtn = Instance.new("TextButton")
+DeployBtn.Size = UDim2.new(1, 0, 0, 38)
+DeployBtn.Position = UDim2.new(0, 0, 0, 0)
+DeployBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+DeployBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+DeployBtn.TextSize = 11
+DeployBtn.Font = Enum.Font.GothamBold
+DeployBtn.Text = "👥 Spawn Replicated Player Clone"
+DeployBtn.Parent = Container
 
-local UIC_1 = Instance.new("UICorner") UIC_1.CornerRadius = UDim.new(0, 6) UIC_1.Parent = ActivateBtn
+local UIC_1 = Instance.new("UICorner") UIC_1.CornerRadius = UDim.new(0, 6) UIC_1.Parent = DeployBtn
 
-local CamCloneBtn = Instance.new("TextButton")
-CamCloneBtn.Size = UDim2.new(1, 0, 0, 35)
-CamCloneBtn.Position = UDim2.new(0, 0, 0, 40)
-CamCloneBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-CamCloneBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
-CamCloneBtn.TextSize = 11
-CamCloneBtn.Font = Enum.Font.GothamBold
-CamCloneBtn.Text = "👁️ View Camera on Clone (Bait)"
-CamCloneBtn.Parent = Container
+local CamBtn = Instance.new("TextButton")
+CamBtn.Size = UDim2.new(1, 0, 0, 38)
+CamBtn.Position = UDim2.new(0, 0, 0, 45)
+CamBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+CamBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
+CamBtn.TextSize = 11
+CamBtn.Font = Enum.Font.GothamBold
+CamBtn.Text = "👁️ Focus Camera on Replicated Clone"
+CamBtn.Parent = Container
 
-local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2.Parent = CamCloneBtn
+local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2.Parent = CamBtn
 
-local CamRealBtn = Instance.new("TextButton")
-CamRealBtn.Size = UDim2.new(1, 0, 0, 35)
-CamRealBtn.Position = UDim2.new(0, 0, 0, 80)
-CamRealBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-CamRealBtn.TextColor3 = Color3.fromRGB(255, 220, 100)
-CamRealBtn.TextSize = 11
-CamRealBtn.Font = Enum.Font.GothamBold
-CamRealBtn.Text = "👁️ View Camera on Object Anchor"
-CamRealBtn.Parent = Container
+local replicatedClone = nil
 
-local UIC_3 = Instance.new("UICorner") UIC_3.CornerRadius = UDim.new(0, 6) UIC_3.Parent = CamRealBtn
-
-local activeClone = nil
-local syncConnection = nil
-
-ActivateBtn.MouseButton1Click:Connect(function()
+DeployBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then 
         InfoLabel.Text = "Status: Character not found!"
@@ -130,116 +117,71 @@ ActivateBtn.MouseButton1Click:Connect(function()
     
     local startCF = character.HumanoidRootPart.CFrame
     
-    if activeClone and activeClone.Parent then
-        activeClone:Destroy()
-        activeClone = nil
+    if replicatedClone and replicatedClone.Parent then
+        replicatedClone:Destroy()
+        replicatedClone = nil
     end
     
-    -- 1. BIẾN CƠ THỂ GỐC THÀNH VẬT THỂ (Xóa hoàn toàn hitbox va chạm, chỉ để nhìn/camera)
-    character.Name = "ObjectCameraAnchor"
-    for _, part in ipairs(character:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.CanCollide = false
-            part.CanTouch = false
-            part.CanQuery = false
-            part.Transparency = 0.5 -- Làm mờ cơ thể gốc cho dễ nhận biết
-        end
-    end
-    
-    local realHumanoid = character:FindFirstChildOfClass("Humanoid")
-    if realHumanoid then
-        realHumanoid.PlatformStand = true
-    end
-    
-    -- 2. TẠO CLONE MANG NGUYÊN VẸN TAG PLAYER VÀ HITBOX ĐỂ ĐỨNG DƯỚI ĐẤT CHỊU ĐÒN
+    -- 1. TẠO MODEL PHỤ TRỢ MANG NGUYÊN VẸN TAG VÀ HITBOX PLAYER
     character.Archivable = true
-    activeClone = character:Clone()
+    replicatedClone = character:Clone()
     character.Archivable = false
     
-    activeClone.Name = LocalPlayer.Name
-    activeClone.Parent = workspace
-    activeClone:SetPrimaryPartCFrame(startCF + Vector3.new(3, 0, 0))
+    replicatedClone.Name = LocalPlayer.Name .. "_ReplicatedClone"
+    replicatedClone.Parent = workspace
+    replicatedClone:SetPrimaryPartCFrame(startCF + Vector3.new(3, 0, 0))
     
-    -- Khôi phục hoàn toàn hitbox cho Clone
-    for _, part in ipairs(activeClone:GetDescendants()) do
+    local cloneHumanoid = replicatedClone:FindFirstChildOfClass("Humanoid")
+    local cloneHrp = replicatedClone:FindFirstChild("HumanoidRootPart")
+    
+    if cloneHumanoid then
+        -- Ép trạng thái ngồi (`Sit = true`) để chống anti-cheat kiểm tra trạng thái lơ lửng/bay nhảy vật lý
+        cloneHumanoid.Sit = true
+        cloneHumanoid.PlatformStand = false
+        cloneHumanoid.AutoRotate = true
+        
+        -- GODMODE CHO CLONE
+        cloneHumanoid.MaxHealth = math.huge
+        cloneHumanoid.Health = math.huge
+        cloneHumanoid.HealthChanged:Connect(function()
+            if cloneHumanoid and cloneHumanoid.Health < cloneHumanoid.MaxHealth then
+                cloneHumanoid.Health = cloneHumanoid.MaxHealth
+            end
+        end)
+    end
+    
+    -- Khôi phục toàn bộ tính chất vật lý, hitbox và khả năng hiển thị mạng (Replication) cho mọi người cùng thấy
+    for _, part in ipairs(replicatedClone:GetDescendants()) do
         if part:IsA("BasePart") then
             part.CanCollide = true
             part.CanTouch = true
             part.CanQuery = true
             part.Transparency = 0
-        end
-    end
-    
-    local cloneHumanoid = activeClone:FindFirstChildOfClass("Humanoid")
-    local cloneHrp = activeClone:FindFirstChild("HumanoidRootPart")
-    local realHrp = character.HumanoidRootPart
-    
-    if cloneHumanoid then
-        cloneHumanoid.PlatformStand = false
-        cloneHumanoid.AutoRotate = true
-    end
-    
-    -- Đưa camera mặc định nhìn vào cơ thể gốc (vật thể an toàn)
-    Camera.CameraSubject = realHumanoid
-    
-    -- 3. ĐỒNG BỘ ĐIỀU KHIỂN TỪ ANCHOR SANG CLONE HOẶC NGƯỢC LẠI
-    if syncConnection then syncConnection:Disconnect() end
-    syncConnection = RunService.RenderStepped:Connect(function()
-        if character and character.Parent and activeClone and activeClone.Parent then
-            local moveDir = Vector3.zero
-            if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.Up) then
-                moveDir = moveDir + Vector3.new(0, 0, -1)
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.Down) then
-                moveDir = moveDir + Vector3.new(0, 0, 1)
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.Left) then
-                moveDir = moveDir + Vector3.new(-1, 0, 0)
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.D) or UserInputService:IsKeyDown(Enum.KeyCode.Right) then
-                moveDir = moveDir + Vector3.new(1, 0, 0)
-            end
             
-            if moveDir.Magnitude > 0 and cloneHumanoid then
-                local camLook = Camera.CFrame.LookVector
-                camLook = Vector3.new(camLook.X, 0, camLook.Z).Unit
-                local camRight = Camera.CFrame.RightVector
-                camRight = Vector3.new(camRight.X, 0, camRight.Z).Unit
-                
-                local worldDir = (camRight * moveDir.X + camLook * -moveDir.Z).Unit
-                cloneHumanoid:Move(worldDir, false)
-                
-                -- Đồng thời dịch chuyển cơ thể gốc (Anchor) đi theo Clone nhưng ở trên cao hoặc lệch một khoảng an toàn
-                if realHrp and cloneHrp then
-                    realHrp.CFrame = cloneHrp.CFrame + Vector3.new(0, 10, 0) -- Treo lơ lửng trên đầu clone 10 studs làm trạm camera vô hình
-                end
-            end
+            -- Chuyển quyền sở hữu vật lý mạng (Network Ownership) sang client để mọi người chơi khác nhìn thấy mượt mà
+            pcall(function()
+                part:SetNetworkOwner(LocalPlayer)
+            end)
         end
-    end)
-    
-    InfoLabel.Text = "Status: Clone is Player Bait, Real Body is Camera Object!"
-end)
-
-CamCloneBtn.MouseButton1Click:Connect(function()
-    if activeClone and activeClone:FindFirstChildOfClass("Humanoid") then
-        Camera.CameraSubject = activeClone.Humanoid
-        InfoLabel.Text = "Status: Camera on Clone Hitbox"
     end
+    
+    Camera.CameraSubject = cloneHumanoid
+    InfoLabel.Text = "Status: Replicated Clone Deployed & Seated!"
 end)
 
-CamRealBtn.MouseButton1Click:Connect(function()
-    local character = LocalPlayer.Character
-    if character and character:FindFirstChildOfClass("Humanoid") then
-        Camera.CameraSubject = character:FindFirstChildOfClass("Humanoid")
-        InfoLabel.Text = "Status: Camera on Object Anchor"
+CamBtn.MouseButton1Click:Connect(function()
+    if replicatedClone and replicatedClone:FindFirstChildOfClass("Humanoid") then
+        Camera.CameraSubject = replicatedClone:FindFirstChildOfClass("Humanoid")
+        InfoLabel.Text = "Status: Camera on Replicated Clone"
+    else
+        InfoLabel.Text = "Status: Clone not found!"
     end
 end)
 
 LocalPlayer.CharacterAdded:Connect(function()
-    if syncConnection then syncConnection:Disconnect() syncConnection = nil end
-    if activeClone then
-        activeClone:Destroy()
-        activeClone = nil
+    if replicatedClone then
+        replicatedClone:Destroy()
+        replicatedClone = nil
     end
     InfoLabel.Text = "Status: Reset - Normal Mode"
 end)
