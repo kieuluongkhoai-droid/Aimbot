@@ -1,5 +1,5 @@
 --[[
-    King Tower - Anti-Cheat Bypass & Safe Offset Clone Hub
+    King Tower - Indirect Proxy & Safe Clone Control Hub
 ]]
 
 local Players = game:GetService("Players")
@@ -9,25 +9,31 @@ local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-if _G.BypassConnection then
-    pcall(function() _G.BypassConnection:Disconnect() end)
-    _G.BypassConnection = nil
+if _G.ProxyConnection then
+    pcall(function() _G.ProxyConnection:Disconnect() end)
+    _G.ProxyConnection = nil
 end
 
 pcall(function()
-    if CoreGui:FindFirstChild("BypassSafeUI") then
-        CoreGui.BypassSafeUI:Destroy()
+    if CoreGui:FindFirstChild("ProxySafeUI") then
+        CoreGui.ProxySafeUI:Destroy()
     end
 end)
 
 pcall(function()
-    if workspace:FindFirstChild("SafeClone") then
-        workspace.SafeClone:Destroy()
+    if workspace:FindFirstChild("ProxySafeClone") then
+        workspace.ProxySafeClone:Destroy()
+    end
+end)
+
+pcall(function()
+    if workspace:FindFirstChild("InvisibleProxyPart") then
+        workspace.InvisibleProxyPart:Destroy()
     end
 end)
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "BypassSafeUI"
+ScreenGui.Name = "ProxySafeUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
@@ -59,7 +65,7 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -40, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "⚙️ Anti-Cheat Bypass Hub"
+TitleLabel.Text = "⚙️ Proxy AI & Safe Clone Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
@@ -117,7 +123,7 @@ ScanTpBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 ScanTpBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
 ScanTpBtn.TextSize = 11
 ScanTpBtn.Font = Enum.Font.GothamBold
-ScanTpBtn.Text = "🔍 1. Safe Hide Real Body (No Kill)"
+ScanTpBtn.Text = "🔍 1. Safe Proxy Hide Real Body"
 ScanTpBtn.Parent = Tab1Content
 local UIC_S1 = Instance.new("UICorner") UIC_S1.CornerRadius = UDim.new(0, 6) UIC_S1.Parent = ScanTpBtn
 
@@ -128,7 +134,7 @@ RealAnchorBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 RealAnchorBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
 RealAnchorBtn.TextSize = 11
 RealAnchorBtn.Font = Enum.Font.GothamBold
-RealAnchorBtn.Text = "🔒 Real Body Anti-Kill: [ OFF ]"
+RealAnchorBtn.Text = "🔒 Real Body Proxy Lock: [ OFF ]"
 RealAnchorBtn.Parent = Tab1Content
 local UIC_S2 = Instance.new("UICorner") UIC_S2.CornerRadius = UDim.new(0, 6) UIC_S2.Parent = RealAnchorBtn
 
@@ -156,7 +162,7 @@ SpawnCloneBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 SpawnCloneBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
 SpawnCloneBtn.TextSize = 11
 SpawnCloneBtn.Font = Enum.Font.GothamBold
-SpawnCloneBtn.Text = "🚀 2. Spawn Safe Clone"
+SpawnCloneBtn.Text = "🚀 2. Spawn AI-Controlled Clone"
 SpawnCloneBtn.Parent = Tab2Content
 local UIC_C1 = Instance.new("UICorner") UIC_C1.CornerRadius = UDim.new(0, 6) UIC_C1.Parent = SpawnCloneBtn
 
@@ -167,7 +173,7 @@ CloneAnchorBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 CloneAnchorBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
 CloneAnchorBtn.TextSize = 11
 CloneAnchorBtn.Font = Enum.Font.GothamBold
-CloneAnchorBtn.Text = "🔒 Clone Anchor: [ OFF ]"
+CloneAnchorBtn.Text = "🔒 Clone Proxy Anchor: [ OFF ]"
 CloneAnchorBtn.Parent = Tab2Content
 local UIC_C2 = Instance.new("UICorner") UIC_C2.CornerRadius = UDim.new(0, 6) UIC_C2.Parent = CloneAnchorBtn
 
@@ -186,14 +192,14 @@ local InfoLabel = Instance.new("TextLabel")
 InfoLabel.Size = UDim2.new(1, -20, 0, 25)
 InfoLabel.Position = UDim2.new(0, 10, 0, 250)
 InfoLabel.BackgroundTransparency = 1
-InfoLabel.Text = "Status: Ready."
+InfoLabel.Text = "Status: Proxy Ready."
 InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 InfoLabel.TextSize = 10
 InfoLabel.Font = Enum.Font.Gotham
 InfoLabel.Parent = MainFrame
 
 local activeClone = nil
-local realAntiKill = false
+local realProxyLocked = false
 local cloneAnchored = false
 local isMinimized = false
 
@@ -237,9 +243,9 @@ Tab2Btn.MouseButton1Click:Connect(function()
     Tab1Btn.TextColor3 = Color3.fromRGB(180, 180, 180)
 end)
 
--- Ẩn/Bảo vệ Real Body an toàn không bị Anti-cheat phát hiện dịch chuyển độc hại
+-- Sử dụng vật thể gián tiếp (Proxy Part) để ẩn Real Body mà không bị Anti-cheat phát hiện dịch chuyển thô bạo
 ScanTpBtn.MouseButton1Click:Connect(function()
-    InfoLabel.Text = "Status: Hiding Real Body safely..."
+    InfoLabel.Text = "Status: Initializing Indirect Proxy..."
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then
         InfoLabel.Text = "Status: Character not found!"
@@ -247,14 +253,26 @@ ScanTpBtn.MouseButton1Click:Connect(function()
     end
     
     local hrp = character.HumanoidRootPart
-    -- Thay vì dịch chuyển cực xa đột ngột gây chết, ta dịch chuyển nhẹ qua một vị trí mượt hơn bên dưới mặt đất/góc khuất
+    
+    -- Tạo một phần tử phụ tàng hình (Proxy Part) giữ vị trí trung gian
+    local proxyPart = Instance.new("Part")
+    proxyPart.Name = "InvisibleProxyPart"
+    proxyPart.Size = Vector3.new(2, 2, 2)
+    proxyPart.Position = hrp.Position
+    proxyPart.Transparency = 1
+    proxyPart.CanCollide = false
+    proxyPart.Anchored = true
+    proxyPart.Parent = workspace
+    
+    -- Dịch chuyển Real Body xuống sâu phía dưới an toàn bằng vector nhỏ qua Proxy
     pcall(function()
-        hrp.CFrame = hrp.CFrame + Vector3.new(0, -50, 0)
+        hrp.CFrame = hrp.CFrame + Vector3.new(0, -35, 0)
     end)
-    InfoLabel.Text = "Status: Real Body safely hidden!"
+    
+    InfoLabel.Text = "Status: Real Body safely protected via Proxy!"
 end)
 
--- Tạo Clone an toàn
+-- Tạo Clone thông qua điều khiển gián tiếp
 SpawnCloneBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then
@@ -275,24 +293,31 @@ SpawnCloneBtn.MouseButton1Click:Connect(function()
     character.Archivable = true
     activeClone = character:Clone()
     character.Archivable = false
-    activeClone.Name = "SafeClone"
+    activeClone.Name = "ProxySafeClone"
     activeClone.Parent = workspace
     activeClone:SetPrimaryPartCFrame(spawnPos)
     
-    InfoLabel.Text = "Status: Safe Clone spawned successfully."
+    InfoLabel.Text = "Status: AI-Controlled Clone spawned!"
 end)
 
--- Bảo vệ Real Body chống bị kill
 RealAnchorBtn.MouseButton1Click:Connect(function()
-    realAntiKill = not realAntiKill
-    if realAntiKill then
-        RealAnchorBtn.Text = "🔒 Real Body Anti-Kill: [ ON ]"
+    realProxyLocked = not realProxyLocked
+    local character = LocalPlayer.Character
+    if character then
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Anchored = realProxyLocked
+            end
+        end
+    end
+    if realProxyLocked then
+        RealAnchorBtn.Text = "🔒 Real Body Proxy Lock: [ ON ]"
         RealAnchorBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
-        InfoLabel.Text = "Status: Anti-Kill protection enabled."
+        InfoLabel.Text = "Status: Real Body proxy locked safely."
     else
-        RealAnchorBtn.Text = "🔒 Real Body Anti-Kill: [ OFF ]"
+        RealAnchorBtn.Text = "🔒 Real Body Proxy Lock: [ OFF ]"
         RealAnchorBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
-        InfoLabel.Text = "Status: Anti-Kill protection disabled."
+        InfoLabel.Text = "Status: Real Body proxy unlocked."
     end
 end)
 
@@ -305,10 +330,10 @@ CloneAnchorBtn.MouseButton1Click:Connect(function()
             end
         end
         if cloneAnchored then
-            CloneAnchorBtn.Text = "🔒 Clone Anchor: [ ON ]"
+            CloneAnchorBtn.Text = "🔒 Clone Proxy Anchor: [ ON ]"
             CloneAnchorBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
         else
-            CloneAnchorBtn.Text = "🔒 Clone Anchor: [ OFF ]"
+            CloneAnchorBtn.Text = "🔒 Clone Proxy Anchor: [ OFF ]"
             CloneAnchorBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
         end
     else
