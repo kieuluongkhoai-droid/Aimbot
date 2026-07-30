@@ -1,5 +1,6 @@
 --[[
-    King Tower - Puppet Master Hitbox Offset Script
+    King Tower - Ultimate Puppet Master Swap Script 
+    (Clone = Real Player Tag + Hitbox | Real Body = Object Tag + Camera Anchor)
 ]]
 
 local Players = game:GetService("Players")
@@ -11,18 +12,18 @@ local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-if _G.PuppetMasterLoaded then return end
-_G.PuppetMasterLoaded = true
+if _G.UltimatePuppetMasterLoaded then return end
+_G.UltimatePuppetMasterLoaded = true
 
 -- UI SETUP
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "PuppetMasterUI"
+ScreenGui.Name = "UltimatePuppetUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 260, 0, 180)
+MainFrame.Size = UDim2.new(0, 260, 0, 210)
 MainFrame.Position = UDim2.new(0, 50, 0, 150)
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
 MainFrame.BorderSizePixel = 0
@@ -56,7 +57,7 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -35, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "Puppet Hitbox Shift Hub"
+TitleLabel.Text = "Ultimate Puppet Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
@@ -64,16 +65,16 @@ TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
 
 local Container = Instance.new("Frame")
-Container.Size = UDim2.new(1, -20, 0, 90)
+Container.Size = UDim2.new(1, -20, 0, 120)
 Container.Position = UDim2.new(0, 10, 0, 40)
 Container.BackgroundTransparency = 1
 Container.Parent = MainFrame
 
 local InfoLabel = Instance.new("TextLabel")
 InfoLabel.Size = UDim2.new(1, -20, 0, 25)
-InfoLabel.Position = UDim2.new(0, 10, 0, 145)
+InfoLabel.Position = UDim2.new(0, 10, 0, 175)
 InfoLabel.BackgroundTransparency = 1
-InfoLabel.Text = "Status: Ready for Puppet Mode"
+InfoLabel.Text = "Status: Ready for Ultimate Swap"
 InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 InfoLabel.TextSize = 10
 InfoLabel.Font = Enum.Font.Gotham
@@ -81,72 +82,164 @@ InfoLabel.TextXAlignment = Enum.TextXAlignment.Center
 InfoLabel.Parent = MainFrame
 
 -- BUTTONS
-local ActivatePuppetBtn = Instance.new("TextButton")
-ActivatePuppetBtn.Size = UDim2.new(1, 0, 0, 38)
-ActivatePuppetBtn.Position = UDim2.new(0, 0, 0, 0)
-ActivatePuppetBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-ActivatePuppetBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-ActivatePuppetBtn.TextSize = 11
-ActivatePuppetBtn.Font = Enum.Font.GothamBold
-ActivatePuppetBtn.Text = "🕹️ Enable Puppet Hitbox Lift (+15 Studs)"
-ActivatePuppetBtn.Parent = Container
+local ActivateBtn = Instance.new("TextButton")
+ActivateBtn.Size = UDim2.new(1, 0, 0, 35)
+ActivateBtn.Position = UDim2.new(0, 0, 0, 0)
+ActivateBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+ActivateBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+ActivateBtn.TextSize = 11
+ActivateBtn.Font = Enum.Font.GothamBold
+ActivateBtn.Text = "🎭 Deploy Clone Player & Object Body"
+ActivateBtn.Parent = Container
 
-local UIC_1 = Instance.new("UICorner") UIC_1.CornerRadius = UDim.new(0, 6) UIC_1.Parent = ActivatePuppetBtn
+local UIC_1 = Instance.new("UICorner") UIC_1.CornerRadius = UDim.new(0, 6) UIC_1.Parent = ActivateBtn
 
-local ResetPuppetBtn = Instance.new("TextButton")
-ResetPuppetBtn.Size = UDim2.new(1, 0, 0, 38)
-ResetPuppetBtn.Position = UDim2.new(0, 0, 0, 45)
-ResetPuppetBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-ResetPuppetBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
-ResetPuppetBtn.TextSize = 11
-ResetPuppetBtn.Font = Enum.Font.GothamBold
-ResetPuppetBtn.Text = "🔄 Reset Hitbox to Normal"
-ResetPuppetBtn.Parent = Container
+local CamCloneBtn = Instance.new("TextButton")
+CamCloneBtn.Size = UDim2.new(1, 0, 0, 35)
+CamCloneBtn.Position = UDim2.new(0, 0, 0, 40)
+CamCloneBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+CamCloneBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
+CamCloneBtn.TextSize = 11
+CamCloneBtn.Font = Enum.Font.GothamBold
+CamCloneBtn.Text = "👁️ View Camera on Clone (Bait)"
+CamCloneBtn.Parent = Container
 
-local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2.Parent = ResetPuppetBtn
+local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2.Parent = CamCloneBtn
 
-local puppetConnection = nil
-local isPuppetActive = false
+local CamRealBtn = Instance.new("TextButton")
+CamRealBtn.Size = UDim2.new(1, 0, 0, 35)
+CamRealBtn.Position = UDim2.new(0, 0, 0, 80)
+CamRealBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+CamRealBtn.TextColor3 = Color3.fromRGB(255, 220, 100)
+CamRealBtn.TextSize = 11
+CamRealBtn.Font = Enum.Font.GothamBold
+CamRealBtn.Text = "👁️ View Camera on Object Anchor"
+CamRealBtn.Parent = Container
 
-ActivatePuppetBtn.MouseButton1Click:Connect(function()
+local UIC_3 = Instance.new("UICorner") UIC_3.CornerRadius = UDim.new(0, 6) UIC_3.Parent = CamRealBtn
+
+local activeClone = nil
+local syncConnection = nil
+
+ActivateBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then 
         InfoLabel.Text = "Status: Character not found!"
         return 
     end
     
-    local hrp = character.HumanoidRootPart
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local startCF = character.HumanoidRootPart.CFrame
     
-    isPuppetActive = true
-    InfoLabel.Text = "Status: Puppet Mode Active! Hitbox lifted."
+    if activeClone and activeClone.Parent then
+        activeClone:Destroy()
+        activeClone = nil
+    end
     
-    if puppetConnection then puppetConnection:Disconnect() end
+    -- 1. BIẾN CƠ THỂ GỐC THÀNH VẬT THỂ (Xóa hoàn toàn hitbox va chạm, chỉ để nhìn/camera)
+    character.Name = "ObjectCameraAnchor"
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+            part.CanTouch = false
+            part.CanQuery = false
+            part.Transparency = 0.5 -- Làm mờ cơ thể gốc cho dễ nhận biết
+        end
+    end
     
-    -- Sử dụng Weld hoặc cập nhật vị trí liên tục để ép Hitbox (HRP) bay lên cao hơn phần thân hiển thị
-    -- Trong khi đó Camera giữ nguyên ở nhân vật
-    puppetConnection = RunService.Heartbeat:Connect(function()
-        if not isPuppetActive or not character or not character.Parent or not hrp then return end
-        
-        -- Đẩy HRP lên cao hơn 15 studs so với tọa độ thực tế của nhân vật dưới đất
-        -- Hoặc giữ nhân vật dưới đất và ép HRP bay lơ lửng trên đầu
-        local currentPos = hrp.Position
-        -- Tạo một độ lệch vị trí (Offset) cho Hitbox server nhận diện
-        -- Kẻ địch đánh vào phần thân dưới đất sẽ trúng không khí vì hitbox đã dịch lên trời 15 đơn vị
+    local realHumanoid = character:FindFirstChildOfClass("Humanoid")
+    if realHumanoid then
+        realHumanoid.PlatformStand = true
+    end
+    
+    -- 2. TẠO CLONE MANG NGUYÊN VẸN TAG PLAYER VÀ HITBOX ĐỂ ĐỨNG DƯỚI ĐẤT CHỊU ĐÒN
+    character.Archivable = true
+    activeClone = character:Clone()
+    character.Archivable = false
+    
+    activeClone.Name = LocalPlayer.Name
+    activeClone.Parent = workspace
+    activeClone:SetPrimaryPartCFrame(startCF + Vector3.new(3, 0, 0))
+    
+    -- Khôi phục hoàn toàn hitbox cho Clone
+    for _, part in ipairs(activeClone:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = true
+            part.CanTouch = true
+            part.CanQuery = true
+            part.Transparency = 0
+        end
+    end
+    
+    local cloneHumanoid = activeClone:FindFirstChildOfClass("Humanoid")
+    local cloneHrp = activeClone:FindFirstChild("HumanoidRootPart")
+    local realHrp = character.HumanoidRootPart
+    
+    if cloneHumanoid then
+        cloneHumanoid.PlatformStand = false
+        cloneHumanoid.AutoRotate = true
+    end
+    
+    -- Đưa camera mặc định nhìn vào cơ thể gốc (vật thể an toàn)
+    Camera.CameraSubject = realHumanoid
+    
+    -- 3. ĐỒNG BỘ ĐIỀU KHIỂN TỪ ANCHOR SANG CLONE HOẶC NGƯỢC LẠI
+    if syncConnection then syncConnection:Disconnect() end
+    syncConnection = RunService.RenderStepped:Connect(function()
+        if character and character.Parent and activeClone and activeClone.Parent then
+            local moveDir = Vector3.zero
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.Up) then
+                moveDir = moveDir + Vector3.new(0, 0, -1)
+            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.Down) then
+                moveDir = moveDir + Vector3.new(0, 0, 1)
+            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.Left) then
+                moveDir = moveDir + Vector3.new(-1, 0, 0)
+            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) or UserInputService:IsKeyDown(Enum.KeyCode.Right) then
+                moveDir = moveDir + Vector3.new(1, 0, 0)
+            end
+            
+            if moveDir.Magnitude > 0 and cloneHumanoid then
+                local camLook = Camera.CFrame.LookVector
+                camLook = Vector3.new(camLook.X, 0, camLook.Z).Unit
+                local camRight = Camera.CFrame.RightVector
+                camRight = Vector3.new(camRight.X, 0, camRight.Z).Unit
+                
+                local worldDir = (camRight * moveDir.X + camLook * -moveDir.Z).Unit
+                cloneHumanoid:Move(worldDir, false)
+                
+                -- Đồng thời dịch chuyển cơ thể gốc (Anchor) đi theo Clone nhưng ở trên cao hoặc lệch một khoảng an toàn
+                if realHrp and cloneHrp then
+                    realHrp.CFrame = cloneHrp.CFrame + Vector3.new(0, 10, 0) -- Treo lơ lửng trên đầu clone 10 studs làm trạm camera vô hình
+                end
+            end
+        end
     end)
+    
+    InfoLabel.Text = "Status: Clone is Player Bait, Real Body is Camera Object!"
 end)
 
-ResetPuppetBtn.MouseButton1Click:Connect(function()
-    isPuppetActive = false
-    if puppetConnection then 
-        puppetConnection:Disconnect() 
-        puppetConnection = nil 
+CamCloneBtn.MouseButton1Click:Connect(function()
+    if activeClone and activeClone:FindFirstChildOfClass("Humanoid") then
+        Camera.CameraSubject = activeClone.Humanoid
+        InfoLabel.Text = "Status: Camera on Clone Hitbox"
     end
-    InfoLabel.Text = "Status: Hitbox Reset to Normal."
+end)
+
+CamRealBtn.MouseButton1Click:Connect(function()
+    local character = LocalPlayer.Character
+    if character and character:FindFirstChildOfClass("Humanoid") then
+        Camera.CameraSubject = character:FindFirstChildOfClass("Humanoid")
+        InfoLabel.Text = "Status: Camera on Object Anchor"
+    end
 end)
 
 LocalPlayer.CharacterAdded:Connect(function()
-    isPuppetActive = false
-    if puppetConnection then puppetConnection:Disconnect() puppetConnection = nil end
-    InfoLabel.Text = "Status: Character Reset"
+    if syncConnection then syncConnection:Disconnect() syncConnection = nil end
+    if activeClone then
+        activeClone:Destroy()
+        activeClone = nil
+    end
+    InfoLabel.Text = "Status: Reset - Normal Mode"
 end)
