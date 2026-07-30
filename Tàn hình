@@ -1,5 +1,5 @@
 --[[
-    King Tower - Perfect Swap Hub (Seated Real Body <-> AI Clone)
+    King Tower - Giant Floor & Perfect Swap Hub
 ]]
 
 local Players = game:GetService("Players")
@@ -9,14 +9,14 @@ local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-if _G.SwapProxyConnection then
-    pcall(function() _G.SwapProxyConnection:Disconnect() end)
-    _G.SwapProxyConnection = nil
+if _G.GiantFloorConnection then
+    pcall(function() _G.GiantFloorConnection:Disconnect() end)
+    _G.GiantFloorConnection = nil
 end
 
 pcall(function()
-    if CoreGui:FindFirstChild("SwapProxyUI") then
-        CoreGui.SwapProxyUI:Destroy()
+    if CoreGui:FindFirstChild("GiantFloorUI") then
+        CoreGui.GiantFloorUI:Destroy()
     end
 end)
 
@@ -24,10 +24,13 @@ pcall(function()
     if workspace:FindFirstChild("HiddenArmorSeat") then
         workspace.HiddenArmorSeat:Destroy()
     end
+    if workspace:FindFirstChild("UndergroundGiantFloor") then
+        workspace.UndergroundGiantFloor:Destroy()
+    end
 end)
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SwapProxyUI"
+ScreenGui.Name = "GiantFloorUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
@@ -53,7 +56,7 @@ UIStroke.Parent = MainFrame
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, 0, 0, 30)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "🔄 Perfect Swap Hub"
+TitleLabel.Text = "🏗️ Giant Floor & Swap Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
@@ -65,7 +68,7 @@ Container.Position = UDim2.new(0, 10, 0, 35)
 Container.BackgroundTransparency = 1
 Container.Parent = MainFrame
 
--- Nút 1: Khởi tạo hệ thống (Spawn ghế + ngồi + tạo clone AI)
+-- Nút 1: Khởi tạo Sàn khổng lồ + Ghế + Clone AI
 local SpawnBtn = Instance.new("TextButton")
 SpawnBtn.Size = UDim2.new(1, 0, 0, 32)
 SpawnBtn.Position = UDim2.new(0, 0, 0, 0)
@@ -73,11 +76,11 @@ SpawnBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 SpawnBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
 SpawnBtn.TextSize = 11
 SpawnBtn.Font = Enum.Font.GothamBold
-SpawnBtn.Text = "🚀 1. Spawn Seated Real & AI Clone"
+SpawnBtn.Text = "🚀 1. Spawn Giant Floor & Clone"
 SpawnBtn.Parent = Container
 local UIC_1 = Instance.new("UICorner") UIC_1.CornerRadius = UDim.new(0, 6) UIC_1.Parent = SpawnBtn
 
--- Nút 2: Nút Swap vị trí qua lại theo ý bạn
+-- Nút 2: Swap vị trí qua lại
 local SwapBtn = Instance.new("TextButton")
 SwapBtn.Size = UDim2.new(1, 0, 0, 32)
 SwapBtn.Position = UDim2.new(0, 0, 0, 38)
@@ -85,7 +88,7 @@ SwapBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 SwapBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
 SwapBtn.TextSize = 11
 SwapBtn.Font = Enum.Font.GothamBold
-SwapBtn.Text = "🔄 2. Swap Pos: [ CURRENT: SEATED ]"
+SwapBtn.Text = "🔄 2. Swap Pos: [ REAL: SEATED ]"
 SwapBtn.Parent = Container
 local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2.Parent = SwapBtn
 
@@ -125,8 +128,9 @@ InfoLabel.Parent = MainFrame
 
 local activeClone = nil
 local activeSeat = nil
+local giantFloor = nil
 local viewingClone = true
-local isRealSeated = true -- true: Real body đang ngồi ở ghế, false: Real body đang đứng ở vị trí clone
+local isRealSeated = true
 
 SpawnBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
@@ -141,12 +145,24 @@ SpawnBtn.MouseButton1Click:Connect(function()
     
     if activeClone then pcall(function() activeClone:Destroy() end) activeClone = nil end
     if activeSeat then pcall(function() activeSeat:Destroy() end) activeSeat = nil end
+    if giantFloor then pcall(function() giantFloor:Destroy() end) giantFloor = nil end
     
-    -- 1. Tạo ghế ô tô ẩn ngay dưới vị trí hiện tại
+    -- 1. Tạo Sàn Khổng Lồ ở bên dưới (Kích thước lớn 2048x2048, cách vị trí hiện tại 10 stud xuống dưới)
+    giantFloor = Instance.new("Part")
+    giantFloor.Name = "UndergroundGiantFloor"
+    giantFloor.Size = Vector3.new(2048, 5, 2048)
+    giantFloor.CFrame = currentCF - Vector3.new(0, 10, 0)
+    giantFloor.Anchored = true
+    giantFloor.CanCollide = true
+    giantFloor.Transparency = 0.5 -- Bán trong suốt để dễ quan sát hoặc đổi thành 1 nếu muốn tàng hình hoàn toàn
+    giantFloor.Color = Color3.fromRGB(35, 35, 45)
+    giantFloor.Parent = workspace
+    
+    -- 2. Tạo Ghế Ô Tô ngay trên sàn khổng lồ đó
     activeSeat = Instance.new("Seat")
     activeSeat.Name = "HiddenArmorSeat"
     activeSeat.Size = Vector3.new(3, 1, 3)
-    activeSeat.CFrame = currentCF
+    activeSeat.CFrame = giantFloor.CFrame + Vector3.new(0, 4, 0)
     activeSeat.Anchored = false
     activeSeat.CanCollide = false
     activeSeat.Transparency = 1
@@ -164,13 +180,13 @@ SpawnBtn.MouseButton1Click:Connect(function()
         end
     end
     
-    -- 2. Tạo Clone xuất hiện trên mặt đất (cách một khoảng nhỏ)
+    -- 3. Tạo Clone xuất hiện trên mặt đất chính để AI điều khiển
     character.Archivable = true
     activeClone = character:Clone()
     character.Archivable = false
-    activeClone.Name = "AI_Swap_Clone"
+    activeClone.Name = "AI_GiantFloor_Clone"
     activeClone.Parent = workspace
-    activeClone:SetPrimaryPartCFrame(currentCF + Vector3.new(0, 3, 0))
+    activeClone:SetPrimaryPartCFrame(currentCF)
     
     local cloneHrp = activeClone:FindFirstChild("HumanoidRootPart")
     local cloneHum = activeClone:FindFirstChildOfClass("Humanoid")
@@ -180,13 +196,13 @@ SpawnBtn.MouseButton1Click:Connect(function()
     isRealSeated = true
     
     SwitchCamBtn.Text = "👁️ 3. View: [ CLONE ]"
-    SwapBtn.Text = "🔄 2. Swap Pos: [ REAL BODY: SEATED ]"
-    InfoLabel.Text = "Status: Real body seated securely. Clone active."
+    SwapBtn.Text = "🔄 2. Swap Pos: [ REAL: SEATED ]"
+    InfoLabel.Text = "Status: Giant floor created. Real body seated safely."
     
-    if _G.SwapProxyConnection then _G.SwapProxyConnection:Disconnect() end
+    if _G.GiantFloorConnection then _G.GiantFloorConnection:Disconnect() end
     
-    -- 3. AI điều khiển Clone săn mục tiêu
-    _G.SwapProxyConnection = RunService.RenderStepped:Connect(function()
+    -- 4. Vòng lặp AI điều khiển Clone săn mục tiêu
+    _G.GiantFloorConnection = RunService.RenderStepped:Connect(function()
         if activeClone and cloneHum and cloneHrp then
             local targetHrp = nil
             local minDist = math.huge
@@ -206,7 +222,7 @@ SpawnBtn.MouseButton1Click:Connect(function()
     end)
 end)
 
--- Nút SWAP vị trí qua lại cực kỳ linh hoạt
+-- Nút Swap vị trí qua lại giữa Real Body (trên sàn khổng lồ) và Clone (trên mặt đất)
 SwapBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") or not activeClone or not activeSeat then
@@ -219,14 +235,15 @@ SwapBtn.MouseButton1Click:Connect(function()
     local cloneHrp = activeClone:FindFirstChild("HumanoidRootPart")
     
     if isRealSeated then
-        -- TRƯỜNG HỢP 1: Từ Real Body (Đang ngồi ghế) -> Đổi chỗ với Clone
-        -- Hủy trạng thái ngồi của Real body, dịch chuyển Real body lên vị trí của Clone
+        -- TRƯỜNG HỢP 1: Từ Real Body (Đang ngồi trên sàn khổng lồ) -> Đổi chỗ lên mặt đất thay cho Clone
         realHum.Sit = false
         task.wait(0.05)
         realHrp.CFrame = cloneHrp.CFrame
         
-        -- Mang ghế và bắt Clone dịch chuyển xuống dưới ngồi vào ghế
-        activeSeat.CFrame = realHrp.CFrame - Vector3.new(0, 3, 0)
+        -- Mang ghế và bắt Clone dịch chuyển xuống sàn khổng lồ ngồi vào ghế
+        if giantFloor then
+            activeSeat.CFrame = giantFloor.CFrame + Vector3.new(0, 4, 0)
+        end
         local cloneHum = activeClone:FindFirstChildOfClass("Humanoid")
         if cloneHum then
             cloneHum.Sit = true
@@ -234,27 +251,27 @@ SwapBtn.MouseButton1Click:Connect(function()
         end
         
         isRealSeated = false
-        SwapBtn.Text = "🔄 2. Swap Pos: [ REAL BODY: STANDING ]"
+        SwapBtn.Text = "🔄 2. Swap Pos: [ REAL: ON SURFACE ]"
         SwapBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-        InfoLabel.Text = "Status: Swapped! Real body is now at Clone pos."
+        InfoLabel.Text = "Status: Swapped! Real body is now at Clone position."
     else
-        -- TRƯỜNG HỢP 2: Từ vị trí Clone -> Trở lại vị trí Real Body (Ngồi ghế)
+        -- TRƯỜNG HỢP 2: Từ vị trí mặt đất -> Trở về ngồi trên sàn khổng lồ bên dưới
         local cloneHum = activeClone:FindFirstChildOfClass("Humanoid")
         if cloneHum then cloneHum.Sit = false end
         task.wait(0.05)
         
-        -- Đưa Clone ra chỗ khác hoặc cho nó đứng dậy
-        cloneHrp.CFrame = realHrp.CFrame + Vector3.new(0, 3, 0)
+        -- Đưa Clone lên vị trí mặt đất
+        cloneHrp.CFrame = realHrp.CFrame
         
-        -- Kéo Real body trở lại vị trí chiếc ghế ở dưới và cho ngồi xuống cố định
+        -- Kéo Real body trở lại ghế trên sàn khổng lồ bên dưới
         realHrp.CFrame = activeSeat.CFrame + Vector3.new(0, 2, 0)
         realHum.Sit = true
         activeSeat:Sit(realHum)
         
         isRealSeated = true
-        SwapBtn.Text = "🔄 2. Swap Pos: [ REAL BODY: SEATED ]"
+        SwapBtn.Text = "🔄 2. Swap Pos: [ REAL: SEATED ]"
         SwapBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
-        InfoLabel.Text = "Status: Swapped back! Real body is safely seated."
+        InfoLabel.Text = "Status: Swapped back! Real body is safely seated on giant floor."
     end
 end)
 
@@ -283,12 +300,13 @@ SwitchCamBtn.MouseButton1Click:Connect(function()
 end)
 
 ResetBtn.MouseButton1Click:Connect(function()
-    if _G.SwapProxyConnection then
-        _G.SwapProxyConnection:Disconnect()
-        _G.SwapProxyConnection = nil
+    if _G.GiantFloorConnection then
+        _G.GiantFloorConnection:Disconnect()
+        _G.GiantFloorConnection = nil
     end
     if activeClone then pcall(function() activeClone:Destroy() end) activeClone = nil end
     if activeSeat then pcall(function() activeSeat:Destroy() end) activeSeat = nil end
+    if giantFloor then pcall(function() giantFloor:Destroy() end) giantFloor = nil end
     
     local character = LocalPlayer.Character
     if character then
@@ -306,7 +324,7 @@ ResetBtn.MouseButton1Click:Connect(function()
     
     viewingClone = false
     isRealSeated = true
-    SwapBtn.Text = "🔄 2. Swap Pos: [ REAL BODY: SEATED ]"
+    SwapBtn.Text = "🔄 2. Swap Pos: [ REAL: SEATED ]"
     SwitchCamBtn.Text = "👁️ 3. View: [ REAL BODY ]"
     InfoLabel.Text = "Status: Reset completed."
 end)
