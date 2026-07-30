@@ -1,5 +1,5 @@
 --[[
-    King Tower - Simple Direct Swap Hub (Real Body at Corner <-> Clone)
+    King Tower - Final Verified Strict Safe Distance Scanner & Dual Tab UI
 ]]
 
 local Players = game:GetService("Players")
@@ -9,31 +9,31 @@ local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-if _G.DirectSwapConnection then
-    pcall(function() _G.DirectSwapConnection:Disconnect() end)
-    _G.DirectSwapConnection = nil
+if _G.StrictSafeConnection then
+    pcall(function() _G.StrictSafeConnection:Disconnect() end)
+    _G.StrictSafeConnection = nil
 end
 
 pcall(function()
-    if CoreGui:FindFirstChild("DirectSwapUI") then
-        CoreGui.DirectSwapUI:Destroy()
+    if CoreGui:FindFirstChild("StrictSafeUI") then
+        CoreGui.StrictSafeUI:Destroy()
     end
 end)
 
 pcall(function()
-    if workspace:FindFirstChild("DirectClone") then
-        workspace.DirectClone:Destroy()
+    if workspace:FindFirstChild("StrictSafeClone") then
+        workspace.StrictSafeClone:Destroy()
     end
 end)
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "DirectSwapUI"
+ScreenGui.Name = "StrictSafeUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 280, 0, 220)
+MainFrame.Size = UDim2.new(0, 320, 0, 290)
 MainFrame.Position = UDim2.new(0, 50, 0, 150)
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 MainFrame.BorderSizePixel = 0
@@ -50,72 +50,141 @@ UIStroke.Thickness = 2
 UIStroke.Color = Color3.fromRGB(0, 255, 128)
 UIStroke.Parent = MainFrame
 
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1, 0, 0, 35)
+TopBar.BackgroundTransparency = 1
+TopBar.Parent = MainFrame
+
 local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, 0, 0, 30)
+TitleLabel.Size = UDim2.new(1, -40, 1, 0)
+TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "⚡ Direct Swap Hub"
+TitleLabel.Text = "⚙️ Strict Safe Distance Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Parent = MainFrame
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = TopBar
 
-local Container = Instance.new("Frame")
-Container.Size = UDim2.new(1, -20, 0, 150)
-Container.Position = UDim2.new(0, 10, 0, 35)
-Container.BackgroundTransparency = 1
-Container.Parent = MainFrame
+local MinimizeBtn = Instance.new("TextButton")
+MinimizeBtn.Size = UDim2.new(0, 30, 0, 30)
+MinimizeBtn.Position = UDim2.new(1, -35, 0, 2)
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+MinimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeBtn.TextSize = 12
+MinimizeBtn.Font = Enum.Font.GothamBold
+MinimizeBtn.Text = "-"
+MinimizeBtn.Parent = TopBar
+local UIC_Min = Instance.new("UICorner") UIC_Min.CornerRadius = UDim.new(0, 6) UIC_Min.Parent = MinimizeBtn
 
--- Nút 1: Khởi tạo Clone và đưa Real Body tới góc bản đồ
-local SpawnBtn = Instance.new("TextButton")
-SpawnBtn.Size = UDim2.new(1, 0, 0, 32)
-SpawnBtn.Position = UDim2.new(0, 0, 0, 0)
-SpawnBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-SpawnBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-SpawnBtn.TextSize = 11
-SpawnBtn.Font = Enum.Font.GothamBold
-SpawnBtn.Text = "🚀 1. Spawn Clone & Real to Corner"
-SpawnBtn.Parent = Container
-local UIC_1 = Instance.new("UICorner") UIC_1.CornerRadius = UDim.new(0, 6) UIC_1.Parent = SpawnBtn
+local TabBar = Instance.new("Frame")
+TabBar.Size = UDim2.new(1, -20, 0, 30)
+TabBar.Position = UDim2.new(0, 10, 0, 40)
+TabBar.BackgroundTransparency = 1
+TabBar.Parent = MainFrame
 
--- Nút 2: Swap vị trí trực tiếp qua lại giữa Real Body và Clone
-local SwapBtn = Instance.new("TextButton")
-SwapBtn.Size = UDim2.new(1, 0, 0, 32)
-SwapBtn.Position = UDim2.new(0, 0, 0, 38)
-SwapBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-SwapBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
-SwapBtn.TextSize = 11
-SwapBtn.Font = Enum.Font.GothamBold
-SwapBtn.Text = "🔄 2. Swap Positions"
-SwapBtn.Parent = Container
-local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2.Parent = SwapBtn
+local Tab1Btn = Instance.new("TextButton")
+Tab1Btn.Size = UDim2.new(0.5, -3, 1, 0)
+Tab1Btn.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
+Tab1Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+Tab1Btn.TextSize = 11
+Tab1Btn.Font = Enum.Font.GothamBold
+Tab1Btn.Text = "👤 Real Body"
+Tab1Btn.Parent = TabBar
+local UIC_T1 = Instance.new("UICorner") UIC_T1.CornerRadius = UDim.new(0, 6) UIC_T1.Parent = Tab1Btn
 
--- Nút 3: Đổi góc nhìn Camera
-local SwitchCamBtn = Instance.new("TextButton")
-SwitchCamBtn.Size = UDim2.new(1, 0, 0, 32)
-SwitchCamBtn.Position = UDim2.new(0, 0, 0, 76)
-SwitchCamBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-SwitchCamBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
-SwitchCamBtn.TextSize = 11
-SwitchCamBtn.Font = Enum.Font.GothamBold
-SwitchCamBtn.Text = "👁️ 3. View: [ CLONE ]"
-SwitchCamBtn.Parent = Container
-local UIC_3 = Instance.new("UICorner") UIC_3.CornerRadius = UDim.new(0, 6) UIC_3.Parent = SwitchCamBtn
+local Tab2Btn = Instance.new("TextButton")
+Tab2Btn.Size = UDim2.new(0.5, -3, 1, 0)
+Tab2Btn.Position = UDim2.new(0.5, 3, 0, 0)
+Tab2Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+Tab2Btn.TextColor3 = Color3.fromRGB(180, 180, 180)
+Tab2Btn.TextSize = 11
+Tab2Btn.Font = Enum.Font.GothamBold
+Tab2Btn.Text = "🤖 Clone Hub"
+Tab2Btn.Parent = TabBar
+local UIC_T2 = Instance.new("UICorner") UIC_T2.CornerRadius = UDim.new(0, 6) UIC_T2.Parent = Tab2Btn
 
--- Nút 4: Reset toàn bộ
-local ResetBtn = Instance.new("TextButton")
-ResetBtn.Size = UDim2.new(1, 0, 0, 32)
-ResetBtn.Position = UDim2.new(0, 0, 0, 114)
-ResetBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-ResetBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
-ResetBtn.TextSize = 11
-ResetBtn.Font = Enum.Font.GothamBold
-ResetBtn.Text = "🔄 Reset All State"
-ResetBtn.Parent = Container
-local UIC_4 = Instance.new("UICorner") UIC_4.CornerRadius = UDim.new(0, 6) UIC_4.Parent = ResetBtn
+local Tab1Content = Instance.new("Frame")
+Tab1Content.Size = UDim2.new(1, -20, 0, 150)
+Tab1Content.Position = UDim2.new(0, 10, 0, 80)
+Tab1Content.BackgroundTransparency = 1
+Tab1Content.Visible = true
+Tab1Content.Parent = MainFrame
+
+local ScanTpBtn = Instance.new("TextButton")
+ScanTpBtn.Size = UDim2.new(1, 0, 0, 35)
+ScanTpBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+ScanTpBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+ScanTpBtn.TextSize = 11
+ScanTpBtn.Font = Enum.Font.GothamBold
+ScanTpBtn.Text = "🔍 1. Scan Map & TP Real Far Away"
+ScanTpBtn.Parent = Tab1Content
+local UIC_S1 = Instance.new("UICorner") UIC_S1.CornerRadius = UDim.new(0, 6) UIC_S1.Parent = ScanTpBtn
+
+local RealAnchorBtn = Instance.new("TextButton")
+RealAnchorBtn.Size = UDim2.new(1, 0, 0, 35)
+RealAnchorBtn.Position = UDim2.new(0, 0, 0, 42)
+RealAnchorBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+RealAnchorBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
+RealAnchorBtn.TextSize = 11
+RealAnchorBtn.Font = Enum.Font.GothamBold
+RealAnchorBtn.Text = "🔒 Real Body Anchor: [ OFF ]"
+RealAnchorBtn.Parent = Tab1Content
+local UIC_S2 = Instance.new("UICorner") UIC_S2.CornerRadius = UDim.new(0, 6) UIC_S2.Parent = RealAnchorBtn
+
+local ViewRealBtn = Instance.new("TextButton")
+ViewRealBtn.Size = UDim2.new(1, 0, 0, 35)
+ViewRealBtn.Position = UDim2.new(0, 0, 0, 84)
+ViewRealBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+ViewRealBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
+ViewRealBtn.TextSize = 11
+ViewRealBtn.Font = Enum.Font.GothamBold
+ViewRealBtn.Text = "👁️ View Camera: Real Body"
+ViewRealBtn.Parent = Tab1Content
+local UIC_S3 = Instance.new("UICorner") UIC_S3.CornerRadius = UDim.new(0, 6) UIC_S3.Parent = ViewRealBtn
+
+local Tab2Content = Instance.new("Frame")
+Tab2Content.Size = UDim2.new(1, -20, 0, 150)
+Tab2Content.Position = UDim2.new(0, 10, 0, 80)
+Tab2Content.BackgroundTransparency = 1
+Tab2Content.Visible = false
+Tab2Content.Parent = MainFrame
+
+local SpawnCloneBtn = Instance.new("TextButton")
+SpawnCloneBtn.Size = UDim2.new(1, 0, 0, 35)
+SpawnCloneBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+SpawnCloneBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+SpawnCloneBtn.TextSize = 11
+SpawnCloneBtn.Font = Enum.Font.GothamBold
+SpawnCloneBtn.Text = "🚀 2. Spawn Clone at Exact Game Spawn"
+SpawnCloneBtn.Parent = Tab2Content
+local UIC_C1 = Instance.new("UICorner") UIC_C1.CornerRadius = UDim.new(0, 6) UIC_C1.Parent = SpawnCloneBtn
+
+local CloneAnchorBtn = Instance.new("TextButton")
+CloneAnchorBtn.Size = UDim2.new(1, 0, 0, 35)
+CloneAnchorBtn.Position = UDim2.new(0, 0, 0, 42)
+CloneAnchorBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+CloneAnchorBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
+CloneAnchorBtn.TextSize = 11
+CloneAnchorBtn.Font = Enum.Font.GothamBold
+CloneAnchorBtn.Text = "🔒 Clone Anchor: [ OFF ]"
+CloneAnchorBtn.Parent = Tab2Content
+local UIC_C2 = Instance.new("UICorner") UIC_C2.CornerRadius = UDim.new(0, 6) UIC_C2.Parent = CloneAnchorBtn
+
+local ViewCloneBtn = Instance.new("TextButton")
+ViewCloneBtn.Size = UDim2.new(1, 0, 0, 35)
+ViewCloneBtn.Position = UDim2.new(0, 0, 0, 84)
+ViewCloneBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+ViewCloneBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
+ViewCloneBtn.TextSize = 11
+ViewCloneBtn.Font = Enum.Font.GothamBold
+ViewCloneBtn.Text = "👁️ View Camera: Clone"
+ViewCloneBtn.Parent = Tab2Content
+local UIC_C3 = Instance.new("UICorner") UIC_C3.CornerRadius = UDim.new(0, 6) UIC_C3.Parent = ViewCloneBtn
 
 local InfoLabel = Instance.new("TextLabel")
 InfoLabel.Size = UDim2.new(1, -20, 0, 25)
-InfoLabel.Position = UDim2.new(0, 10, 0, 190)
+InfoLabel.Position = UDim2.new(0, 10, 0, 250)
 InfoLabel.BackgroundTransparency = 1
 InfoLabel.Text = "Status: Ready."
 InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -124,139 +193,164 @@ InfoLabel.Font = Enum.Font.Gotham
 InfoLabel.Parent = MainFrame
 
 local activeClone = nil
-local viewingClone = true
-local aiEnabled = true
+local realAnchored = false
+local cloneAnchored = false
+local isMinimized = false
 
-local function getCornerPos(refCF)
-    return CFrame.new(refCF.Position + Vector3.new(600, 15, 600))
-end
+MinimizeBtn.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    if isMinimized then
+        MainFrame.Size = UDim2.new(0, 320, 0, 40)
+        TabBar.Visible = false
+        Tab1Content.Visible = false
+        Tab2Content.Visible = false
+        InfoLabel.Visible = false
+        MinimizeBtn.Text = "+"
+    else
+        MainFrame.Size = UDim2.new(0, 320, 0, 290)
+        TabBar.Visible = true
+        if Tab1Btn.BackgroundColor3 == Color3.fromRGB(0, 170, 127) then
+            Tab1Content.Visible = true
+        else
+            Tab2Content.Visible = true
+        end
+        InfoLabel.Visible = true
+        MinimizeBtn.Text = "-"
+    end
+end)
 
-SpawnBtn.MouseButton1Click:Connect(function()
+Tab1Btn.MouseButton1Click:Connect(function()
+    Tab1Content.Visible = true
+    Tab2Content.Visible = false
+    Tab1Btn.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
+    Tab1Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Tab2Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    Tab2Btn.TextColor3 = Color3.fromRGB(180, 180, 180)
+end)
+
+Tab2Btn.MouseButton1Click:Connect(function()
+    Tab1Content.Visible = false
+    Tab2Content.Visible = true
+    Tab2Btn.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
+    Tab2Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Tab1Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    Tab1Btn.TextColor3 = Color3.fromRGB(180, 180, 180)
+end)
+
+-- Quét Y, quét toàn bộ map tìm phần tử ngoài cùng nhất để TP Real Body ra thật xa
+ScanTpBtn.MouseButton1Click:Connect(function()
+    InfoLabel.Text = "Status: Scanning map boundaries..."
+    
     local character = LocalPlayer.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") or not character:FindFirstChildOfClass("Humanoid") then
+    if not character or not character:FindFirstChild("HumanoidRootPart") then
         InfoLabel.Text = "Status: Character not found!"
         return
     end
     
     local hrp = character.HumanoidRootPart
-    local currentCF = hrp.CFrame
+    local maxDist = 0
+    local furthestPart = nil
+    
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and not obj.Anchored and obj.Size.Magnitude > 3 and obj.Transparency < 1 then
+            local dist = (obj.Position - Vector3.new(0, obj.Position.Y, 0)).Magnitude
+            if dist > maxDist then
+                maxDist = dist
+                furthestPart = obj
+            end
+        end
+    end
+    
+    if furthestPart then
+        -- Teleport real body ra sát góc xa nhất của bản đồ (cách xa tâm và điểm spawn hàng trăm đơn vị)
+        hrp.CFrame = CFrame.new(furthestPart.Position.X, furthestPart.Position.Y + 5, furthestPart.Position.Z)
+        InfoLabel.Text = "Status: Real Body TP to far boundary corner!"
+    else
+        hrp.CFrame = hrp.CFrame + Vector3.new(500, 10, 500)
+        InfoLabel.Text = "Status: Real Body moved far away (Fallback)."
+    end
+end)
+
+-- Tạo Clone ngay chính xác tại điểm Spawn của game
+SpawnCloneBtn.MouseButton1Click:Connect(function()
+    local character = LocalPlayer.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then
+        InfoLabel.Text = "Status: Character not found!"
+        return
+    end
+    
+    local spawnPos = CFrame.new(0, 10, 0)
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("SpawnLocation") then
+            spawnPos = obj.CFrame + Vector3.new(0, 3, 0)
+            break
+        end
+    end
     
     if activeClone then pcall(function() activeClone:Destroy() end) activeClone = nil end
     
-    -- 1. Tạo Clone ở vị trí hiện tại (giữ nguyên ở chỗ cũ để AI điều khiển)
     character.Archivable = true
     activeClone = character:Clone()
     character.Archivable = false
-    activeClone.Name = "DirectClone"
+    activeClone.Name = "StrictSafeClone"
     activeClone.Parent = workspace
-    activeClone:SetPrimaryPartCFrame(currentCF)
+    activeClone:SetPrimaryPartCFrame(spawnPos)
     
-    -- 2. Đưa cơ thể thật (Real Body) đến góc bản đồ
-    hrp.CFrame = getCornerPos(currentCF)
-    
-    local cloneHrp = activeClone:FindFirstChild("HumanoidRootPart")
-    local cloneHum = activeClone:FindFirstChildOfClass("Humanoid")
-    
-    if cloneHum then Camera.CameraSubject = cloneHum end
-    viewingClone = true
-    aiEnabled = true
-    
-    SwitchCamBtn.Text = "👁️ 3. View: [ CLONE ]"
-    InfoLabel.Text = "Status: Real body at corner. Clone active."
-    
-    if _G.DirectSwapConnection then _G.DirectSwapConnection:Disconnect() end
-    
-    -- Vòng lặp AI điều khiển Clone săn mục tiêu khi AI bật
-    _G.DirectSwapConnection = RunService.RenderStepped:Connect(function()
-        if activeClone and cloneHum and cloneHrp and aiEnabled then
-            local targetHrp = nil
-            local minDist = math.huge
-            for _, plr in ipairs(Players:GetPlayers()) do
-                if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                    local d = (plr.Character.HumanoidRootPart.Position - cloneHrp.Position).Magnitude
-                    if d < minDist then
-                        minDist = d
-                        targetHrp = plr.Character.HumanoidRootPart
-                    end
-                end
-            end
-            if targetHrp then
-                cloneHum:MoveTo(targetHrp.Position)
-            end
-        end
-    end)
+    InfoLabel.Text = "Status: Clone created at game spawn location."
 end)
 
--- Nút Swap: Đổi chỗ trực tiếp vị trí cho nhau giữa Real Body và Clone, đồng thời bật/tắt AI tương ứng
-SwapBtn.MouseButton1Click:Connect(function()
-    local character = LocalPlayer.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") or not activeClone then
-        InfoLabel.Text = "Status: Spawn system first!"
-        return
-    end
-    
-    local realHrp = character.HumanoidRootPart
-    local cloneHrp = activeClone:FindFirstChild("HumanoidRootPart")
-    
-    -- Lưu lại tọa độ hiện tại của cả 2 bên
-    local realCF = realHrp.CFrame
-    local cloneCF = cloneHrp.CFrame
-    
-    -- Đổi chỗ vị trí cho nhau ngay lập tức
-    realHrp.CFrame = cloneCF
-    cloneHrp.CFrame = realCF
-    
-    -- Đảo trạng thái AI: Nếu Real Body vừa nhảy ra vị trí của Clone -> Tắt AI để bạn tự điều khiển. Ngược lại -> Bật AI cho Clone.
-    aiEnabled = not aiEnabled
-    
-    if aiEnabled then
-        InfoLabel.Text = "Status: Swapped! Clone is now active with AI."
-    else
-        InfoLabel.Text = "Status: Swapped! Real body is now active here."
-    end
-end)
-
-SwitchCamBtn.MouseButton1Click:Connect(function()
-    local character = LocalPlayer.Character
-    if not character or not activeClone then
-        InfoLabel.Text = "Status: Spawn system first!"
-        return
-    end
-    
-    viewingClone = not viewingClone
-    local realHum = character:FindFirstChildOfClass("Humanoid")
-    local cloneHum = activeClone:FindFirstChildOfClass("Humanoid")
-    
-    if viewingClone then
-        if cloneHum then Camera.CameraSubject = cloneHum end
-        SwitchCamBtn.Text = "👁️ 3. View: [ CLONE ]"
-        SwitchCamBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
-        InfoLabel.Text = "Status: Viewing Clone"
-    else
-        if realHum then Camera.CameraSubject = realHum end
-        SwitchCamBtn.Text = "👁️ 3. View: [ REAL BODY ]"
-        SwitchCamBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
-        InfoLabel.Text = "Status: Viewing Real Body"
-    end
-end)
-
-ResetBtn.MouseButton1Click:Connect(function()
-    if _G.DirectSwapConnection then
-        _G.DirectSwapConnection:Disconnect()
-        _G.DirectSwapConnection = nil
-    end
-    if activeClone then pcall(function() activeClone:Destroy() end) activeClone = nil end
-    
+RealAnchorBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if character then
-        local realHum = character:FindFirstChildOfClass("Humanoid")
-        if realHum then 
-            Camera.CameraSubject = realHum 
+        realAnchored = not realAnchored
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Anchored = realAnchored
+            end
+        end
+        if realAnchored then
+            RealAnchorBtn.Text = "🔒 Real Body Anchor: [ ON ]"
+            RealAnchorBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
+        else
+            RealAnchorBtn.Text = "🔒 Real Body Anchor: [ OFF ]"
+            RealAnchorBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
         end
     end
-    
-    viewingClone = false
-    aiEnabled = true
-    SwitchCamBtn.Text = "👁️ 3. View: [ REAL BODY ]"
-    InfoLabel.Text = "Status: Reset completed."
+end)
+
+CloneAnchorBtn.MouseButton1Click:Connect(function()
+    if activeClone then
+        cloneAnchored = not cloneAnchored
+        for _, part in ipairs(activeClone:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Anchored = cloneAnchored
+            end
+        end
+        if cloneAnchored then
+            CloneAnchorBtn.Text = "🔒 Clone Anchor: [ ON ]"
+            CloneAnchorBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
+        else
+            CloneAnchorBtn.Text = "🔒 Clone Anchor: [ OFF ]"
+            CloneAnchorBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
+        end
+    else
+        InfoLabel.Text = "Status: No clone to anchor!"
+    end
+end)
+
+ViewRealBtn.MouseButton1Click:Connect(function()
+    local character = LocalPlayer.Character
+    if character and character:FindFirstChildOfClass("Humanoid") then
+        Camera.CameraSubject = character:FindFirstChildOfClass("Humanoid")
+        InfoLabel.Text = "Status: Camera viewing Real Body."
+    end
+end)
+
+ViewCloneBtn.MouseButton1Click:Connect(function()
+    if activeClone and activeClone:FindFirstChildOfClass("Humanoid") then
+        Camera.CameraSubject = activeClone:FindFirstChildOfClass("Humanoid")
+        InfoLabel.Text = "Status: Camera viewing Clone."
+    else
+        InfoLabel.Text = "Status: No clone available to view!"
+    end
 end)
