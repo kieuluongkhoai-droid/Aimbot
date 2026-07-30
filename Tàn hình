@@ -1,9 +1,7 @@
 --[[
-    King Tower - Ultimate Decoy Puppet Master
-    (Clone = Player Tag + Hitbox + Anti-Cheat Bait | Real Body = Free Roam Ghost Anchor)
+    King Tower - Anti-Conflict Safe Decoy Script
 ]]
 
-local Players = Service("Players") -- safe call fallback
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
@@ -12,244 +10,124 @@ local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-if _G.DecoyPuppetLoaded then return end
-_G.DecoyPuppetLoaded = true
+-- DỌN DẸP SẠCH SẼ CÁC KẾT NỐI VÀ GIAO DIỆN CŨ TRƯỚC KHI CHẠY (CHỐNG XUNG ĐỘT)
+if _G.SafeDecoyConnection then
+    pcall(function() _G.SafeDecoyConnection:Disconnect() end)
+    _G.SafeDecoyConnection = nil
+end
 
--- UI SETUP
+pcall(function()
+    if CoreGui:FindFirstChild("SafeDecoyUI") then
+        CoreGui.SafeDecoyUI:Destroy()
+    end
+end)
+
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "DecoyPuppetUI"
+ScreenGui.Name = "SafeDecoyUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 280, 0, 190)
+MainFrame.Size = UDim2.new(0, 260, 0, 160)
 MainFrame.Position = UDim2.new(0, 50, 0, 150)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
 local UICornerMain = Instance.new("UICorner")
-UICornerMain.CornerRadius = UDim.new(0, 12)
+UICornerMain.CornerRadius = UDim.new(0, 10)
 UICornerMain.Parent = MainFrame
 
-local UIStroke = Instance.new("UIStroke")
-UIStroke.Thickness = 3
-UIStroke.Parent = MainFrame
-
-task.spawn(function()
-    local hue = 0
-    while true do
-        hue = (hue + 0.01) % 1
-        UIStroke.Color = Color3.fromHSV(hue, 1, 1)
-        task.wait(0.03)
-    end
-end)
-
-local TopBar = Instance.new("Frame")
-TopBar.Size = UDim2.new(1, 0, 0, 30)
-TopBar.BackgroundTransparency = 1
-TopBar.Parent = MainFrame
-
 local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, -20, 1, 0)
-TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+TitleLabel.Size = UDim2.new(1, 0, 0, 30)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "Decoy Puppet & Free Body Hub"
+TitleLabel.Text = "Safe Decoy Hub (Anti-Conflict)"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-TitleLabel.Parent = TopBar
+TitleLabel.Parent = MainFrame
 
-local Container = Instance.new("Frame")
-Container.Size = UDim2.new(1, -20, 0, 100)
-Container.Position = UDim2.new(0, 10, 0, 40)
-Container.BackgroundTransparency = 1
-Container.Parent = MainFrame
-
-local InfoLabel = Instance.new("TextLabel")
-InfoLabel.Size = UDim2.new(1, -20, 0, 30)
-InfoLabel.Position = UDim2.new(0, 10, 0, 150)
-InfoLabel.BackgroundTransparency = 1
-InfoLabel.Text = "Status: System Initialized. Ready to Deploy Decoy."
-InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-InfoLabel.TextSize = 10
-InfoLabel.Font = Enum.Font.Gotham
-InfoLabel.TextXAlignment = Enum.TextXAlignment.Center
-InfoLabel.Parent = MainFrame
-
--- BUTTONS
 local DeployBtn = Instance.new("TextButton")
-DeployBtn.Size = UDim2.new(1, 0, 0, 42)
-DeployBtn.Position = UDim2.new(0, 0, 0, 0)
-DeployBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+DeployBtn.Size = UDim2.new(1, -20, 0, 40)
+DeployBtn.Position = UDim2.new(0, 10, 0, 45)
+DeployBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 DeployBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
 DeployBtn.TextSize = 11
 DeployBtn.Font = Enum.Font.GothamBold
-DeployBtn.Text = "🎯 Spawn Anti-Cheat Decoy Clone"
-DeployBtn.Parent = Container
+DeployBtn.Text = "🎯 Spawn Decoy & Free Body"
+DeployBtn.Parent = MainFrame
 
 local UIC_1 = Instance.new("UICorner") UIC_1.CornerRadius = UDim.new(0, 6) UIC_1.Parent = DeployBtn
 
-local CamToggleBtn = Instance.new("TextButton")
-CamToggleBtn.Size = UDim2.new(1, 0, 0, 42)
-CamToggleBtn.Position = UDim2.new(0, 0, 0, 50)
-CamToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-CamToggleBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
-CamToggleBtn.TextSize = 11
-CamToggleBtn.Font = Enum.Font.GothamBold
-CamToggleBtn.Text = "👁️ Switch Camera: [ Real Body / Decoy ]"
-CamToggleBtn.Parent = Container
+local InfoLabel = Instance.new("TextLabel")
+InfoLabel.Size = UDim2.new(1, -20, 0, 30)
+InfoLabel.Position = UDim2.new(0, 10, 0, 110)
+InfoLabel.BackgroundTransparency = 1
+InfoLabel.Text = "Status: Ready."
+InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+InfoLabel.TextSize = 10
+InfoLabel.Font = Enum.Font.Gotham
+InfoLabel.Parent = MainFrame
 
-local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2.Parent = CamToggleBtn
-
-local decoyClone = nil
-local isCameraOnDecoy = false
-local controlConnection = nil
+local activeDecoy = nil
 
 DeployBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then 
-        InfoLabel.Text = "Status Error: Character not found!"
+        InfoLabel.Text = "Status: Character not found!"
         return 
     end
     
     local startCF = character.HumanoidRootPart.CFrame
-    local realHumanoid = character:FindFirstChildOfClass("Humanoid")
     
-    if decoyClone and decoyClone.Parent then
-        decoyClone:Destroy()
-        decoyClone = nil
+    if activeDecoy and activeDecoy.Parent then
+        activeDecoy:Destroy()
+        activeDecoy = nil
     end
     
-    -- 1. BIẾN CƠ THỂ CHÍNH THÀNH VẬT THỂ TỰ DO (Xóa gánh nặng kiểm tra mạng của server)
-    character.Name = "FreeRoamingRealBody"
-    for _, part in ipairs(character:GetDescendants()) do
-        if part:IsA("BasePart") then
-            -- Tắt va chạm ở cơ thể chính để đi xuyên tường/bay nhảy mượt mà không sợ anti-cheat kéo giật
-            part.CanCollide = false
-            part.Transparency = 0.4 -- Làm mờ cơ thể chính để nhận biết
-        end
-    end
+    -- 1. Đổi tên cơ thể chính để ngắt xung đột định danh trực tiếp
+    character.Name = "SafeRealBody"
     
-    if realHumanoid then
-        realHumanoid.PlatformStand = true -- Giúp cơ thể chính lơ lửng điều khiển tự do không bị trọng lực kéo rơi
-    end
-    
-    -- 2. TẠO CON CLONE MANG NGUYÊN VẸN PLAYER TAG ĐỂ HỨNG CỜ ANTI-CHEAT
+    -- 2. Tạo Clone mồi nhử mang tag Player
     character.Archivable = true
-    decoyClone = character:Clone()
+    activeDecoy = character:Clone()
     character.Archivable = false
     
-    decoyClone.Name = LocalPlayer.Name -- Giữ nguyên tên gốc / Player Tag để server nhận diện nhầm đây là player chính
-    decoyClone.Parent = workspace
-    decoyClone:SetPrimaryPartCFrame(startCF + Vector3.new(3, 0, 0))
+    activeDecoy.Name = LocalPlayer.Name
+    activeDecoy.Parent = workspace
+    activeDecoy:SetPrimaryPartCFrame(startCF + Vector3.new(3, 0, 0))
     
-    local decoyHumanoid = decoyClone:FindFirstChildOfClass("Humanoid")
-    local decoyHrp = decoyClone:FindFirstChild("HumanoidRootPart")
-    local realHrp = character.HumanoidRootPart
-    
+    local decoyHumanoid = activeDecoy:FindFirstChildOfClass("Humanoid")
     if decoyHumanoid then
-        decoyHumanoid.PlatformStand = false
-        decoyHumanoid.AutoRotate = true
-        decoyHumanoid.Sit = true -- Ép trạng thái ngồi để vô hiệu hóa bớt các cờ check tốc độ bay nhảy của anti-cheat trên con mồi nhử
-        
-        -- Bất tử cho mồi nhử để nó làm nhiệm vụ hứng đòn lâu nhất có thể
+        decoyHumanoid.Sit = true -- Chống anti-cheat quét bay nhảy
         decoyHumanoid.MaxHealth = math.huge
         decoyHumanoid.Health = math.huge
-        decoyHumanoid.HealthChanged:Connect(function()
-            if decoyHumanoid and decoyHumanoid.Health < decoyHumanoid.MaxHealth then
-                decoyHumanoid.Health = decoyHumanoid.MaxHealth
-            end
-        end)
     end
     
-    -- Khôi phục toàn bộ hitbox vật lý cho con Clone để Server và Anti-Cheat chính thức "nhận nuôi" nó
-    for _, part in ipairs(decoyClone:GetDescendants()) do
+    -- Thiết lập hitbox mạng cho Clone
+    for _, part in ipairs(activeDecoy:GetDescendants()) do
         if part:IsA("BasePart") then
             part.CanCollide = true
-            part.CanTouch = true
-            part.Transparency = 0
-            pcall(function()
-                part:SetNetworkOwner(LocalPlayer)
-            end)
+            pcall(function() part:SetNetworkOwner(LocalPlayer) end)
         end
     end
     
-    -- Mặc định Camera giữ nguyên ở cơ thể chính để bạn điều khiển linh hoạt
-    if realHumanoid then
-        Camera.CameraSubject = realHumanoid
+    -- Đưa camera về clone để kiểm chứng
+    if decoyHumanoid then
+        Camera.CameraSubject = decoyHumanoid
     end
-    isCameraOnDecoy = false
     
-    -- 3. HỆ THỐNG ĐIỀU KHIỂN TỰ DO (ĐIỀU KHIỂN CƠ THỂ CHÍNH XUYÊN KHÔNG GIAN)
-    if controlConnection then controlConnection:Disconnect() end
-    controlConnection = RunService.RenderStepped:Connect(function()
-        if character and character.Parent and realHrp then
-            local moveDir = Vector3.zero
-            if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.Up) then
-                moveDir = moveDir + Vector3.new(0, 0, -1)
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.Down) then
-                moveDir = moveDir + Vector3.new(0, 0, 1)
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.Left) then
-                moveDir = moveDir + Vector3.new(-1, 0, 0)
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.D) or UserInputService:IsKeyDown(Enum.KeyCode.Right) then
-                moveDir = moveDir + Vector3.new(1, 0, 0)
-            end
-            
-            if moveDir.Magnitude > 0 then
-                local camLook = Camera.CFrame.LookVector
-                camLook = Vector3.new(camLook.X, 0, camLook.Z).Unit
-                local camRight = Camera.CFrame.RightVector
-                camRight = Vector3.new(camRight.X, 0, camRight.Z).Unit
-                
-                local worldDir = (camRight * moveDir.X + camLook * -moveDir.Z).Unit
-                -- Di chuyển tự do cơ thể chính theo hướng camera mà không sợ bị hitbox cản trở
-                realHrp.CFrame = realHrp.CFrame + (worldDir * 0.5)
-            end
-        end
-    end)
-    
-    InfoLabel.Text = "Status: Decoy Active! Anti-cheat is locked on Clone."
+    InfoLabel.Text = "Status: Success! Decoy deployed safely."
 end)
 
-CamToggleBtn.MouseButton1Click:Connect(function()
-    if not decoyClone or not decoyClone:FindFirstChildOfClass("Humanoid") then
-        InfoLabel.Text = "Status: Deploy decoy first!"
-        return
-    end
-    
-    local realChar = workspace:FindFirstChild("FreeRoamingRealBody")
-    local realHumanoid = realChar and realChar:FindFirstChildOfClass("Humanoid")
-    local decoyHumanoid = decoyClone:FindFirstChildOfClass("Humanoid")
-    
-    if isCameraOnDecoy then
-        if realHumanoid then
-            Camera.CameraSubject = realHumanoid
-            InfoLabel.Text = "Status: Camera switched to Real Body"
-        end
-        isCameraOnDecoy = false
-    else
-        if decoyHumanoid then
-            Camera.CameraSubject = decoyHumanoid
-            InfoLabel.Text = "Status: Camera switched to Decoy Clone"
-        end
-        isCameraOnDecoy = true
-    end
-end)
-
+-- Dọn dẹp tự động khi nhân vật chết hoặc reset
 LocalPlayer.CharacterAdded:Connect(function()
-    if controlConnection then controlConnection:Disconnect() controlConnection = nil end
-    if decoyClone then
-        decoyClone:Destroy()
-        decoyClone = nil
+    if activeDecoy then
+        activeDecoy:Destroy()
+        activeDecoy = nil
     end
-    InfoLabel.Text = "Status: Reset to Normal"
+    InfoLabel.Text = "Status: Reset."
 end)
-
