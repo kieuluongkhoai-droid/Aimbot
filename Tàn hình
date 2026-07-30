@@ -1,9 +1,10 @@
 --[[
-    King Tower - Final AI Mirror (Advanced Anti-Cheat Evasion / Ghost TP), Smooth Mirror & Swap Hub
+    King Tower - Final AI Mirror (Ground-Hugging Raycast Anti-Cheat Bypass) Hub
 ]]
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 
 local LocalPlayer = Players.LocalPlayer
@@ -59,9 +60,9 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -40, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "📱 Ultimate Anti-Cheat Evasion Hub"
+TitleLabel.Text = "📱 Ground-Hugging Raycast Bypass Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.TextSize = 11
+TitleLabel.TextSize = 10
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TopBar
@@ -222,40 +223,66 @@ local cloneLocked = false
 local isMinimized = false
 local lockedPos = nil
 
--- HÀM GHOST TP - VÔ HIỆU HÓA HOÀN TOÀN ANTI-CHEAT KILL KHI DI CHUYỂN XA
-local function GhostTP(character, targetCFrame)
+-- HÀM GROUND-HUGGING RAYCAST DASH (Dùng Raycast quét mặt sàn THẬT của server để chống Anti-Cheat quét không chạm đất)
+local function GroundHuggingDashTP(character, targetCFrame)
     local hrp = character:FindFirstChild("HumanoidRootPart")
     local hum = character:FindFirstChildOfClass("Humanoid")
     if not hrp or not hum then return end
 
-    InfoLabel.Text = "Status: Executing Ghost Bypass TP..."
+    local dist = (hrp.Position - targetCFrame.Position).Magnitude
+    if dist < 20 then
+        hrp.CFrame = targetCFrame
+        return
+    end
 
-    -- 1. Chuyển nhân vật sang trạng thái vô hiệu hóa vật lý nặng (PlatformStanding)
-    -- Giúp server hiểu nhân vật đang bị bất động hoặc rơi tự do, ngắt logic check Speed/Teleport
-    hum.PlatformStand = true
-    
-    -- Tắt va chạm để không bị văng kẹt tường giữa đường
-    local noclipCon
-    noclipCon = RunService.Stepped:Connect(function()
-        for _, p in ipairs(character:GetDescendants()) do
-            if p:IsA("BasePart") then p.CanCollide = false end
+    InfoLabel.Text = "Status: Ground-Hugging Dash (Real Floor Raycast)..."
+
+    local startPos = hrp.Position
+    local endPos = targetCFrame.Position
+    local duration = math.clamp(dist / 350, 0.4, 1.4)
+    local startTime = tick()
+
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+    raycastParams.FilterDescendantsInstances = {character}
+    raycastParams.IgnoreWater = true
+
+    local connection
+    connection = RunService.Heartbeat:Connect(function()
+        local elapsed = tick() - startTime
+        local alpha = math.clamp(elapsed / duration, 0, 1)
+
+        -- Nội suy vị trí X và Z giữa điểm đi và điểm đến
+        local currentX = startPos.X + (endPos.X - startPos.X) * alpha
+        local currentZ = startPos.Z + (endPos.Z - startPos.Z) * alpha
+
+        -- Bắn Raycast từ trên cao xuống tại vị trí X, Z hiện tại để tìm mặt sàn THẬT của server
+        local rayOrigin = Vector3.new(currentX, math.max(startPos.Y, endPos.Y) + 100, currentZ)
+        local rayResult = workspace:Raycast(rayOrigin, Vector3.new(0, -300, 0), raycastParams)
+
+        local targetY
+        if rayResult then
+            -- Nếu tìm thấy mặt sàn thực tế, đặt nhân vật đứng sát trên mặt sàn đó
+            targetY = rayResult.Position.Y + 3
+        else
+            -- Fallback tuyến tính nếu không tìm thấy sàn
+            targetY = startPos.Y + (endPos.Y - startPos.Y) * alpha
+        end
+
+        hrp.CFrame = CFrame.new(currentX, targetY, currentZ)
+        hum:ChangeState(Enum.HumanoidStateType.Running)
+
+        if alpha >= 1 then
+            if connection then connection:Disconnect() end
         end
     end)
 
-    -- 2. Đặt vận tốc về 0 và thực hiện đặt trực tiếp vị trí đích
+    task.wait(duration + 0.05)
+    if connection then connection:Disconnect() end
+    
+    hrp.CFrame = targetCFrame
     hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
     hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-    hrp.CFrame = targetCFrame
-
-    -- Giữ trạng thái "bóng ma" trong tích tắc để gói tin đồng bộ kịp thời gian chết của Anti-Cheat
-    task.wait(0.15)
-
-    if noclipCon then noclipCon:Disconnect() end
-    
-    -- Khôi phục lại trạng thái bình thường cho nhân vật
-    if character and character:FindFirstChildOfClass("Humanoid") then
-        character:FindFirstChildOfClass("Humanoid").PlatformStand = false
-    end
 end
 
 MinimizeBtn.MouseButton1Click:Connect(function()
@@ -342,13 +369,13 @@ ScanTpBtn.MouseButton1Click:Connect(function()
             task.wait(0.05) 
         end
         
-        GhostTP(character, targetCF) -- Sử dụng Ghost TP chuyên dụng
+        GroundHuggingDashTP(character, targetCF)
         
         if wasLocked then 
             lockedPos = targetCF 
             realLocked = true 
         end
-        InfoLabel.Text = "Status: Real Body TP to Safe Spot Safely!"
+        InfoLabel.Text = "Status: Real Body safely dashed to Safe Spot!"
     else
         InfoLabel.Text = "Status: No safe spot found."
     end
@@ -495,18 +522,18 @@ local function performSwap()
         task.wait(0.05)
     end
     
-    -- Clone dịch chuyển tức thời về chỗ thật (vì là client-side nên vô hình với server)
+    -- Clone là giả (phía client), dịch chuyển tức thời thoải mái
     cloneHrp.CFrame = tempCF
     
-    -- Cơ thể thật sử dụng Ghost TP để nhảy tới vị trí clone mà không kích hoạt Anti-Cheat kiểm tra khoảng cách
-    GhostTP(character, targetCF)
+    -- Cơ thể thật di chuyển bằng Raycast sát mặt đất thật để chống Anti-Cheat Server
+    GroundHuggingDashTP(character, targetCF)
     
     if wasLocked then
         lockedPos = targetCF
         realLocked = true
     end
     
-    InfoLabel.Text = "Status: Swapped successfully with Ghost Evasion!"
+    InfoLabel.Text = "Status: Swapped successfully with Ground-Hugging Raycast!"
 end
 
 SwapRealBtn.MouseButton1Click:Connect(performSwap)
