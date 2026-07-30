@@ -1,5 +1,5 @@
 --[[
-    King Tower - Stable Puppet Hub
+    King Tower - Indirect AI Proxy Controller Hub
 ]]
 
 local Players = game:GetService("Players")
@@ -9,25 +9,25 @@ local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-if _G.PuppetConnection then
-    pcall(function() _G.PuppetConnection:Disconnect() end)
-    _G.PuppetConnection = nil
+if _G.ProxyConnection then
+    pcall(function() _G.ProxyConnection:Disconnect() end)
+    _G.ProxyConnection = nil
 end
 
 pcall(function()
-    if CoreGui:FindFirstChild("StablePuppetUI") then
-        CoreGui.StablePuppetUI:Destroy()
+    if CoreGui:FindFirstChild("ProxyUI") then
+        CoreGui.ProxyUI:Destroy()
     end
 end)
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "StablePuppetUI"
+ScreenGui.Name = "ProxyUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 260, 0, 190)
+MainFrame.Size = UDim2.new(0, 270, 0, 190)
 MainFrame.Position = UDim2.new(0, 50, 0, 150)
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 MainFrame.BorderSizePixel = 0
@@ -41,63 +41,60 @@ UICornerMain.Parent = MainFrame
 
 local UIStroke = Instance.new("UIStroke")
 UIStroke.Thickness = 2
-UIStroke.Color = Color3.fromRGB(0, 170, 255)
+UIStroke.Color = Color3.fromRGB(0, 255, 128)
 UIStroke.Parent = MainFrame
 
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, 0, 0, 30)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "🎭 Stable Puppet Hub"
+TitleLabel.Text = "🧠 AI Proxy Controller Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.Parent = MainFrame
 
 local Container = Instance.new("Frame")
-Container.Size = UDim2.new(1, -20, 0, 110)
+Container.Size = UDim2.new(1, -20, 0, 120)
 Container.Position = UDim2.new(0, 10, 0, 35)
 Container.BackgroundTransparency = 1
 Container.Parent = MainFrame
 
 local SpawnBtn = Instance.new("TextButton")
-SpawnBtn.Size = UDim2.new(1, 0, 0, 32)
+SpawnBtn.Size = UDim2.new(1, 0, 0, 34)
 SpawnBtn.Position = UDim2.new(0, 0, 0, 0)
 SpawnBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 SpawnBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
 SpawnBtn.TextSize = 11
 SpawnBtn.Font = Enum.Font.GothamBold
-SpawnBtn.Text = "👥 Spawn Clone & Hide Real"
+SpawnBtn.Text = "🚀 Spawn Proxy Clone & Hide"
 SpawnBtn.Parent = Container
-
 local UIC_1 = Instance.new("UICorner") UIC_1.CornerRadius = UDim.new(0, 6) UIC_1.Parent = SpawnBtn
 
-local SwitchBtn = Instance.new("TextButton")
-SwitchBtn.Size = UDim2.new(1, 0, 0, 32)
-SwitchBtn.Position = UDim2.new(0, 0, 0, 38)
-SwitchBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-SwitchBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
-SwitchBtn.TextSize = 11
-SwitchBtn.Font = Enum.Font.GothamBold
-SwitchBtn.Text = "👁️ View: [ CLONE AI ]"
-SwitchBtn.Parent = Container
-
-local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2.Parent = SwitchBtn
+local SwitchCamBtn = Instance.new("TextButton")
+SwitchCamBtn.Size = UDim2.new(1, 0, 0, 34)
+SwitchCamBtn.Position = UDim2.new(0, 0, 0, 40)
+SwitchCamBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+SwitchCamBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
+SwitchCamBtn.TextSize = 11
+SwitchCamBtn.Font = Enum.Font.GothamBold
+SwitchCamBtn.Text = "👁️ View: [ CLONE PROXY ]"
+SwitchCamBtn.Parent = Container
+local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2.Parent = SwitchCamBtn
 
 local ResetBtn = Instance.new("TextButton")
-ResetBtn.Size = UDim2.new(1, 0, 0, 32)
-ResetBtn.Position = UDim2.new(0, 0, 0, 76)
+ResetBtn.Size = UDim2.new(1, 0, 0, 34)
+ResetBtn.Position = UDim2.new(0, 0, 0, 80)
 ResetBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 ResetBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
 ResetBtn.TextSize = 11
 ResetBtn.Font = Enum.Font.GothamBold
-ResetBtn.Text = "🔄 Reset State"
+ResetBtn.Text = "🔄 Reset All State"
 ResetBtn.Parent = Container
-
 local UIC_3 = Instance.new("UICorner") UIC_3.CornerRadius = UDim.new(0, 6) UIC_3.Parent = ResetBtn
 
 local InfoLabel = Instance.new("TextLabel")
 InfoLabel.Size = UDim2.new(1, -20, 0, 25)
-InfoLabel.Position = UDim2.new(0, 10, 0, 155)
+InfoLabel.Position = UDim2.new(0, 10, 0, 160)
 InfoLabel.BackgroundTransparency = 1
 InfoLabel.Text = "Status: Ready."
 InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -107,7 +104,7 @@ InfoLabel.Parent = MainFrame
 
 local activeClone = nil
 local viewingClone = true
-local aiActive = true
+local hideOffset = 12
 
 SpawnBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
@@ -117,71 +114,56 @@ SpawnBtn.MouseButton1Click:Connect(function()
     end
     
     local hrp = character.HumanoidRootPart
-    local pos = hrp.CFrame
+    local currentCF = hrp.CFrame
     
     if activeClone then
         pcall(function() activeClone:Destroy() end)
         activeClone = nil
     end
     
+    -- Tạo Clone làm Proxy hiển thị trên mặt đất
     character.Archivable = true
     activeClone = character:Clone()
     character.Archivable = false
-    
-    activeClone.Name = "Client_Clone"
+    activeClone.Name = "AI_Proxy_Clone"
     activeClone.Parent = workspace
-    activeClone:SetPrimaryPartCFrame(pos + Vector3.new(0, 3, 0))
+    activeClone:SetPrimaryPartCFrame(currentCF)
     
     local cloneHrp = activeClone:FindFirstChild("HumanoidRootPart")
     local cloneHum = activeClone:FindFirstChildOfClass("Humanoid")
     
-    -- Giấu thân thật xuống dưới đất
-    hrp.CFrame = pos - Vector3.new(0, 15, 0)
-    for _, p in ipairs(character:GetDescendants()) do
-        if p:IsA("BasePart") then
-            p.CanCollide = false
-            p.Transparency = 1
+    -- Giấu cơ thể thật xuống dưới lòng đất (tàng hình + vô hiệu hóa va chạm để né sát thương map)
+    hrp.CFrame = currentCF - Vector3.new(0, hideOffset, 0)
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+            part.Transparency = 1
         end
     end
     
-    for _, p in ipairs(activeClone:GetDescendants()) do
-        if p:IsA("BasePart") then
-            p.Transparency = 0
-        end
-    end
-    
-    if cloneHum then
-        Camera.CameraSubject = cloneHum
-    end
+    -- Đưa camera mặc định nhìn vào Clone
+    if cloneHum then Camera.CameraSubject = cloneHum end
     viewingClone = true
-    aiActive = true
-    SwitchBtn.Text = "👁️ View: [ CLONE AI ]"
-    SwitchBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-    InfoLabel.Text = "Status: Clone active & hidden real body."
+    SwitchCamBtn.Text = "👁️ View: [ CLONE PROXY ]"
+    SwitchCamBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+    InfoLabel.Text = "Status: Real body hidden, AI proxy active."
     
-    if _G.PuppetConnection then _G.PuppetConnection:Disconnect() end
+    -- AI làm cầu nối: Lấy tọa độ di chuyển của bạn dưới đất và bắt Clone ở trên chạy theo đúng hướng đó
+    if _G.ProxyConnection then _G.ProxyConnection:Disconnect() end
     
-    _G.PuppetConnection = RunService.RenderStepped:Connect(function()
-        if aiActive and activeClone and cloneHum and cloneHrp then
-            local target = nil
-            local minDist = math.huge
-            for _, plr in ipairs(Players:GetPlayers()) do
-                if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                    local d = (plr.Character.HumanoidRootPart.Position - cloneHrp.Position).Magnitude
-                    if d < minDist then
-                        minDist = d
-                        target = plr.Character.HumanoidRootPart
-                    end
-                end
-            end
-            if target then
-                cloneHum:MoveTo(target.Position)
-            end
+    _G.ProxyConnection = RunService.RenderStepped:Connect(function()
+        if character and character.Parent and activeClone and cloneHum and hrp and cloneHrp then
+            -- Tính toán vị trí tương ứng của thân thật trên mặt đất (Cộng lại đúng khoảng độ sâu đã giấu)
+            local targetPositionOnSurface = hrp.Position + Vector3.new(0, hideOffset, 0)
+            
+            -- Ép AI điều khiển Clone di chuyển theo đúng vị trí bạn đang lái bên dưới
+            cloneHum:MoveTo(targetPositionOnSurface)
         end
     end)
 end)
 
-SwitchBtn.MouseButton1Click:Connect(function()
+-- Nút đổi góc nhìn linh hoạt giữa Clone Proxy và Cơ thể thật bên dưới
+SwitchCamBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not activeClone then
         InfoLabel.Text = "Status: Spawn clone first!"
@@ -194,41 +176,44 @@ SwitchBtn.MouseButton1Click:Connect(function()
     
     if viewingClone then
         if cloneHum then Camera.CameraSubject = cloneHum end
-        aiActive = true
-        SwitchBtn.Text = "👁️ View: [ CLONE AI ]"
-        SwitchBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-        InfoLabel.Text = "Status: Controlling Clone (AI ON)"
+        SwitchCamBtn.Text = "👁️ View: [ CLONE PROXY ]"
+        SwitchCamBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+        InfoLabel.Text = "Status: Camera on Clone Proxy"
     else
         if realHum then Camera.CameraSubject = realHum end
-        aiActive = false
-        SwitchBtn.Text = "👁️ View: [ REAL BODY ]"
-        SwitchBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
-        InfoLabel.Text = "Status: Real body view (AI OFF)"
+        SwitchCamBtn.Text = "👁️ View: [ REAL BODY ]"
+        SwitchCamBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
+        InfoLabel.Text = "Status: Camera on Real Body (Underground)"
     end
 end)
 
 ResetBtn.MouseButton1Click:Connect(function()
-    if _G.PuppetConnection then
-        _G.PuppetConnection:Disconnect()
-        _G.PuppetConnection = nil
+    if _G.ProxyConnection then
+        _G.ProxyConnection:Disconnect()
+        _G.ProxyConnection = nil
     end
     if activeClone then
         pcall(function() activeClone:Destroy() end)
         activeClone = nil
     end
-    aiActive = false
-    viewingClone = false
     
     local character = LocalPlayer.Character
     if character then
-        for _, p in ipairs(character:GetDescendants()) do
-            if p:IsA("BasePart") then
-                p.CanCollide = true
-                p.Transparency = 0
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.CFrame = hrp.CFrame + Vector3.new(0, hideOffset, 0)
+        end
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+                part.Transparency = 0
             end
         end
-        local hum = character:FindFirstChildOfClass("Humanoid")
-        if hum then Camera.CameraSubject = hum end
+        local realHum = character:FindFirstChildOfClass("Humanoid")
+        if realHum then Camera.CameraSubject = realHum end
     end
+    
+    viewingClone = false
+    SwitchCamBtn.Text = "👁️ View: [ REAL BODY ]"
     InfoLabel.Text = "Status: Reset completed."
 end)
