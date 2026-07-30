@@ -1,5 +1,5 @@
 --[[
-    King Tower - Ultimate Decoy & Ghost Body (Fixed Movement & Damage Immunity)
+    King Tower - Absolute Touch Immunity Ghost Body
 ]]
 
 local Players = game:GetService("Players")
@@ -10,7 +10,6 @@ local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- DỌN DẸP KẾT NỐI VÀ UI CŨ
 if _G.MasterDecoyConnection then
     pcall(function() _G.MasterDecoyConnection:Disconnect() end)
     _G.MasterDecoyConnection = nil
@@ -22,7 +21,6 @@ pcall(function()
     end
 end)
 
--- GIAO DIỆN ĐIỀU KHIỂN CHÍNH
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "MasterDecoyUI"
 ScreenGui.ResetOnSpawn = false
@@ -62,7 +60,6 @@ Container.Position = UDim2.new(0, 10, 0, 40)
 Container.BackgroundTransparency = 1
 Container.Parent = MainFrame
 
--- NÚT 1: TRIỂN KHAI
 local DeployBtn = Instance.new("TextButton")
 DeployBtn.Size = UDim2.new(1, 0, 0, 36)
 DeployBtn.Position = UDim2.new(0, 0, 0, 0)
@@ -75,7 +72,6 @@ DeployBtn.Parent = Container
 
 local UIC_1 = Instance.new("UICorner") UIC_1.CornerRadius = UDim.new(0, 6) UIC_1.Parent = DeployBtn
 
--- NÚT 2: ĐỔI CAMERA
 local CamToggleBtn = Instance.new("TextButton")
 CamToggleBtn.Size = UDim2.new(1, 0, 0, 36)
 CamToggleBtn.Position = UDim2.new(0, 0, 0, 42)
@@ -88,7 +84,6 @@ CamToggleBtn.Parent = Container
 
 local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2.Parent = CamToggleBtn
 
--- NÚT 3: RESET
 local ResetBtn = Instance.new("TextButton")
 ResetBtn.Size = UDim2.new(1, 0, 0, 36)
 ResetBtn.Position = UDim2.new(0, 0, 0, 84)
@@ -130,29 +125,23 @@ DeployBtn.MouseButton1Click:Connect(function()
         activeDecoy = nil
     end
     
-    -- 1. XỬ LÝ CƠ THỂ GỐC: VÔ HIỆU HÓA SÁT THƯƠNG & XUYÊN TƯỜNG TỰ DO
+    -- 1. XỬ LÝ CƠ THỂ GỐC: VÔ HIỆU HÓA HOÀN TOÀN TÍNH CHẤT CHẠM VÀ SÁT THƯƠNG
     character.Name = "GhostRealBody"
     
     if realHumanoid then
-        realHumanoid.PlatformStand = true
-        -- Khóa chặt máu của cơ thể gốc luôn ở mức tối đa để ngăn chặn việc chết do sát thương lan
-        realHumanoid.MaxHealth = math.huge
-        realHumanoid.Health = math.huge
-        realHumanoid.HealthChanged:Connect(function()
-            if realHumanoid.Health < realHumanoid.MaxHealth then
-                realHumanoid.Health = realHumanoid.MaxHealth
-            end
-        end)
+        realHumanoid:Destroy()
     end
     
     for _, part in ipairs(character:GetDescendants()) do
         if part:IsA("BasePart") then
             part.CanCollide = false
+            part.CanTouch = false -- Chặn đứng mọi sự kiện chạm từ kill block hoặc vũ khí
+            part.CanQuery = false
             part.Transparency = 0.6
         end
     end
     
-    -- 2. TẠO CLONE MỒI NHỬ HỨNG ĐÒN THAY CHO THÂN THẬT
+    -- 2. TẠO CLONE MỒI NHỬ: ĐÓN NHẬN MỌI VA CHẠM VÀ SÁT THƯƠNG THAY CHO THÂN THẬT
     character.Archivable = true
     activeDecoy = character:Clone()
     character.Archivable = false
@@ -176,16 +165,19 @@ DeployBtn.MouseButton1Click:Connect(function()
     for _, part in ipairs(activeDecoy:GetDescendants()) do
         if part:IsA("BasePart") then
             part.CanCollide = true
-            part.CanTouch = true
+            part.CanTouch = true -- Mồi nhử sẽ hứng trọn va chạm và sát thương từ kill brick hoặc đòn đánh
+            part.CanQuery = true
             part.Transparency = 0
             pcall(function() part:SetNetworkOwner(LocalPlayer) end)
         end
     end
     
-    if realHumanoid then Camera.CameraSubject = realHumanoid end
-    isCameraOnDecoy = false
+    if decoyHumanoid then 
+        Camera.CameraSubject = decoyHumanoid 
+        isCameraOnDecoy = true
+    end
     
-    -- 3. VÒNG LẶP ĐIỀU KHIỂN CƠ THỂ GỐC (Ép buộc truyền động liên tục không cần chờ sát thương)
+    -- 3. VÒNG LẶP ĐIỀU KHIỂN CƠ THỂ GỐC (DI CHUYỂN TỰ DO XUYÊN KHÔNG GIAN)
     if _G.MasterDecoyConnection then _G.MasterDecoyConnection:Disconnect() end
     _G.MasterDecoyConnection = RunService.RenderStepped:Connect(function(dt)
         if character and character.Parent and realHrp then
@@ -211,7 +203,6 @@ DeployBtn.MouseButton1Click:Connect(function()
                 
                 local worldDir = (camRight * moveDir.X + camLook * -moveDir.Z).Unit
                 
-                -- Bơm tốc độ trực tiếp vào CFrame và Velocity để game buộc phải di chuyển mượt mà ngay lập tức
                 realHrp.AssemblyLinearVelocity = worldDir * 35
                 realHrp.CFrame = realHrp.CFrame + (worldDir * (35 * dt))
             else
@@ -220,10 +211,9 @@ DeployBtn.MouseButton1Click:Connect(function()
         end
     end)
     
-    InfoLabel.Text = "Status: Godmode Ghost & Decoy Active!"
+    InfoLabel.Text = "Status: Absolute Touch Immunity Active!"
 end)
 
--- CHUYỂN ĐỔI CAMERA
 CamToggleBtn.MouseButton1Click:Connect(function()
     if not activeDecoy or not activeDecoy:FindFirstChildOfClass("Humanoid") then
         InfoLabel.Text = "Status: Spawn decoy first!"
@@ -231,21 +221,23 @@ CamToggleBtn.MouseButton1Click:Connect(function()
     end
     
     local realChar = workspace:FindFirstChild("GhostRealBody")
-    local realHumanoid = realChar and realChar:FindFirstChildOfClass("Humanoid")
     local decoyHumanoid = activeDecoy:FindFirstChildOfClass("Humanoid")
     
     if isCameraOnDecoy then
-        if realHumanoid then Camera.CameraSubject = realHumanoid end
+        if realChar and realChar:FindFirstChild("HumanoidRootPart") then
+            Camera.CameraSubject = realChar.HumanoidRootPart
+        end
         InfoLabel.Text = "Status: Camera on Ghost Body"
         isCameraOnDecoy = false
     else
-        if decoyHumanoid then Camera.CameraSubject = decoyHumanoid end
+        if decoyHumanoid then 
+            Camera.CameraSubject = decoyHumanoid 
+        end
         InfoLabel.Text = "Status: Camera on Decoy Clone"
         isCameraOnDecoy = true
     end
 end)
 
--- RESET
 ResetBtn.MouseButton1Click:Connect(function()
     if _G.MasterDecoyConnection then 
         _G.MasterDecoyConnection:Disconnect() 
