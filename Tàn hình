@@ -1,34 +1,32 @@
 --[[
-    King Tower - Fixed Mobile Joystick & AI Decoy Hub
+    King Tower - Chaos Godmode & Server Damage Breaker Hub
 ]]
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
-local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
 
-if _G.MasterDecoyConnection then
-    pcall(function() _G.MasterDecoyConnection:Disconnect() end)
-    _G.MasterDecoyConnection = nil
+if _G.ChaosGodConnection then
+    pcall(function() _G.ChaosGodConnection:Disconnect() end)
+    _G.ChaosGodConnection = nil
 end
 
 pcall(function()
-    if CoreGui:FindFirstChild("MasterDecoyUI") then
-        CoreGui.MasterDecoyUI:Destroy()
+    if CoreGui:FindFirstChild("ChaosGodUI") then
+        CoreGui.ChaosGodUI:Destroy()
     end
 end)
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "MasterDecoyUI"
+ScreenGui.Name = "ChaosGodUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 280, 0, 240)
+MainFrame.Size = UDim2.new(0, 260, 0, 180)
 MainFrame.Position = UDim2.new(0, 50, 0, 150)
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 MainFrame.BorderSizePixel = 0
@@ -42,63 +40,39 @@ UICornerMain.Parent = MainFrame
 
 local UIStroke = Instance.new("UIStroke")
 UIStroke.Thickness = 2
-UIStroke.Color = Color3.fromRGB(0, 255, 128)
+UIStroke.Color = Color3.fromRGB(255, 50, 50)
 UIStroke.Parent = MainFrame
 
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, 0, 0, 35)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "Fixed Mobile Decoy Hub"
+TitleLabel.Text = "🔥 Chaos Godmode Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.TextSize = 12
+TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.Parent = MainFrame
 
 local Container = Instance.new("Frame")
-Container.Size = UDim2.new(1, -20, 0, 150)
+Container.Size = UDim2.new(1, -20, 0, 90)
 Container.Position = UDim2.new(0, 10, 0, 40)
 Container.BackgroundTransparency = 1
 Container.Parent = MainFrame
 
-local DeployBtn = Instance.new("TextButton")
-DeployBtn.Size = UDim2.new(1, 0, 0, 32)
-DeployBtn.Position = UDim2.new(0, 0, 0, 0)
-DeployBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-DeployBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-DeployBtn.TextSize = 11
-DeployBtn.Font = Enum.Font.GothamBold
-DeployBtn.Text = "🎯 Spawn Fixed Ghost & Decoy"
-DeployBtn.Parent = Container
+local GodToggleBtn = Instance.new("TextButton")
+GodToggleBtn.Size = UDim2.new(1, 0, 0, 38)
+GodToggleBtn.Position = UDim2.new(0, 0, 0, 0)
+GodToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+GodToggleBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
+GodToggleBtn.TextSize = 11
+GodToggleBtn.Font = Enum.Font.GothamBold
+GodToggleBtn.Text = "💀 Chaos Godmode: [ OFF ]"
+GodToggleBtn.Parent = Container
 
-local UIC_1 = Instance.new("UICorner") UIC_1.CornerRadius = UDim.new(0, 6) UIC_1.Parent = DeployBtn
-
-local AIToggleBtn = Instance.new("TextButton")
-AIToggleBtn.Size = UDim2.new(1, 0, 0, 32)
-AIToggleBtn.Position = UDim2.new(0, 0, 0, 38)
-AIToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-AIToggleBtn.TextColor3 = Color3.fromRGB(255, 200, 100)
-AIToggleBtn.TextSize = 11
-AIToggleBtn.Font = Enum.Font.GothamBold
-AIToggleBtn.Text = "🤖 Decoy AI: [ OFF ]"
-AIToggleBtn.Parent = Container
-
-local UIC_AI = Instance.new("UICorner") UIC_AI.CornerRadius = UDim.new(0, 6) UIC_AI.Parent = AIToggleBtn
-
-local CamToggleBtn = Instance.new("TextButton")
-CamToggleBtn.Size = UDim2.new(1, 0, 0, 32)
-CamToggleBtn.Position = UDim2.new(0, 0, 0, 76)
-CamToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-CamToggleBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
-CamToggleBtn.TextSize = 11
-CamToggleBtn.Font = Enum.Font.GothamBold
-CamToggleBtn.Text = "👁️ Switch Camera"
-CamToggleBtn.Parent = Container
-
-local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2.Parent = CamToggleBtn
+local UIC_1 = Instance.new("UICorner") UIC_1.CornerRadius = UDim.new(0, 6) UIC_1.Parent = GodToggleBtn
 
 local ResetBtn = Instance.new("TextButton")
-ResetBtn.Size = UDim2.new(1, 0, 0, 32)
-ResetBtn.Position = UDim2.new(0, 0, 0, 114)
+ResetBtn.Size = UDim2.new(1, 0, 0, 38)
+ResetBtn.Position = UDim2.new(0, 0, 0, 46)
 ResetBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 ResetBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
 ResetBtn.TextSize = 11
@@ -106,11 +80,11 @@ ResetBtn.Font = Enum.Font.GothamBold
 ResetBtn.Text = "🔄 Reset Normal State"
 ResetBtn.Parent = Container
 
-local UIC_3 = Instance.new("UICorner") UIC_3.CornerRadius = UDim.new(0, 6) UIC_3.Parent = ResetBtn
+local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2.Parent = ResetBtn
 
 local InfoLabel = Instance.new("TextLabel")
 InfoLabel.Size = UDim2.new(1, -20, 0, 25)
-InfoLabel.Position = UDim2.new(0, 10, 0, 205)
+InfoLabel.Position = UDim2.new(0, 10, 0, 140)
 InfoLabel.BackgroundTransparency = 1
 InfoLabel.Text = "Status: Ready."
 InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -118,160 +92,84 @@ InfoLabel.TextSize = 10
 InfoLabel.Font = Enum.Font.Gotham
 InfoLabel.Parent = MainFrame
 
-local activeDecoy = nil
-local isAIActive = false
+local isGodActive = false
 
-DeployBtn.MouseButton1Click:Connect(function()
+GodToggleBtn.MouseButton1Click:Connect(function()
+    isGodActive = not isGodActive
     local character = LocalPlayer.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then 
+    if not character or not character:FindFirstChild("HumanoidRootPart") then
         InfoLabel.Text = "Status: Character not found!"
-        return 
+        return
     end
     
-    local startCF = character.HumanoidRootPart.CFrame
-    local realHumanoid = character:FindFirstChildOfClass("Humanoid")
-    local realHrp = character.HumanoidRootPart
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
     
-    if activeDecoy and activeDecoy.Parent then
-        activeDecoy:Destroy()
-        activeDecoy = nil
-    end
-    
-    -- 1. GIỮ LẠI HUMANOID ĐỂ JOYSTICK MOBILE HOẠT ĐỘNG, NHƯNG KHÓA CHẶT SÁT THƯƠNG
-    if realHumanoid then
-        realHumanoid.MaxHealth = math.huge
-        realHumanoid.Health = math.huge
-        realHumanoid.HealthChanged:Connect(function()
-            if realHumanoid.Health < realHumanoid.MaxHealth then
-                realHumanoid.Health = realHumanoid.MaxHealth
-            end
-        end)
-    end
-    
-    -- Làm mờ thân thật và tắt va chạm để xuyên tường tự do nhưng vẫn giữ quyền điều khiển joystick
-    for _, part in ipairs(character:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.CanCollide = false
-            part.Transparency = 0.5
+    if isGodActive then
+        GodToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+        GodToggleBtn.Text = "💀 Chaos Godmode: [ ACTIVE ]"
+        InfoLabel.Text = "Status: Server damage calculation blinded!"
+        
+        if humanoid then
+            humanoid.MaxHealth = math.huge
+            humanoid.Health = math.huge
+            humanoid.BreakJointsOnDeath = false
         end
-    end
-    
-    -- 2. TẠO CLONE MỒI NHỬ (DECOY) HOẠT ĐỘNG ĐẦY ĐỦ
-    character.Archivable = true
-    activeDecoy = character:Clone()
-    character.Archivable = false
-    
-    activeDecoy.Name = LocalPlayer.Name .. "_Decoy"
-    activeDecoy.Parent = workspace
-    activeDecoy:SetPrimaryPartCFrame(startCF + Vector3.new(3, 0, 0))
-    
-    local decoyHumanoid = activeDecoy:FindFirstChildOfClass("Humanoid")
-    local decoyHrp = activeDecoy:FindFirstChild("HumanoidRootPart")
-    
-    if decoyHumanoid then
-        decoyHumanoid.MaxHealth = math.huge
-        decoyHumanoid.Health = math.huge
-        decoyHumanoid.HealthChanged:Connect(function()
-            if decoyHumanoid.Health < decoyHumanoid.MaxHealth then
-                decoyHumanoid.Health = decoyHumanoid.MaxHealth
+        
+        -- Chặn đứng mọi kết nối va chạm vật lý truyền về server gây mất máu
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanTouch = false
+                part.CanQuery = false
             end
-        end)
-    end
-    
-    for _, part in ipairs(activeDecoy:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.CanCollide = true
-            part.CanTouch = true
-            part.Transparency = 0
-            pcall(function() part:SetNetworkOwner(LocalPlayer) end)
         end
-    end
-    
-    if realHrp then 
-        Camera.CameraSubject = realHrp 
-    end
-    
-    -- 3. VÒNG LẶP ĐIỀU KHIỂN AI CHO CLONE
-    if _G.MasterDecoyConnection then _G.MasterDecoyConnection:Disconnect() end
-    _G.MasterDecoyConnection = RunService.RenderStepped:Connect(function()
-        if isAIActive and activeDecoy and decoyHumanoid and decoyHrp then
-            local nearestTarget = nil
-            local shortestDist = math.huge
-            
-            for _, player in ipairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                    local targetHrp = player.Character.HumanoidRootPart
-                    local dist = (targetHrp.Position - decoyHrp.Position).Magnitude
-                    if dist < shortestDist then
-                        shortestDist = dist
-                        nearestTarget = targetHrp
-                    end
+        
+        -- Vòng lặp "ép xác" server: khóa cứng máu ở mức vô hạn liên tục từng mili-giây
+        if _G.ChaosGodConnection then _G.ChaosGodConnection:Disconnect() end
+        _G.ChaosGodConnection = RunService.Heartbeat:Connect(function()
+            if character and character.Parent and humanoid then
+                if humanoid.Health < humanoid.MaxHealth then
+                    humanoid.Health = humanoid.MaxHealth
+                end
+                -- Nếu server cố tình ép chết nhân vật, lập tức can thiệp xóa trạng thái chết
+                if humanoid:GetState() == Enum.HumanoidStateType.Dead then
+                    humanoid:ChangeState(Enum.HumanoidStateType.Running)
                 end
             end
-            
-            if nearestTarget then
-                decoyHumanoid:MoveTo(nearestTarget.Position)
+        end)
+    else
+        GodToggleBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
+        GodToggleBtn.Text = "💀 Chaos Godmode: [ OFF ]"
+        InfoLabel.Text = "Status: Chaos Mode Disabled."
+        
+        if _G.ChaosGodConnection then
+            _G.ChaosGodConnection:Disconnect()
+            _G.ChaosGodConnection = nil
+        end
+        
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanTouch = true
+                part.CanQuery = true
             end
-        end
-    end)
-    
-    InfoLabel.Text = "Status: Mobile Joystick & Decoy Fixed!"
-end)
-
-AIToggleBtn.MouseButton1Click:Connect(function()
-    isAIActive = not isAIActive
-    if isAIActive then
-        AIToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-        AIToggleBtn.Text = "🤖 Decoy AI: [ ACTIVE ]"
-    else
-        AIToggleBtn.TextColor3 = Color3.fromRGB(255, 200, 100)
-        AIToggleBtn.Text = "🤖 Decoy AI: [ OFF ]"
-        if activeDecoy and activeDecoy:FindFirstChildOfClass("Humanoid") and activeDecoy.PrimaryPart then
-            activeDecoy:FindFirstChildOfClass("Humanoid"):MoveTo(activeDecoy.PrimaryPart.Position)
-        end
-    end
-end)
-
-local toggleState = false
-CamToggleBtn.MouseButton1Click:Connect(function()
-    toggleState = not toggleState
-    local realChar = LocalPlayer.Character
-    local decoyHumanoid = activeDecoy and activeDecoy:FindFirstChildOfClass("Humanoid")
-    
-    if toggleState then
-        if decoyHumanoid then 
-            Camera.CameraSubject = decoyHumanoid 
-            InfoLabel.Text = "Status: Camera on Decoy"
-        end
-    else
-        if realChar and realChar:FindFirstChildOfClass("Humanoid") then
-            Camera.CameraSubject = realChar:FindFirstChildOfClass("Humanoid")
-            InfoLabel.Text = "Status: Camera on Real Body"
         end
     end
 end)
 
 ResetBtn.MouseButton1Click:Connect(function()
-    if _G.MasterDecoyConnection then 
-        _G.MasterDecoyConnection:Disconnect() 
-        _G.MasterDecoyConnection = nil 
+    if _G.ChaosGodConnection then
+        _G.ChaosGodConnection:Disconnect()
+        _G.ChaosGodConnection = nil
     end
-    if activeDecoy then
-        activeDecoy:Destroy()
-        activeDecoy = nil
-    end
-    isAIActive = false
+    isGodActive = false
+    GodToggleBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
+    GodToggleBtn.Text = "💀 Chaos Godmode: [ OFF ]"
     InfoLabel.Text = "Status: Reset completed."
 end)
 
 LocalPlayer.CharacterAdded:Connect(function()
-    if _G.MasterDecoyConnection then 
-        _G.MasterDecoyConnection:Disconnect() 
-        _G.MasterDecoyConnection = nil 
+    if _G.ChaosGodConnection then
+        _G.ChaosGodConnection:Disconnect()
+        _G.ChaosGodConnection = nil
     end
-    if activeDecoy then
-        activeDecoy:Destroy()
-        activeDecoy = nil
-    end
-    isAIActive = false
+    isGodActive = false
 end)
