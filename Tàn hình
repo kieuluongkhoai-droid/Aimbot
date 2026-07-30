@@ -1,5 +1,5 @@
 --[[
-    King Tower - Final AI Mirror (Optimized Smooth Movement & Stable Animation Sync), Wall Enclosure TP & Swap Hub
+    King Tower - Final AI Mirror (Optimized Smooth Movement + Bypass Anti-Cheat TP), Wall Enclosure TP & Swap Hub
 ]]
 
 local Players = game:GetService("Players")
@@ -59,7 +59,7 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -40, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "📱 Ultra-Smooth AI Mirror Hub"
+TitleLabel.Text = "📱 Anti-Cheat Bypass Mirror Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
@@ -220,6 +220,47 @@ local activeClone = nil
 local realLocked = false
 local cloneLocked = false
 local isMinimized = false
+local lockedPos = nil -- Chuyển biến LockedPos ra ngoài để đồng bộ dễ hơn
+
+-- HÀM BYPASS ANTI-CHEAT TELEPORT (Tránh bị Kill khi qua lại giữa Clone và Gốc)
+local function SafeTP(character, targetCFrame)
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local startCFrame = hrp.CFrame
+    local dist = (startCFrame.Position - targetCFrame.Position).Magnitude
+    
+    -- Nếu cự ly gần (dưới 45 stud) -> Dịch chuyển luôn vì AC không bắt
+    if dist < 45 then
+        hrp.CFrame = targetCFrame
+        return
+    end
+
+    InfoLabel.Text = "Status: Bypassing Anti-Cheat (Safe TP)..."
+    
+    -- Xé nhỏ khoảng cách di chuyển (25 stud mỗi khung hình) để "đánh lừa" Anti-Cheat
+    local stepDist = 25 
+    local steps = math.ceil(dist / stepDist)
+    
+    -- Bật xuyên tường trong tích tắc để không bị kẹt hay văng khi trượt qua tường
+    local noclipCon
+    noclipCon = RunService.Stepped:Connect(function()
+        for _, p in ipairs(character:GetDescendants()) do
+            if p:IsA("BasePart") then p.CanCollide = false end
+        end
+    end)
+
+    for i = 1, steps do
+        if not character or not character:FindFirstChild("HumanoidRootPart") then break end
+        local alpha = i / steps
+        hrp.CFrame = startCFrame:Lerp(targetCFrame, alpha)
+        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0) -- Giữ vận tốc = 0 để tránh cờ SpeedHack
+        RunService.Heartbeat:Wait()
+    end
+    
+    if noclipCon then noclipCon:Disconnect() end
+end
+
 
 MinimizeBtn.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
@@ -297,11 +338,24 @@ ScanTpBtn.MouseButton1Click:Connect(function()
     end
     
     if bestPart then
-        hrp.CFrame = CFrame.new(bestPart.Position.X, bestPart.Position.Y + 3, bestPart.Position.Z)
-        InfoLabel.Text = "Status: Real Body TP to 4-Wall Enclosed Safe Spot!"
+        local targetCF = CFrame.new(bestPart.Position.X, bestPart.Position.Y + 3, bestPart.Position.Z)
+        
+        -- Tạm tắt Lock để không bị kéo giật lùi trong khi đang Bypass TP
+        local wasLocked = realLocked
+        if wasLocked then 
+            realLocked = false 
+            task.wait(0.05) 
+        end
+        
+        SafeTP(character, targetCF) -- Gọi hàm Bypass chống Anti-cheat
+        
+        if wasLocked then 
+            lockedPos = targetCF -- Đặt tọa độ khóa vào đúng vị trí mới
+            realLocked = true 
+        end
+        InfoLabel.Text = "Status: Real Body TP to Safe Spot (Bypass AC)!"
     else
-        hrp.CFrame = hrp.CFrame + Vector3.new(100, 0, 100)
-        InfoLabel.Text = "Status: Real Body moved far away (Fallback)."
+        InfoLabel.Text = "Status: No safe spot found."
     end
 end)
 
@@ -327,12 +381,13 @@ SpawnCloneBtn.MouseButton1Click:Connect(function()
     character.Archivable = false
     activeClone.Name = "MobileAICone"
     activeClone.Parent = workspace
+    -- Clone là giả (Client-Side) nên cứ dịch chuyển thẳng, server không biết
     activeClone:SetPrimaryPartCFrame(spawnPos)
     
     InfoLabel.Text = "Status: Clone spawned at game spawn."
 end)
 
--- Sửa lỗi khựng chuyển động: Tối ưu hóa mượt mà luồng Heartbeat & Đồng bộ Animation thông minh
+
 RealLockBtn.MouseButton1Click:Connect(function()
     realLocked = not realLocked
     local character = LocalPlayer.Character
@@ -343,7 +398,7 @@ RealLockBtn.MouseButton1Click:Connect(function()
         InfoLabel.Text = "Status: Ultra-smooth movement & sync active."
         
         if _G.MobileAIConnection then _G.MobileAIConnection:Disconnect() end
-        local lockedPos = character and character:FindFirstChild("HumanoidRootPart") and character.HumanoidRootPart.CFrame
+        lockedPos = character and character:FindFirstChild("HumanoidRootPart") and character.HumanoidRootPart.CFrame
         
         local cachedTracks = {}
         
@@ -359,18 +414,15 @@ RealLockBtn.MouseButton1Click:Connect(function()
                 local realHum = character and character:FindFirstChildOfClass("Humanoid")
                 
                 if realHum then
-                    -- Điều khiển hướng di chuyển trơn tru dựa trên Humanoid thực tế
                     local moveDir = realHum.MoveDirection
                     cloneHum:Move(moveDir, false)
                     cloneHum.Jump = realHum.Jump
 
-                    -- XỬ LÝ ĐỒNG BỘ HOẠT ẢNH HOÀN TOÀN MƯỢT MÀ (KHÔNG BỊ GIẬT CỤC)
                     local realAnimator = realHum:FindFirstChildOfClass("Animator")
                     local cloneAnimator = cloneHum:FindFirstChildOfClass("Animator")
                     
                     if realAnimator and cloneAnimator then
                         local realTracks = realAnimator:GetPlayingAnimationTracks()
-                        
                         for _, rTrack in ipairs(realTracks) do
                             local animId = rTrack.Animation.AnimationId
                             local cloneTrack = cachedTracks[animId]
@@ -387,10 +439,7 @@ RealLockBtn.MouseButton1Click:Connect(function()
                             end
                             
                             if cloneTrack then
-                                if not cloneTrack.IsPlaying then
-                                    cloneTrack:Play()
-                                end
-                                -- Khớp thời gian và tốc độ khung hình với người thật để không bị lệch cử động
+                                if not cloneTrack.IsPlaying then cloneTrack:Play() end
                                 if math.abs(cloneTrack.TimePosition - rTrack.TimePosition) > 0.15 then
                                     cloneTrack.TimePosition = rTrack.TimePosition
                                 end
@@ -444,11 +493,29 @@ local function performSwap()
     local realHrp = character.HumanoidRootPart
     local cloneHrp = activeClone.HumanoidRootPart
     
+    local targetCF = cloneHrp.CFrame
     local tempCF = realHrp.CFrame
-    realHrp.CFrame = cloneHrp.CFrame
+    
+    -- Tạm tắt Lock để không xung đột Bypass TP
+    local wasLocked = realLocked
+    if wasLocked then 
+        realLocked = false
+        task.wait(0.05)
+    end
+    
+    -- Cơ thể Ảo (Clone) dịch chuyển tức thời vào chỗ Cơ thể Thật
     cloneHrp.CFrame = tempCF
     
-    InfoLabel.Text = "Status: Positions swapped successfully!"
+    -- Cơ thể Thật sử dụng Bypass TP chầm chậm (nhưng cực nhanh bằng Lerp) để ko bị Anti-Cheat văng
+    SafeTP(character, targetCF)
+    
+    -- Kích hoạt lại Lock tại vị trí mới
+    if wasLocked then
+        lockedPos = targetCF
+        realLocked = true
+    end
+    
+    InfoLabel.Text = "Status: Swapped (Bypassed Anti-Cheat)!"
 end
 
 SwapRealBtn.MouseButton1Click:Connect(performSwap)
