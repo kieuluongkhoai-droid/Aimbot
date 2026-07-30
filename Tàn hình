@@ -1,8 +1,7 @@
 --[[
-    King Tower - Puppet Master: Decoy Controller & Real Body Hider
+    King Tower - Stable Puppet Hub
 ]]
 
-local Players = Service("Players") -- Sử dụng game:GetService an toàn
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
@@ -16,19 +15,19 @@ if _G.PuppetConnection then
 end
 
 pcall(function()
-    if CoreGui:FindFirstChild("PuppetHubUI") then
-        CoreGui.PuppetHubUI:Destroy()
+    if CoreGui:FindFirstChild("StablePuppetUI") then
+        CoreGui.StablePuppetUI:Destroy()
     end
 end)
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "PuppetHubUI"
+ScreenGui.Name = "StablePuppetUI"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 280, 0, 220)
+MainFrame.Size = UDim2.new(0, 260, 0, 190)
 MainFrame.Position = UDim2.new(0, 50, 0, 150)
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 MainFrame.BorderSizePixel = 0
@@ -46,59 +45,59 @@ UIStroke.Color = Color3.fromRGB(0, 170, 255)
 UIStroke.Parent = MainFrame
 
 local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, 0, 0, 35)
+TitleLabel.Size = UDim2.new(1, 0, 0, 30)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "🎭 Puppet Master Controller Hub"
+TitleLabel.Text = "🎭 Stable Puppet Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.Parent = MainFrame
 
 local Container = Instance.new("Frame")
-Container.Size = UDim2.new(1, -20, 0, 130)
-Container.Position = UDim2.new(0, 10, 0, 40)
+Container.Size = UDim2.new(1, -20, 0, 110)
+Container.Position = UDim2.new(0, 10, 0, 35)
 Container.BackgroundTransparency = 1
 Container.Parent = MainFrame
 
-local SpawnPuppetBtn = Instance.new("TextButton")
-SpawnPuppetBtn.Size = UDim2.new(1, 0, 0, 35)
-SpawnPuppetBtn.Position = UDim2.new(0, 0, 0, 0)
-SpawnPuppetBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-SpawnPuppetBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-SpawnPuppetBtn.TextSize = 11
-SpawnPuppetBtn.Font = Enum.Font.GothamBold
-SpawnPuppetBtn.Text = "👥 Spawn & Hide Real Body"
-SpawnPuppetBtn.Parent = Container
+local SpawnBtn = Instance.new("TextButton")
+SpawnBtn.Size = UDim2.new(1, 0, 0, 32)
+SpawnBtn.Position = UDim2.new(0, 0, 0, 0)
+SpawnBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+SpawnBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+SpawnBtn.TextSize = 11
+SpawnBtn.Font = Enum.Font.GothamBold
+SpawnBtn.Text = "👥 Spawn Clone & Hide Real"
+SpawnBtn.Parent = Container
 
-local UIC_1 = Instance.new("UICorner") UIC_1.CornerRadius = UDim.new(0, 6) UIC_1.Parent = SpawnPuppetBtn
+local UIC_1 = Instance.new("UICorner") UIC_1.CornerRadius = UDim.new(0, 6) UIC_1.Parent = SpawnBtn
 
-local SwitchCamBtn = Instance.new("TextButton")
-SwitchCamBtn.Size = UDim2.new(1, 0, 0, 35)
-SwitchCamBtn.Position = UDim2.new(0, 0, 0, 42)
-SwitchCamBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-SwitchCamBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
-SwitchCamBtn.TextSize = 11
-SwitchCamBtn.Font = Enum.Font.GothamBold
-SwitchCamBtn.Text = "👁️ Switch View: [ REAL BODY ]"
-SwitchCamBtn.Parent = Container
+local SwitchBtn = Instance.new("TextButton")
+SwitchBtn.Size = UDim2.new(1, 0, 0, 32)
+SwitchBtn.Position = UDim2.new(0, 0, 0, 38)
+SwitchBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+SwitchBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
+SwitchBtn.TextSize = 11
+SwitchBtn.Font = Enum.Font.GothamBold
+SwitchBtn.Text = "👁️ View: [ CLONE AI ]"
+SwitchBtn.Parent = Container
 
-local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2.Parent = SwitchCamBtn
+local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2.Parent = SwitchBtn
 
 local ResetBtn = Instance.new("TextButton")
-ResetBtn.Size = UDim2.new(1, 0, 0, 35)
-ResetBtn.Position = UDim2.new(0, 0, 0, 84)
+ResetBtn.Size = UDim2.new(1, 0, 0, 32)
+ResetBtn.Position = UDim2.new(0, 0, 0, 76)
 ResetBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 ResetBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
 ResetBtn.TextSize = 11
 ResetBtn.Font = Enum.Font.GothamBold
-ResetBtn.Text = "🔄 Reset Normal State"
+ResetBtn.Text = "🔄 Reset State"
 ResetBtn.Parent = Container
 
 local UIC_3 = Instance.new("UICorner") UIC_3.CornerRadius = UDim.new(0, 6) UIC_3.Parent = ResetBtn
 
 local InfoLabel = Instance.new("TextLabel")
 InfoLabel.Size = UDim2.new(1, -20, 0, 25)
-InfoLabel.Position = UDim2.new(0, 10, 0, 180)
+InfoLabel.Position = UDim2.new(0, 10, 0, 155)
 InfoLabel.BackgroundTransparency = 1
 InfoLabel.Text = "Status: Ready."
 InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -107,10 +106,10 @@ InfoLabel.Font = Enum.Font.Gotham
 InfoLabel.Parent = MainFrame
 
 local activeClone = nil
-local isControllingClone = false
-local isAIActive = false
+local viewingClone = true
+local aiActive = true
 
-SpawnPuppetBtn.MouseButton1Click:Connect(function()
+SpawnBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then
         InfoLabel.Text = "Status: Character not found!"
@@ -118,111 +117,93 @@ SpawnPuppetBtn.MouseButton1Click:Connect(function()
     end
     
     local hrp = character.HumanoidRootPart
-    local startCF = hrp.CFrame
+    local pos = hrp.CFrame
     
-    if activeClone and activeClone.Parent then
-        activeClone:Destroy()
+    if activeClone then
+        pcall(function() activeClone:Destroy() end)
         activeClone = nil
     end
     
-    -- 1. Tạo Clone làm hình nhân phía trên
     character.Archivable = true
     activeClone = character:Clone()
     character.Archivable = false
     
-    activeClone.Name = LocalPlayer.Name .. "_PuppetClone"
+    activeClone.Name = "Client_Clone"
     activeClone.Parent = workspace
-    activeClone:SetPrimaryPartCFrame(startCF + Vector3.new(0, 3, 0))
+    activeClone:SetPrimaryPartCFrame(pos + Vector3.new(0, 3, 0))
     
     local cloneHrp = activeClone:FindFirstChild("HumanoidRootPart")
-    local cloneHumanoid = activeClone:FindFirstChildOfClass("Humanoid")
-    local realHumanoid = character:FindFirstChildOfClass("Humanoid")
+    local cloneHum = activeClone:FindFirstChildOfClass("Humanoid")
     
-    -- 2. Ẩn thân xác thật ngay xuống dưới chân (hoặc chìm xuống đất một chút để né sát thương vùng)
-    hrp.CFrame = startCF - Vector3.new(0, 10, 0)
-    for _, part in ipairs(character:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.CanCollide = false
-            part.Transparency = 1 -- Tàng hình thân thật ở dưới đất
+    -- Giấu thân thật xuống dưới đất
+    hrp.CFrame = pos - Vector3.new(0, 15, 0)
+    for _, p in ipairs(character:GetDescendants()) do
+        if p:IsA("BasePart") then
+            p.CanCollide = false
+            p.Transparency = 1
         end
     end
     
-    -- Thiết lập hiển thị cho Clone rõ ràng ở trên
-    for _, part in ipairs(activeClone:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.CanCollide = true
-            part.Transparency = 0
+    for _, p in ipairs(activeClone:GetDescendants()) do
+        if p:IsA("BasePart") then
+            p.Transparency = 0
         end
     end
     
-    -- Mặc định chuyển camera lên Clone và BẬT AI cho Clone
-    if cloneHumanoid then
-        Camera.CameraSubject = cloneHumanoid
+    if cloneHum then
+        Camera.CameraSubject = cloneHum
     end
-    isControllingClone = true
-    isAIActive = true
-    SwitchCamBtn.Text = "👁️ Switch View: [ CLONE AI ]"
-    SwitchCamBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+    viewingClone = true
+    aiActive = true
+    SwitchBtn.Text = "👁️ View: [ CLONE AI ]"
+    SwitchBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+    InfoLabel.Text = "Status: Clone active & hidden real body."
     
-    InfoLabel.Text = "Status: Real body hidden, Clone active!"
-    
-    -- 3. Hệ thống AI tự động tìm và dịch chuyển Clone theo kẻ địch gần nhất
     if _G.PuppetConnection then _G.PuppetConnection:Disconnect() end
     
-    local aiTimer = 0
-    _G.PuppetConnection = RunService.RenderStepped:Connect(function(dt)
-        if isAIActive and activeClone and cloneHumanoid and cloneHrp then
-            aiTimer = aiTimer + dt
-            if aiTimer >= 0.4 then
-                aiTimer = 0
-                local nearestTarget = nil
-                local shortestDist = math.huge
-                
-                for _, player in ipairs(Players:GetPlayers()) do
-                    if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                        local targetHrp = player.Character.HumanoidRootPart
-                        local dist = (targetHrp.Position - cloneHrp.Position).Magnitude
-                        if dist < shortestDist then
-                            shortestDist = dist
-                            nearestTarget = targetHrp
-                        end
+    _G.PuppetConnection = RunService.RenderStepped:Connect(function()
+        if aiActive and activeClone and cloneHum and cloneHrp then
+            local target = nil
+            local minDist = math.huge
+            for _, plr in ipairs(Players:GetPlayers()) do
+                if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                    local d = (plr.Character.HumanoidRootPart.Position - cloneHrp.Position).Magnitude
+                    if d < minDist then
+                        minDist = d
+                        target = plr.Character.HumanoidRootPart
                     end
                 end
-                
-                if nearestTarget then
-                    cloneHumanoid:MoveTo(nearestTarget.Position)
-                end
+            end
+            if target then
+                cloneHum:MoveTo(target.Position)
             end
         end
     end)
 end)
 
--- Nút chuyển đổi qua lại giữa Real Body và Clone AI
-SwitchCamBtn.MouseButton1Click:Connect(function()
+SwitchBtn.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if not character or not activeClone then
         InfoLabel.Text = "Status: Spawn clone first!"
         return
     end
     
-    isControllingClone = not isControllingClone
-    local realHumanoid = character:FindFirstChildOfClass("Humanoid")
-    local cloneHumanoid = activeClone:FindFirstChildOfClass("Humanoid")
+    viewingClone = not viewingClone
+    local realHum = character:FindFirstChildOfClass("Humanoid")
+    local cloneHum = activeClone:FindFirstChildOfClass("Humanoid")
     
-    if isControllingClone then
-        -- Chuyển góc nhìn lên Clone -> Bật AI
-        if cloneHumanoid then Camera.CameraSubject = cloneHumanoid end
-        isAIActive = true
-        SwitchCamBtn.Text = "👁️ Switch View: [ CLONE AI ]"
-        SwitchCamBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+    if viewingClone then
+        if cloneHum then Camera.CameraSubject = cloneHum end
+        aiActive = true
+        SwitchBtn.Text = "👁️ View: [ CLONE AI ]"
+        SwitchBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
         InfoLabel.Text = "Status: Controlling Clone (AI ON)"
     else
-        -- Chuyển góc nhìn về Real Body -> Tắt AI của Clone để bạn tự do đứng ẩn nấp
-        if realHumanoid then Camera.CameraSubject = realHumanoid end
-        isAIActive = false
-        SwitchCamBtn.Text = "👁️ Switch View: [ REAL BODY ]"
-        SwitchCamBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
-        InfoLabel.Text = "Status: Controlling Real Body (AI OFF)"
+        if realHum then Camera.CameraSubject = realHum end
+        aiActive = false
+        SwitchBtn.Text = "👁️ View: [ REAL BODY ]"
+        SwitchBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
+        InfoLabel.Text = "Status: Real body view (AI OFF)"
     end
 end)
 
@@ -232,38 +213,22 @@ ResetBtn.MouseButton1Click:Connect(function()
         _G.PuppetConnection = nil
     end
     if activeClone then
-        activeClone:Destroy()
+        pcall(function() activeClone:Destroy() end)
         activeClone = nil
     end
-    isAIActive = false
-    isControllingClone = false
+    aiActive = false
+    viewingClone = false
     
     local character = LocalPlayer.Character
     if character then
-        for _, part in ipairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = true
-                part.Transparency = 0
+        for _, p in ipairs(character:GetDescendants()) do
+            if p:IsA("BasePart") then
+                p.CanCollide = true
+                p.Transparency = 0
             end
         end
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        if humanoid then Camera.CameraSubject = humanoid end
+        local hum = character:FindFirstChildOfClass("Humanoid")
+        if hum then Camera.CameraSubject = hum end
     end
-    
-    SwitchCamBtn.Text = "👁️ Switch View: [ REAL BODY ]"
-    SwitchCamBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
     InfoLabel.Text = "Status: Reset completed."
-end)
-
-LocalPlayer.CharacterAdded:Connect(function()
-    if _G.PuppetConnection then
-        _G.PuppetConnection:Disconnect()
-        _G.PuppetConnection = nil
-    end
-    if activeClone then
-        activeClone:Destroy()
-        activeClone = nil
-    end
-    isAIActive = false
-    isControllingClone = false
 end)
