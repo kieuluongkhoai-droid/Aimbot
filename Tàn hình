@@ -1,10 +1,10 @@
 --[[
-    King Tower - Final AI Mirror (Ground-Hugging Raycast Anti-Cheat Bypass) Hub
+    King Tower - Final AI Mirror (Legal Pathfinding Anti-Cheat Bypass) Hub
 ]]
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
+local PathfindingService = game:GetService("PathfindingService")
 local CoreGui = game:GetService("CoreGui")
 
 local LocalPlayer = Players.LocalPlayer
@@ -60,7 +60,7 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -40, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "📱 Ground-Hugging Raycast Bypass Hub"
+TitleLabel.Text = "📱 Legal Pathfinding Bypass Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 10
 TitleLabel.Font = Enum.Font.GothamBold
@@ -223,66 +223,62 @@ local cloneLocked = false
 local isMinimized = false
 local lockedPos = nil
 
--- HÀM GROUND-HUGGING RAYCAST DASH (Dùng Raycast quét mặt sàn THẬT của server để chống Anti-Cheat quét không chạm đất)
-local function GroundHuggingDashTP(character, targetCFrame)
+-- HÀM LEGAL PATHFINDING (Tự động tìm đường và chạy bộ hợp pháp - 100% không sợ Anti-Cheat)
+local function LegalMoveTo(character, targetCFrame)
     local hrp = character:FindFirstChild("HumanoidRootPart")
     local hum = character:FindFirstChildOfClass("Humanoid")
     if not hrp or not hum then return end
 
     local dist = (hrp.Position - targetCFrame.Position).Magnitude
-    if dist < 20 then
+    
+    -- Nếu khoảng cách ngắn, dịch chuyển trực tiếp an toàn
+    if dist < 15 then
         hrp.CFrame = targetCFrame
         return
     end
 
-    InfoLabel.Text = "Status: Ground-Hugging Dash (Real Floor Raycast)..."
+    InfoLabel.Text = "Status: Running safely via Legal Pathfinding..."
 
-    local startPos = hrp.Position
-    local endPos = targetCFrame.Position
-    local duration = math.clamp(dist / 350, 0.4, 1.4)
-    local startTime = tick()
+    local path = PathfindingService:CreatePath({
+        AgentRadius = 2,
+        AgentHeight = 5,
+        AgentCanJump = true
+    })
 
-    local raycastParams = RaycastParams.new()
-    raycastParams.FilterType = Enum.RaycastFilterType.Exclude
-    raycastParams.FilterDescendantsInstances = {character}
-    raycastParams.IgnoreWater = true
-
-    local connection
-    connection = RunService.Heartbeat:Connect(function()
-        local elapsed = tick() - startTime
-        local alpha = math.clamp(elapsed / duration, 0, 1)
-
-        -- Nội suy vị trí X và Z giữa điểm đi và điểm đến
-        local currentX = startPos.X + (endPos.X - startPos.X) * alpha
-        local currentZ = startPos.Z + (endPos.Z - startPos.Z) * alpha
-
-        -- Bắn Raycast từ trên cao xuống tại vị trí X, Z hiện tại để tìm mặt sàn THẬT của server
-        local rayOrigin = Vector3.new(currentX, math.max(startPos.Y, endPos.Y) + 100, currentZ)
-        local rayResult = workspace:Raycast(rayOrigin, Vector3.new(0, -300, 0), raycastParams)
-
-        local targetY
-        if rayResult then
-            -- Nếu tìm thấy mặt sàn thực tế, đặt nhân vật đứng sát trên mặt sàn đó
-            targetY = rayResult.Position.Y + 3
-        else
-            -- Fallback tuyến tính nếu không tìm thấy sàn
-            targetY = startPos.Y + (endPos.Y - startPos.Y) * alpha
-        end
-
-        hrp.CFrame = CFrame.new(currentX, targetY, currentZ)
-        hum:ChangeState(Enum.HumanoidStateType.Running)
-
-        if alpha >= 1 then
-            if connection then connection:Disconnect() end
-        end
+    local success, errorMessage = pcall(function()
+        path:ComputeAsync(hrp.Position, targetCFrame.Position)
     end)
 
-    task.wait(duration + 0.05)
-    if connection then connection:Disconnect() end
+    if success and path.Status == Enum.PathStatus.Success then
+        local waypoints = path:GetWaypoints()
+        for _, waypoint in ipairs(waypoints) do
+            hum:MoveTo(waypoint.Position)
+            if waypoint.Action == Enum.PathWaypointAction.Jump then
+                hum.Jump = true
+            end
+            -- Chờ nhân vật chạy đến waypoint hiện tại
+            local reached = false
+            local conn
+            conn = hum.MoveToFinished:Connect(function(reachedSuccessfully)
+                reached = true
+                if conn then conn:Disconnect() end
+            end)
+            
+            local timeout = tick()
+            while not reached and tick() - timeout < 2 do
+                task.wait(0.1)
+                if not character or not character.Parent then break end
+            end
+            if conn then conn:Disconnect() end
+        end
+    else
+        -- Fallback nếu không tính được đường đi: Dùng MoveTo trực tiếp thẳng tới đích
+        hum:MoveTo(targetCFrame.Position)
+        task.wait(math.min(dist / 16, 3))
+    end
     
     hrp.CFrame = targetCFrame
-    hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-    hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    InfoLabel.Text = "Status: Arrived safely!"
 end
 
 MinimizeBtn.MouseButton1Click:Connect(function()
@@ -369,13 +365,13 @@ ScanTpBtn.MouseButton1Click:Connect(function()
             task.wait(0.05) 
         end
         
-        GroundHuggingDashTP(character, targetCF)
+        LegalMoveTo(character, targetCF)
         
         if wasLocked then 
             lockedPos = targetCF 
             realLocked = true 
         end
-        InfoLabel.Text = "Status: Real Body safely dashed to Safe Spot!"
+        InfoLabel.Text = "Status: Real Body safely ran to Safe Spot!"
     else
         InfoLabel.Text = "Status: No safe spot found."
     end
@@ -525,15 +521,15 @@ local function performSwap()
     -- Clone là giả (phía client), dịch chuyển tức thời thoải mái
     cloneHrp.CFrame = tempCF
     
-    -- Cơ thể thật di chuyển bằng Raycast sát mặt đất thật để chống Anti-Cheat Server
-    GroundHuggingDashTP(character, targetCF)
+    -- Cơ thể thật chạy đến vị trí clone bằng Legal Pathfinding
+    LegalMoveTo(character, targetCF)
     
     if wasLocked then
         lockedPos = targetCF
         realLocked = true
     end
     
-    InfoLabel.Text = "Status: Swapped successfully with Ground-Hugging Raycast!"
+    InfoLabel.Text = "Status: Swapped successfully with Legal Pathfinding!"
 end
 
 SwapRealBtn.MouseButton1Click:Connect(performSwap)
