@@ -1,5 +1,5 @@
 --[[
-    King Tower - Final AI Mirror (Optimized Smooth Movement + Bypass Anti-Cheat TP), Wall Enclosure TP & Swap Hub
+    King Tower - Final AI Mirror (Advanced Anti-Cheat Evasion / Ghost TP), Smooth Mirror & Swap Hub
 ]]
 
 local Players = game:GetService("Players")
@@ -59,7 +59,7 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -40, 1, 0)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "📱 Anti-Cheat Bypass Mirror Hub"
+TitleLabel.Text = "📱 Ultimate Anti-Cheat Evasion Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
@@ -220,29 +220,21 @@ local activeClone = nil
 local realLocked = false
 local cloneLocked = false
 local isMinimized = false
-local lockedPos = nil -- Chuyển biến LockedPos ra ngoài để đồng bộ dễ hơn
+local lockedPos = nil
 
--- HÀM BYPASS ANTI-CHEAT TELEPORT (Tránh bị Kill khi qua lại giữa Clone và Gốc)
-local function SafeTP(character, targetCFrame)
+-- HÀM GHOST TP - VÔ HIỆU HÓA HOÀN TOÀN ANTI-CHEAT KILL KHI DI CHUYỂN XA
+local function GhostTP(character, targetCFrame)
     local hrp = character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
+    local hum = character:FindFirstChildOfClass("Humanoid")
+    if not hrp or not hum then return end
 
-    local startCFrame = hrp.CFrame
-    local dist = (startCFrame.Position - targetCFrame.Position).Magnitude
-    
-    -- Nếu cự ly gần (dưới 45 stud) -> Dịch chuyển luôn vì AC không bắt
-    if dist < 45 then
-        hrp.CFrame = targetCFrame
-        return
-    end
+    InfoLabel.Text = "Status: Executing Ghost Bypass TP..."
 
-    InfoLabel.Text = "Status: Bypassing Anti-Cheat (Safe TP)..."
+    -- 1. Chuyển nhân vật sang trạng thái vô hiệu hóa vật lý nặng (PlatformStanding)
+    -- Giúp server hiểu nhân vật đang bị bất động hoặc rơi tự do, ngắt logic check Speed/Teleport
+    hum.PlatformStand = true
     
-    -- Xé nhỏ khoảng cách di chuyển (25 stud mỗi khung hình) để "đánh lừa" Anti-Cheat
-    local stepDist = 25 
-    local steps = math.ceil(dist / stepDist)
-    
-    -- Bật xuyên tường trong tích tắc để không bị kẹt hay văng khi trượt qua tường
+    -- Tắt va chạm để không bị văng kẹt tường giữa đường
     local noclipCon
     noclipCon = RunService.Stepped:Connect(function()
         for _, p in ipairs(character:GetDescendants()) do
@@ -250,17 +242,21 @@ local function SafeTP(character, targetCFrame)
         end
     end)
 
-    for i = 1, steps do
-        if not character or not character:FindFirstChild("HumanoidRootPart") then break end
-        local alpha = i / steps
-        hrp.CFrame = startCFrame:Lerp(targetCFrame, alpha)
-        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0) -- Giữ vận tốc = 0 để tránh cờ SpeedHack
-        RunService.Heartbeat:Wait()
-    end
-    
-    if noclipCon then noclipCon:Disconnect() end
-end
+    -- 2. Đặt vận tốc về 0 và thực hiện đặt trực tiếp vị trí đích
+    hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    hrp.CFrame = targetCFrame
 
+    -- Giữ trạng thái "bóng ma" trong tích tắc để gói tin đồng bộ kịp thời gian chết của Anti-Cheat
+    task.wait(0.15)
+
+    if noclipCon then noclipCon:Disconnect() end
+    
+    -- Khôi phục lại trạng thái bình thường cho nhân vật
+    if character and character:FindFirstChildOfClass("Humanoid") then
+        character:FindFirstChildOfClass("Humanoid").PlatformStand = false
+    end
+end
 
 MinimizeBtn.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
@@ -340,20 +336,19 @@ ScanTpBtn.MouseButton1Click:Connect(function()
     if bestPart then
         local targetCF = CFrame.new(bestPart.Position.X, bestPart.Position.Y + 3, bestPart.Position.Z)
         
-        -- Tạm tắt Lock để không bị kéo giật lùi trong khi đang Bypass TP
         local wasLocked = realLocked
         if wasLocked then 
             realLocked = false 
             task.wait(0.05) 
         end
         
-        SafeTP(character, targetCF) -- Gọi hàm Bypass chống Anti-cheat
+        GhostTP(character, targetCF) -- Sử dụng Ghost TP chuyên dụng
         
         if wasLocked then 
-            lockedPos = targetCF -- Đặt tọa độ khóa vào đúng vị trí mới
+            lockedPos = targetCF 
             realLocked = true 
         end
-        InfoLabel.Text = "Status: Real Body TP to Safe Spot (Bypass AC)!"
+        InfoLabel.Text = "Status: Real Body TP to Safe Spot Safely!"
     else
         InfoLabel.Text = "Status: No safe spot found."
     end
@@ -381,12 +376,10 @@ SpawnCloneBtn.MouseButton1Click:Connect(function()
     character.Archivable = false
     activeClone.Name = "MobileAICone"
     activeClone.Parent = workspace
-    -- Clone là giả (Client-Side) nên cứ dịch chuyển thẳng, server không biết
     activeClone:SetPrimaryPartCFrame(spawnPos)
     
     InfoLabel.Text = "Status: Clone spawned at game spawn."
 end)
-
 
 RealLockBtn.MouseButton1Click:Connect(function()
     realLocked = not realLocked
@@ -496,26 +489,24 @@ local function performSwap()
     local targetCF = cloneHrp.CFrame
     local tempCF = realHrp.CFrame
     
-    -- Tạm tắt Lock để không xung đột Bypass TP
     local wasLocked = realLocked
     if wasLocked then 
         realLocked = false
         task.wait(0.05)
     end
     
-    -- Cơ thể Ảo (Clone) dịch chuyển tức thời vào chỗ Cơ thể Thật
+    -- Clone dịch chuyển tức thời về chỗ thật (vì là client-side nên vô hình với server)
     cloneHrp.CFrame = tempCF
     
-    -- Cơ thể Thật sử dụng Bypass TP chầm chậm (nhưng cực nhanh bằng Lerp) để ko bị Anti-Cheat văng
-    SafeTP(character, targetCF)
+    -- Cơ thể thật sử dụng Ghost TP để nhảy tới vị trí clone mà không kích hoạt Anti-Cheat kiểm tra khoảng cách
+    GhostTP(character, targetCF)
     
-    -- Kích hoạt lại Lock tại vị trí mới
     if wasLocked then
         lockedPos = targetCF
         realLocked = true
     end
     
-    InfoLabel.Text = "Status: Swapped (Bypassed Anti-Cheat)!"
+    InfoLabel.Text = "Status: Swapped successfully with Ghost Evasion!"
 end
 
 SwapRealBtn.MouseButton1Click:Connect(performSwap)
