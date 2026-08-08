@@ -1,321 +1,338 @@
---[[
-    Script Name: Element Magic Battle - Fixed Camera & Dual Mode Aimbot (Normal / Hard)
-    Features: Dynamic ESP, Dual Mode Aimbot (Normal Smooth vs Hard Lock), Body Face, Minimize UI
-]]--
+-- Kiểm tra game đã load xong chưa
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
 
-if not game:IsLoaded() then game.Loaded:Wait() end
-
+-- Các dịch vụ cần thiết
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local CoreGui = game:GetService("CoreGui")
-local Workspace = game:GetService("Workspace")
-local Camera = Workspace.CurrentCamera
-
+local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
--- Cấu hình
-getgenv().EMBSettings = {
-    ESPEnabled = false,
-    BoxColor = Color3.fromRGB(0, 255, 128),
-    TextColor = Color3.fromRGB(255, 255, 255),
-    
-    AimbotEnabled = false,
-    HardLockMode = false, -- false = Aimbot thường (mượt), true = Hard Aimbot (khóa cứng)
-    AimKey = Enum.UserInputType.MouseButton2,
-    Smoothness = 0.2, -- Độ mượt cho Aimbot thường
-    AimbotPart = "HumanoidRootPart"
-}
+-- Trạng thái tính năng
+local AimbotEnabled = false
+local ESPEnabled = false
+local FlyEnabled = false
 
---------------------------------------------------------------------------------
--- 1. GIAO DIỆN UI (CÓ NÚT CHUYỂN ĐỔI CHẾ ĐỘ AIMBOT)
---------------------------------------------------------------------------------
+local TargetPart = "Head"
+local FlySpeed = 50
+local FlyUp = false
+local FlyDown = false
+
+----------------------------------------------------------------
+-- 1. TẠO GIAO DIỆN NỔI CHO MOBILE (FLOATING TOGGLE BUTTON)
+----------------------------------------------------------------
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "EMB_DualModeUI"
-pcall(function() ScreenGui.Parent = CoreGui end)
-if not ScreenGui.Parent then
-    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-end
+ScreenGui.Name = "MEB_MobileMenu"
+ScreenGui.ResetOnSpawn = false
+pcall(function() ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end)
+if not ScreenGui.Parent then ScreenGui.Parent = game:GetService("CoreGui") end
 
+-- Nút mở Menu nổi trên màn hình Mobile
+local OpenButton = Instance.new("TextButton")
+OpenButton.Name = "OpenButton"
+OpenButton.Size = UDim2.new(0, 50, 0, 50)
+OpenButton.Position = UDim2.new(0.02, 0, 0.15, 0)
+OpenButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+OpenButton.Text = "MENU"
+OpenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenButton.TextSize = 12
+OpenButton.Font = Enum.Font.SourceSansBold
+OpenButton.Active = true
+OpenButton.Draggable = true -- Có thể kéo nút đi vị trí khác trên màn hình
+OpenButton.Parent = ScreenGui
+Instance.new("UICorner", OpenButton).CornerRadius = UDim.new(1, 0) -- Nút hình tròn
+
+----------------------------------------------------------------
+-- 2. KHUNG MENU CHÍNH (MOBILE FRIENDLY)
+----------------------------------------------------------------
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 360, 0, 340)
-MainFrame.Position = UDim2.new(0.5, -180, 0.5, -170)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+MainFrame.Size = UDim2.new(0, 230, 0, 250)
+MainFrame.Position = UDim2.new(0.5, -115, 0.3, -125) -- Căn giữa màn hình
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
+MainFrame.Visible = true
 MainFrame.Parent = ScreenGui
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 8)
-UICorner.Parent = MainFrame
+-- Tiêu đề
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Title.Text = "  MEB MOBILE MENU"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 14
+Title.Font = Enum.Font.SourceSansBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = MainFrame
+Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 10)
 
-local TitleBar = Instance.new("TextLabel")
-TitleBar.Size = UDim2.new(1, 0, 0, 40)
-TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
-TitleBar.Text = "  Element Magic Battle | Dual Mode Aimbot"
-TitleBar.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleBar.TextSize = 13
-TitleBar.Font = Enum.Font.SourceSansBold
-TitleBar.TextXAlignment = Enum.TextXAlignment.Left
-TitleBar.Parent = MainFrame
+-- Nút Aimbot
+local AimbotButton = Instance.new("TextButton")
+AimbotButton.Size = UDim2.new(0, 200, 0, 35)
+AimbotButton.Position = UDim2.new(0, 15, 0, 45)
+AimbotButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+AimbotButton.Text = "Aimbot: OFF"
+AimbotButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+AimbotButton.TextSize, AimbotButton.Font = 14, Enum.Font.SourceSansBold
+AimbotButton.Parent = MainFrame
+Instance.new("UICorner", AimbotButton).CornerRadius = UDim.new(0, 6)
 
-local TitleCorner = Instance.new("UICorner")
-TitleCorner.CornerRadius = UDim.new(0, 8)
-TitleCorner.Parent = TitleBar
+-- Nút ESP
+local ESPButton = Instance.new("TextButton")
+ESPButton.Size = UDim2.new(0, 200, 0, 35)
+ESPButton.Position = UDim2.new(0, 15, 0, 90)
+ESPButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+ESPButton.Text = "ESP Highlight: OFF"
+ESPButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ESPButton.TextSize, ESPButton.Font = 14, Enum.Font.SourceSansBold
+ESPButton.Parent = MainFrame
+Instance.new("UICorner", ESPButton).CornerRadius = UDim.new(0, 6)
 
-local CloseBtn = Instance.new("TextButton")
-CloseBtn.Size = UDim2.new(0, 40, 0, 40)
-CloseBtn.Position = UDim2.new(1, -40, 0, 0)
-CloseBtn.BackgroundTransparency = 1
-CloseBtn.Text = "X"
-CloseBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
-CloseBtn.TextSize = 16
-CloseBtn.Font = Enum.Font.SourceSansBold
-CloseBtn.Parent = TitleBar
+-- Nút Fly
+local FlyButton = Instance.new("TextButton")
+FlyButton.Size = UDim2.new(0, 90, 0, 35)
+FlyButton.Position = UDim2.new(0, 15, 0, 135)
+FlyButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+FlyButton.Text = "Fly: OFF"
+FlyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FlyButton.TextSize, FlyButton.Font = 14, Enum.Font.SourceSansBold
+FlyButton.Parent = MainFrame
+Instance.new("UICorner", FlyButton).CornerRadius = UDim.new(0, 6)
 
-CloseBtn.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
+-- Tăng/Giảm tốc độ Fly
+local SpeedMinus = Instance.new("TextButton")
+SpeedMinus.Size = UDim2.new(0, 30, 0, 35)
+SpeedMinus.Position = UDim2.new(0, 110, 0, 135)
+SpeedMinus.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+SpeedMinus.Text = "-"
+SpeedMinus.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpeedMinus.TextSize, SpeedMinus.Font = 18, Enum.Font.SourceSansBold
+SpeedMinus.Parent = MainFrame
+Instance.new("UICorner", SpeedMinus).CornerRadius = UDim.new(0, 6)
 
-local MinimizeBtn = Instance.new("TextButton")
-MinimizeBtn.Size = UDim2.new(0, 40, 0, 40)
-MinimizeBtn.Position = UDim2.new(1, -80, 0, 0)
-MinimizeBtn.BackgroundTransparency = 1
-MinimizeBtn.Text = "-"
-MinimizeBtn.TextColor3 = Color3.fromRGB(255, 200, 0)
-MinimizeBtn.TextSize = 18
-MinimizeBtn.Font = Enum.Font.SourceSansBold
-MinimizeBtn.Parent = TitleBar
+local SpeedDisplay = Instance.new("TextLabel")
+SpeedDisplay.Size = UDim2.new(0, 35, 0, 35)
+SpeedDisplay.Position = UDim2.new(0, 142, 0, 135)
+SpeedDisplay.BackgroundTransparency = 1
+SpeedDisplay.Text = tostring(FlySpeed)
+SpeedDisplay.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpeedDisplay.TextSize, SpeedDisplay.Font = 14, Enum.Font.SourceSansBold
+SpeedDisplay.Parent = MainFrame
 
-local Container = Instance.new("Frame")
-Container.Size = UDim2.new(1, 0, 1, -40)
-Container.Position = UDim2.new(0, 0, 0, 40)
-Container.BackgroundTransparency = 1
-Container.Parent = MainFrame
+local SpeedPlus = Instance.new("TextButton")
+SpeedPlus.Size = UDim2.new(0, 30, 0, 35)
+SpeedPlus.Position = UDim2.new(0, 180, 0, 135)
+SpeedPlus.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+SpeedPlus.Text = "+"
+SpeedPlus.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpeedPlus.TextSize, SpeedPlus.Font = 18, Enum.Font.SourceSansBold
+SpeedPlus.Parent = MainFrame
+Instance.new("UICorner", SpeedPlus).CornerRadius = UDim.new(0, 6)
 
-local isMinimized = false
-MinimizeBtn.MouseButton1Click:Connect(function()
-    isMinimized = not isMinimized
-    if isMinimized then
-        MainFrame.Size = UDim2.new(0, 360, 0, 40)
-        Container.Visible = false
-        MinimizeBtn.Text = "+"
-    else
-        MainFrame.Size = UDim2.new(0, 360, 0, 340)
-        Container.Visible = true
-        MinimizeBtn.Text = "-"
-    end
-end)
+-- Nhãn hướng dẫn
+local InfoLabel = Instance.new("TextLabel")
+InfoLabel.Size = UDim2.new(1, 0, 0, 40)
+InfoLabel.Position = UDim2.new(0, 0, 0, 195)
+InfoLabel.BackgroundTransparency = 1
+InfoLabel.Text = "Chạm nút [MENU] để Ẩn/Hiện\nFly dùng cần gạt + nút ▲ ▼"
+InfoLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+InfoLabel.TextSize = 11
+InfoLabel.Font = Enum.Font.Italic
+InfoLabel.Parent = MainFrame
 
-local function CreateToggle(name, yPos, callback)
-    local ToggleBtn = Instance.new("TextButton")
-    ToggleBtn.Size = UDim2.new(0.9, 0, 0, 45)
-    ToggleBtn.Position = UDim2.new(0.05, 0, 0, yPos)
-    ToggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
-    ToggleBtn.Text = "  " .. name .. ": [ OFF ]"
-    ToggleBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    ToggleBtn.TextSize = 14
-    ToggleBtn.Font = Enum.Font.SourceSansSemibold
-    ToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
-    ToggleBtn.Parent = Container
+----------------------------------------------------------------
+-- 3. NÚT NÂNG/HẠ ĐỘ CAO KHI BAY TRÊN MOBILE (UP/DOWN BUTTONS)
+----------------------------------------------------------------
+local FlyControlsFrame = Instance.new("Frame")
+FlyControlsFrame.Size = UDim2.new(0, 60, 0, 130)
+FlyControlsFrame.Position = UDim2.new(0.85, 0, 0.5, -65)
+FlyControlsFrame.BackgroundTransparency = 1
+FlyControlsFrame.Visible = false
+FlyControlsFrame.Parent = ScreenGui
 
-    local BtnCorner = Instance.new("UICorner")
-    BtnCorner.CornerRadius = UDim.new(0, 6)
-    BtnCorner.Parent = ToggleBtn
+local UpBtn = Instance.new("TextButton")
+UpBtn.Size = UDim2.new(0, 55, 0, 55)
+UpBtn.Position = UDim2.new(0, 0, 0, 0)
+UpBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+UpBtn.Text = "▲"
+UpBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+UpBtn.TextSize = 20
+UpBtn.Parent = FlyControlsFrame
+Instance.new("UICorner", UpBtn).CornerRadius = UDim.new(1, 0)
 
-    local state = false
-    ToggleBtn.MouseButton1Click:Connect(function()
-        state = not state
-        if state then
-            ToggleBtn.Text = "  " .. name .. ": [ ON ]"
-            ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
-        else
-            ToggleBtn.Text = "  " .. name .. ": [ OFF ]"
-            ToggleBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-        end
-        callback(state)
-    end)
-end
+local DownBtn = Instance.new("TextButton")
+DownBtn.Size = UDim2.new(0, 55, 0, 55)
+DownBtn.Position = UDim2.new(0, 0, 0, 65)
+DownBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+DownBtn.Text = "▼"
+DownBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+DownBtn.TextSize = 20
+DownBtn.Parent = FlyControlsFrame
+Instance.new("UICorner", DownBtn).CornerRadius = UDim.new(1, 0)
 
-CreateToggle("ESP (Box, Health, Distance)", 15, function(state)
-    getgenv().EMBSettings.ESPEnabled = state
-end)
+----------------------------------------------------------------
+-- 4. HỆ THỐNG FLY MOBILE (DÙNG THUMBSTICK & MOVER)
+----------------------------------------------------------------
+local FlyController = { bg = nil, bv = nil }
 
-CreateToggle("Aimbot (Hold Key)", 70, function(state)
-    getgenv().EMBSettings.AimbotEnabled = state
-end)
-
--- Nút chuyển đổi chế độ Aimbot Thường (Normal) và Khóa Cứng (Hard Lock)
-local ModeBtn = Instance.new("TextButton")
-ModeBtn.Size = UDim2.new(0.9, 0, 0, 45)
-ModeBtn.Position = UDim2.new(0.05, 0, 0, 125)
-ModeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
-ModeBtn.Text = "  Mode: [ Normal Aimbot ]"
-ModeBtn.TextColor3 = Color3.fromRGB(0, 170, 255)
-ModeBtn.TextSize = 14
-ModeBtn.Font = Enum.Font.SourceSansSemibold
-ModeBtn.TextXAlignment = Enum.TextXAlignment.Left
-ModeBtn.Parent = Container
-
-local ModeCorner = Instance.new("UICorner")
-ModeCorner.CornerRadius = UDim.new(0, 6)
-ModeCorner.Parent = ModeBtn
-
-ModeBtn.MouseButton1Click:Connect(function()
-    getgenv().EMBSettings.HardLockMode = not getgenv().EMBSettings.HardLockMode
-    if getgenv().EMBSettings.HardLockMode then
-        ModeBtn.Text = "  Mode: [ Hard Lock Aimbot ]"
-        ModeBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
-    else
-        ModeBtn.Text = "  Mode: [ Normal Aimbot ]"
-        ModeBtn.TextColor3 = Color3.fromRGB(0, 170, 255)
-    end
-end)
-
---------------------------------------------------------------------------------
--- 2. HỆ THỐNG ESP DYNAMIC
---------------------------------------------------------------------------------
-local espCache = {}
-
-local function removeESP(player)
-    if espCache[player] then
-        if espCache[player].Box then espCache[player].Box:Remove() end
-        if espCache[player].Info then espCache[player].Info:Remove() end
-        espCache[player] = nil
-    end
-end
-
-local function createESP(player)
-    if player == LocalPlayer then return end
-    removeESP(player)
+local function StartFlying()
+    local character = LocalPlayer.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     
-    local box = Drawing.new("Square")
-    box.Visible = false
-    box.Color = getgenv().EMBSettings.BoxColor
-    box.Thickness = 1.5
-    box.Filled = false
+    local rootPart = character.HumanoidRootPart
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    
+    FlyController.bg = Instance.new("BodyGyro")
+    FlyController.bg.P = 9e4
+    FlyController.bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+    FlyController.bg.cframe = rootPart.CFrame
+    FlyController.bg.Parent = rootPart
 
-    local infoText = Drawing.new("Text")
-    infoText.Visible = false
-    infoText.Color = getgenv().EMBSettings.TextColor
-    infoText.Size = 13
-    infoText.Center = true
-    infoText.Outline = true
+    FlyController.bv = Instance.new("BodyVelocity")
+    FlyController.bv.velocity = Vector3.new(0, 0, 0)
+    FlyController.bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+    FlyController.bv.Parent = rootPart
 
-    espCache[player] = {Box = box, Info = infoText}
+    if humanoid then humanoid.PlatformStand = true end
+    FlyControlsFrame.Visible = true
 
-    player.CharacterRemoving:Connect(function()
-        if espCache[player] then
-            espCache[player].Box.Visible = false
-            espCache[player].Info.Visible = false
-        end
-    end)
-end
-
-for _, p in ipairs(Players:GetPlayers()) do createESP(p) end
-Players.PlayerAdded:Connect(createESP)
-Players.PlayerRemoving:Connect(removeESP)
-
-RunService.RenderStepped:Connect(function()
-    for player, elements in pairs(espCache) do
-        local character = player.Character
-        local rootPart = character and character:FindFirstChild("HumanoidRootPart")
-        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-        
-        if getgenv().EMBSettings.ESPEnabled and character and rootPart and humanoid and humanoid.Health > 0 then
-            local vector, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
+    task.spawn(function()
+        while FlyEnabled and character and character.Parent do
+            local hum = character:FindFirstChildOfClass("Humanoid")
+            local moveVector = hum and hum.MoveVector or Vector3.new(0, 0, 0) -- Nhận đầu vào từ Cần gạt Mobile
             
-            if onScreen then
-                local head = character:FindFirstChild("Head")
-                local topPosition = head and Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0)) or vector
-                local bottomPosition = Camera:WorldToViewportPoint(rootPart.Position - Vector3.new(0, 3, 0))
-                
-                local boxHeight = math.abs(topPosition.Y - bottomPosition.Y)
-                local boxWidth = boxHeight / 2
-                
-                elements.Box.Size = Vector2.new(boxWidth, boxHeight)
-                elements.Box.Position = Vector2.new(vector.X - boxWidth / 2, topPosition.Y)
-                elements.Box.Visible = true
-                
-                local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                local distance = myRoot and math.floor((rootPart.Position - myRoot.Position).Magnitude) or 0
-                local health = math.floor(humanoid.Health)
-                local maxHealth = math.floor(humanoid.MaxHealth)
-                
-                elements.Info.Text = string.format("%s [%d/%dHP] (%dm)", player.Name, health, maxHealth, math.floor(distance / 3.5))
-                elements.Info.Position = Vector2.new(vector.X, topPosition.Y - 18)
-                elements.Info.Visible = true
-            else
-                elements.Box.Visible = false
-                elements.Info.Visible = false
+            local cameraCFrame = Camera.CFrame
+            local flyDir = (cameraCFrame.RightVector * moveVector.X) + (cameraCFrame.LookVector * -moveVector.Z)
+
+            if FlyUp then
+                flyDir = flyDir + Vector3.new(0, 1, 0)
+            elseif FlyDown then
+                flyDir = flyDir - Vector3.new(0, 1, 0)
             end
-        else
-            if elements.Box then elements.Box.Visible = false end
-            if elements.Info then elements.Info.Visible = false end
+
+            if FlyController.bv and FlyController.bg then
+                FlyController.bv.velocity = flyDir * FlySpeed
+                FlyController.bg.cframe = cameraCFrame
+            end
+            task.wait()
+        end
+    end)
+end
+
+local function StopFlying()
+    if FlyController.bg then FlyController.bg:Destroy() end
+    if FlyController.bv then FlyController.bv:Destroy() end
+    FlyControlsFrame.Visible = false
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChildOfClass("Humanoid") then
+        char:FindFirstChildOfClass("Humanoid").PlatformStand = false
+    end
+end
+
+----------------------------------------------------------------
+-- 5. XỬ LÝ SỰ KIỆN NÚT CẢM ỨNG
+----------------------------------------------------------------
+OpenButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+UpBtn.MouseButton1Down:Connect(function() FlyUp = true end)
+UpBtn.MouseButton1Up:Connect(function() FlyUp = false end)
+DownBtn.MouseButton1Down:Connect(function() FlyDown = true end)
+DownBtn.MouseButton1Up:Connect(function() FlyDown = false end)
+
+SpeedMinus.MouseButton1Click:Connect(function()
+    FlySpeed = math.max(10, FlySpeed - 10)
+    SpeedDisplay.Text = tostring(FlySpeed)
+end)
+
+SpeedPlus.MouseButton1Click:Connect(function()
+    FlySpeed = FlySpeed + 10
+    SpeedDisplay.Text = tostring(FlySpeed)
+end)
+
+FlyButton.MouseButton1Click:Connect(function()
+    FlyEnabled = not FlyEnabled
+    FlyButton.Text = FlyEnabled and "Fly: ON" or "Fly: OFF"
+    FlyButton.BackgroundColor3 = FlyEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    if FlyEnabled then StartFlying() else StopFlying() end
+end)
+
+AimbotButton.MouseButton1Click:Connect(function()
+    AimbotEnabled = not AimbotEnabled
+    AimbotButton.Text = AimbotEnabled and "Aimbot: ON" or "Aimbot: OFF"
+    AimbotButton.BackgroundColor3 = AimbotEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+end)
+
+ESPButton.MouseButton1Click:Connect(function()
+    ESPEnabled = not ESPEnabled
+    ESPButton.Text = ESPEnabled and "ESP Highlight: ON" or "ESP Highlight: OFF"
+    ESPButton.BackgroundColor3 = ESPEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    
+    if not ESPEnabled then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player.Character and player.Character:FindFirstChild("MEB_Highlight") then
+                player.Character.MEB_Highlight.Enabled = false
+            end
         end
     end
 end)
 
---------------------------------------------------------------------------------
--- 3. HỆ THỐNG AIMBOT (FIXED CAMERA & DUAL MODE)
---------------------------------------------------------------------------------
-local function getClosestPlayerByDistance()
-    local closestPlayer = nil
-    local shortestDistance = math.huge
-    local myCharacter = LocalPlayer.Character
-    
-    if not myCharacter or not myCharacter:FindFirstChild("HumanoidRootPart") then return nil end
-    local myRootPos = myCharacter.HumanoidRootPart.Position
+----------------------------------------------------------------
+-- 6. VÒNG LẶP RENDERSTEPPED (AUTO-LOCK AIMBOT & ESP)
+----------------------------------------------------------------
+local function GetClosestPlayer()
+    local closest, shortestDist = nil, math.huge
+    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character then
-            local character = player.Character
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            local targetPart = character:FindFirstChild(getgenv().EMBSettings.AimbotPart)
-            
-            if humanoid and humanoid.Health > 0 and targetPart then
-                local distance = (targetPart.Position - myRootPos).Magnitude
-                if distance < shortestDistance then
-                    shortestDistance = distance
-                    closestPlayer = player
+            local root = player.Character:FindFirstChild(TargetPart) or player.Character:FindFirstChild("HumanoidRootPart")
+            local hum = player.Character:FindFirstChildOfClass("Humanoid")
+            if root and hum and hum.Health > 0 then
+                local screenPos, onScreen = Camera:WorldToViewportPoint(root.Position)
+                if onScreen then
+                    local dist = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
+                    if dist < shortestDist then
+                        shortestDist = dist
+                        closest = player
+                    end
                 end
             end
         end
     end
-    return closestPlayer
+    return closest
 end
 
 RunService.RenderStepped:Connect(function()
-    if getgenv().EMBSettings.AimbotEnabled then
-        local isAiming = UserInputService:IsMouseButtonPressed(getgenv().EMBSettings.AimKey) or UserInputService.TouchEnabled
-        
-        if isAiming then
-            local target = getClosestPlayerByDistance()
-            if target and target.Character then
-                local targetPart = target.Character:FindFirstChild(getgenv().EMBSettings.AimbotPart)
-                local humanoid = target.Character:FindFirstChildOfClass("Humanoid")
-                local myCharacter = LocalPlayer.Character
-                local myRoot = myCharacter and myCharacter:FindFirstChild("HumanoidRootPart")
-                
-                if targetPart and humanoid and humanoid.Health > 0 and myRoot then
-                    if getgenv().EMBSettings.HardLockMode then
-                        -- HARD LOCK: Khóa cứng camera không bị lỗi free cam và tự quay mặt nhân vật
-                        local camPos = Camera.CFrame.Position
-                        Camera.CFrame = CFrame.new(camPos, targetPart.Position)
-                        
-                        myRoot.CFrame = CFrame.new(myRoot.Position, Vector3.new(targetPart.Position.X, myRoot.Position.Y, targetPart.Position.Z))
-                    else
-                        -- NORMAL AIMBOT: Aim mượt mà, giữ nguyên khoảng cách camera người chơi
-                        local currentCF = Camera.CFrame
-                        local targetCF = CFrame.new(Camera.CFrame.Position, targetPart.Position)
-                        Camera.CFrame = currentCF:Lerp(targetCF, getgenv().EMBSettings.Smoothness)
-                        
-                        -- Xoay nhẹ cơ thể hướng về địch
-                        local lookAtPos = Vector3.new(targetPart.Position.X, myRoot.Position.Y, targetPart.Position.Z)
-                        myRoot.CFrame = myRoot.CFrame:Lerp(CFrame.new(myRoot.Position, lookAtPos), getgenv().EMBSettings.Smoothness)
-                    end
+    -- Mobile Aimbot: Tự động nhắm vào kẻ địch gần tâm màn hình khi Aimbot bật
+    if AimbotEnabled then
+        local target = GetClosestPlayer()
+        if target and target.Character then
+            local targetPartObj = target.Character:FindFirstChild(TargetPart) or target.Character:FindFirstChild("HumanoidRootPart")
+            if targetPartObj then
+                local pos = targetPartObj.Position + Vector3.new(0, 0.5, 0)
+                Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, pos), 0.25)
+            end
+        end
+    end
+
+    -- ESP Highlight
+    if ESPEnabled then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local hl = player.Character:FindFirstChild("MEB_Highlight")
+                if not hl then
+                    hl = Instance.new("Highlight", player.Character)
+                    hl.Name = "MEB_Highlight"
+                    hl.FillColor = Color3.fromRGB(0, 255, 100)
+                    hl.FillTransparency = 0.5
                 end
+                hl.Enabled = true
             end
         end
     end
