@@ -15,9 +15,7 @@ local lastDeathCFrame = nil
 
 local AimbotEnabled = false
 local AimMode = "Normal" -- "Normal" hoặc "Hard"
-local isAiming = false -- Biến cờ theo dõi trạng thái chuột phải
-local AimKey = Enum.UserInputType.MouseButton2
-local FOVRadius = 150
+local FOVRadius = 250 -- Tăng phạm vi quét Aimbot
 
 local ESPEnabled = false
 
@@ -40,24 +38,23 @@ MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.ClipsDescendants = true -- Quan trọng để thu nhỏ ẩn các nút
+MainFrame.ClipsDescendants = true
 MainFrame.Parent = ScreenGui
 
 local UICornerMain = Instance.new("UICorner") UICornerMain.CornerRadius = UDim.new(0, 10) UICornerMain.Parent = MainFrame
 local UIStroke = Instance.new("UIStroke") UIStroke.Thickness = 2 UIStroke.Color = Color3.fromRGB(255, 80, 80) UIStroke.Parent = MainFrame
 
 local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, -35, 0, 35) -- Chừa chỗ cho nút Minimize
+TitleLabel.Size = UDim2.new(1, -35, 0, 35)
 TitleLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-TitleLabel.Text = "  KING TOWER - V3"
+TitleLabel.Text = "  KING TOWER - V4 (AUTO AIM)"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.TextSize = 12
+TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = MainFrame
 local TitleCorner = Instance.new("UICorner") TitleCorner.CornerRadius = UDim.new(0, 10) TitleCorner.Parent = TitleLabel
 
--- Nút Thu nhỏ / Phóng to (Minimize)
 local MinimizeBtn = Instance.new("TextButton")
 MinimizeBtn.Size = UDim2.new(0, 35, 0, 35)
 MinimizeBtn.Position = UDim2.new(1, -35, 0, 0)
@@ -83,10 +80,10 @@ local function createButton(text, yPos, color)
     return btn
 end
 
-local BtnRespawn = createButton("⚙️ Hồi sinh tại chỗ chết: [ OFF ]", 45, Color3.fromRGB(40, 40, 50))
-local BtnAimbot  = createButton("🎯 Aimbot: [ OFF ]", 82, Color3.fromRGB(200, 50, 50))
+local BtnRespawn = createButton("⚙️ TP Lại Chỗ Chết: [ OFF ]", 45, Color3.fromRGB(40, 40, 50))
+local BtnAimbot  = createButton("🎯 Auto Aimbot: [ OFF ]", 82, Color3.fromRGB(200, 50, 50))
 local BtnMode    = createButton("🔄 Aim Mode: [ Normal ]", 119, Color3.fromRGB(40, 40, 50))
-local BtnESP     = createButton("👁️ ESP Text (Máu & Khoảng cách): [ OFF ]", 156, Color3.fromRGB(200, 50, 50))
+local BtnESP     = createButton("👁️ ESP (Máu & Khoảng cách): [ OFF ]", 156, Color3.fromRGB(200, 50, 50))
 local BtnSuicide = createButton("💀 Tự sát ngay lập tức", 193, Color3.fromRGB(120, 30, 30))
 
 local InfoLabel = Instance.new("TextLabel")
@@ -101,38 +98,33 @@ InfoLabel.TextWrapped = true
 InfoLabel.Parent = MainFrame
 
 ----------------------------------------------------------------
--- 2. HỆ THỐNG ÉP HỒI SINH TẠI CHỖ CHẾT
+-- 2. HỆ THỐNG TELEPORT LẠI CHỖ CHẾT
 ----------------------------------------------------------------
 local function setupCharacter(char)
-    -- Xử lý Ép Hồi Sinh (Bypass Game Spawn System)
+    local hrp = char:WaitForChild("HumanoidRootPart", 5)
+    local humanoid = char:WaitForChild("Humanoid", 5)
+
+    if not hrp or not humanoid then return end
+
+    -- Dịch chuyển sau khi hồi sinh
     if autoRespawnActive and lastDeathCFrame then
         task.spawn(function()
-            local hrp = char:WaitForChild("HumanoidRootPart", 5)
-            if hrp then
-                -- Lặp lại việc đặt tọa độ trong 1 giây đầu để chống game đẩy về bãi hồi sinh
-                for i = 1, 10 do
-                    hrp.CFrame = lastDeathCFrame
-                    hrp.AssemblyLinearVelocity = Vector3.zero
-                    task.wait(0.1)
-                end
-                InfoLabel.Text = "Trạng thái: Đã hồi sinh tại chỗ chết thành công!"
+            -- Đợi 1.5 giây để game load xong (Rất quan trọng)
+            task.wait(1.5)
+            if char:IsDescendantOf(workspace) and humanoid.Health > 0 then
+                -- Dùng PivotTo để dịch chuyển toàn bộ nhân vật an toàn
+                char:PivotTo(lastDeathCFrame)
+                InfoLabel.Text = "Trạng thái: Đã TP lại chỗ chết!"
+                lastDeathCFrame = nil -- Tránh TP liên tục
             end
         end)
     end
 
-    -- Theo dõi tọa độ khi còn sống
-    task.spawn(function()
-        local humanoid = char:WaitForChild("Humanoid", 5)
-        local hrp = char:WaitForChild("HumanoidRootPart", 5)
-        if humanoid and hrp then
-            local trackConn
-            trackConn = RunService.Heartbeat:Connect(function()
-                if humanoid.Health > 0 and hrp and hrp.Parent then
-                    lastDeathCFrame = hrp.CFrame
-                else
-                    if trackConn then trackConn:Disconnect() end
-                end
-            end)
+    -- Lưu tọa độ khi chết
+    humanoid.Died:Connect(function()
+        if hrp and hrp.Parent then
+            lastDeathCFrame = hrp.CFrame
+            InfoLabel.Text = "Trạng thái: Đã lưu vị trí chết!"
         end
     end)
 end
@@ -141,24 +133,12 @@ LocalPlayer.CharacterAdded:Connect(setupCharacter)
 if LocalPlayer.Character then setupCharacter(LocalPlayer.Character) end
 
 ----------------------------------------------------------------
--- 3. HỆ THỐNG AIMBOT & BẮT SỰ KIỆN CHUỘT MỚI
+-- 3. HỆ THỐNG AUTO AIMBOT (KHÔNG CẦN BẤM CHUỘT)
 ----------------------------------------------------------------
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.UserInputType == AimKey then
-        isAiming = true
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input, gameProcessed)
-    if input.UserInputType == AimKey then
-        isAiming = false
-    end
-end)
-
 local function GetClosestTarget()
     local closest, shortestDist = nil, math.huge
-    local mousePos = UserInputService:GetMouseLocation()
+    local screenSize = Camera.ViewportSize
+    local screenCenter = Vector2.new(screenSize.X / 2, screenSize.Y / 2)
 
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character then
@@ -170,18 +150,10 @@ local function GetClosestTarget()
                 if player.Team ~= LocalPlayer.Team or not player.Team then
                     local screenPos, onScreen = Camera:WorldToViewportPoint(head.Position)
                     if onScreen then
-                        local dist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
-                        
-                        if AimMode == "Normal" then
-                            if dist <= FOVRadius and dist < shortestDist then
-                                shortestDist = dist
-                                closest = head
-                            end
-                        elseif AimMode == "Hard" then
-                            if dist < shortestDist then
-                                shortestDist = dist
-                                closest = head
-                            end
+                        local dist = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
+                        if dist <= FOVRadius and dist < shortestDist then
+                            shortestDist = dist
+                            closest = head
                         end
                     end
                 end
@@ -202,7 +174,6 @@ local function UpdateESP()
             local humanoid = char:FindFirstChildOfClass("Humanoid")
             
             if head and humanoid and humanoid.Health > 0 then
-                -- 1. Xử lý Highlight (Viền sáng)
                 local highlight = char:FindFirstChild("MEB_Highlight")
                 if not highlight then
                     highlight = Instance.new("Highlight")
@@ -215,7 +186,6 @@ local function UpdateESP()
                 end
                 highlight.Enabled = ESPEnabled
 
-                -- 2. Xử lý Text (Máu & Khoảng cách)
                 local bGui = head:FindFirstChild("MEB_ESPText")
                 if not bGui then
                     bGui = Instance.new("BillboardGui")
@@ -229,36 +199,29 @@ local function UpdateESP()
                     textLabel.Name = "Info"
                     textLabel.Size = UDim2.new(1, 0, 1, 0)
                     textLabel.BackgroundTransparency = 1
-                    textLabel.TextStrokeTransparency = 0.2 -- Viền chữ đen để dễ đọc
+                    textLabel.TextStrokeTransparency = 0.2
                     textLabel.Font = Enum.Font.GothamBold
                     textLabel.TextSize = 11
                     textLabel.Parent = bGui
                 end
-
                 bGui.Enabled = ESPEnabled
 
-                -- Cập nhật số liệu liên tục nếu ESP đang bật
                 if ESPEnabled then
                     local myHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
                     local distance = 0
-                    if myHrp then
-                        distance = math.floor((myHrp.Position - head.Position).Magnitude)
-                    end
+                    if myHrp then distance = math.floor((myHrp.Position - head.Position).Magnitude) end
                     
                     local hp = math.floor(humanoid.Health)
                     local maxHp = math.floor(humanoid.MaxHealth)
                     
                     bGui.Info.Text = string.format("%s\nHP: %d/%d | [%dm]", player.Name, hp, maxHp, distance)
-                    
-                    -- Đổi màu chữ theo lượng máu
                     if (hp / maxHp) > 0.5 then
-                        bGui.Info.TextColor3 = Color3.fromRGB(0, 255, 100) -- Xanh
+                        bGui.Info.TextColor3 = Color3.fromRGB(0, 255, 100)
                     else
-                        bGui.Info.TextColor3 = Color3.fromRGB(255, 80, 80) -- Đỏ
+                        bGui.Info.TextColor3 = Color3.fromRGB(255, 80, 80)
                     end
                 end
             else
-                -- Tắt ESP nếu người chơi chết
                 local highlight = char:FindFirstChild("MEB_Highlight")
                 if highlight then highlight.Enabled = false end
                 local bGui = char:FindFirstChild("Head") and char.Head:FindFirstChild("MEB_ESPText")
@@ -275,10 +238,10 @@ local isMinimized = false
 MinimizeBtn.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
     if isMinimized then
-        MainFrame.Size = UDim2.new(0, 260, 0, 35) -- Thu nhỏ
+        MainFrame.Size = UDim2.new(0, 260, 0, 35)
         MinimizeBtn.Text = "+"
     else
-        MainFrame.Size = UDim2.new(0, 260, 0, 300) -- Phóng to
+        MainFrame.Size = UDim2.new(0, 260, 0, 300)
         MinimizeBtn.Text = "-"
     end
 end)
@@ -286,10 +249,10 @@ end)
 BtnRespawn.MouseButton1Click:Connect(function()
     autoRespawnActive = not autoRespawnActive
     if autoRespawnActive then
-        BtnRespawn.Text = "⚙️ Hồi sinh tại chỗ chết: [ ON ]"
+        BtnRespawn.Text = "⚙️ TP Lại Chỗ Chết: [ ON ]"
         BtnRespawn.BackgroundColor3 = Color3.fromRGB(30, 100, 50)
     else
-        BtnRespawn.Text = "⚙️ Hồi sinh tại chỗ chết: [ OFF ]"
+        BtnRespawn.Text = "⚙️ TP Lại Chỗ Chết: [ OFF ]"
         BtnRespawn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
     end
 end)
@@ -297,10 +260,10 @@ end)
 BtnAimbot.MouseButton1Click:Connect(function()
     AimbotEnabled = not AimbotEnabled
     if AimbotEnabled then
-        BtnAimbot.Text = "🎯 Aimbot: [ ON ]"
+        BtnAimbot.Text = "🎯 Auto Aimbot: [ ON ]"
         BtnAimbot.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
     else
-        BtnAimbot.Text = "🎯 Aimbot: [ OFF ]"
+        BtnAimbot.Text = "🎯 Auto Aimbot: [ OFF ]"
         BtnAimbot.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
     end
 end)
@@ -320,17 +283,16 @@ end)
 BtnESP.MouseButton1Click:Connect(function()
     ESPEnabled = not ESPEnabled
     if ESPEnabled then
-        BtnESP.Text = "👁️ ESP Text (Máu & Khoảng cách): [ ON ]"
+        BtnESP.Text = "👁️ ESP (Máu & Khoảng cách): [ ON ]"
         BtnESP.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
     else
-        BtnESP.Text = "👁️ ESP Text (Máu & Khoảng cách): [ OFF ]"
+        BtnESP.Text = "👁️ ESP (Máu & Khoảng cách): [ OFF ]"
         BtnESP.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-        -- Tắt hết ESP ngay lập tức
         for _, p in ipairs(Players:GetPlayers()) do
             if p.Character then
                 local hl = p.Character:FindFirstChild("MEB_Highlight")
                 if hl then hl.Enabled = false end
-                local h = p.Character:FindFirstChild("Head")
+                local h = p.Character:FindFirstChild("Head") or p.Character:FindFirstChild("HumanoidRootPart")
                 if h and h:FindFirstChild("MEB_ESPText") then h.MEB_ESPText.Enabled = false end
             end
         end
@@ -354,20 +316,19 @@ end)
 -- 6. VÒNG LẶP CHẠY LIÊN TỤC (RENDERSTEPPED)
 ----------------------------------------------------------------
 RunService.RenderStepped:Connect(function()
-    -- Xử lý Aimbot với cờ chuột `isAiming` an toàn
-    if AimbotEnabled and isAiming then
+    -- Auto Aimbot: Tự động khóa mục tiêu gần tâm màn hình nhất khi bật
+    if AimbotEnabled then
         local targetHead = GetClosestTarget()
         if targetHead then
             if AimMode == "Hard" then
                 Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
             elseif AimMode == "Normal" then
                 local targetCF = CFrame.new(Camera.CFrame.Position, targetHead.Position)
-                Camera.CFrame = Camera.CFrame:Lerp(targetCF, 0.2)
+                Camera.CFrame = Camera.CFrame:Lerp(targetCF, 0.25)
             end
         end
     end
 
-    -- Xử lý cập nhật thông số ESP
     if ESPEnabled then
         UpdateESP()
     end
