@@ -1,339 +1,189 @@
--- Kiểm tra game đã load xong chưa
-if not game:IsLoaded() then
-    game.Loaded:Wait()
-end
+--[[
+    King Tower - Auto Respawn At Death Spot (Anti-Cheat Bypass)
+    Tự động ghi nhận vị trí chết và hồi sinh ngay tại chỗ đó.
+]]
 
--- Các dịch vụ cần thiết
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local Camera = workspace.CurrentCamera
+local CoreGui = game:GetService("CoreGui")
+
 local LocalPlayer = Players.LocalPlayer
 
--- Trạng thái tính năng
-local AimbotEnabled = false
-local ESPEnabled = false
-local FlyEnabled = false
+pcall(function()
+    if CoreGui:FindFirstChild("DeathRespawnUI") then
+        CoreGui.DeathRespawnUI:Destroy()
+    end
+end)
 
-local TargetPart = "Head"
-local FlySpeed = 50
-local FlyUp = false
-local FlyDown = false
-
-----------------------------------------------------------------
--- 1. TẠO GIAO DIỆN NỔI CHO MOBILE (FLOATING TOGGLE BUTTON)
-----------------------------------------------------------------
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "MEB_MobileMenu"
+ScreenGui.Name = "DeathRespawnUI"
 ScreenGui.ResetOnSpawn = false
-pcall(function() ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end)
-if not ScreenGui.Parent then ScreenGui.Parent = game:GetService("CoreGui") end
+pcall(function() ScreenGui.Parent = CoreGui end)
+if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
--- Nút mở Menu nổi trên màn hình Mobile
-local OpenButton = Instance.new("TextButton")
-OpenButton.Name = "OpenButton"
-OpenButton.Size = UDim2.new(0, 50, 0, 50)
-OpenButton.Position = UDim2.new(0.02, 0, 0.15, 0)
-OpenButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-OpenButton.Text = "MENU"
-OpenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-OpenButton.TextSize = 12
-OpenButton.Font = Enum.Font.SourceSansBold
-OpenButton.Active = true
-OpenButton.Draggable = true -- Có thể kéo nút đi vị trí khác trên màn hình
-OpenButton.Parent = ScreenGui
-Instance.new("UICorner", OpenButton).CornerRadius = UDim.new(1, 0) -- Nút hình tròn
-
-----------------------------------------------------------------
--- 2. KHUNG MENU CHÍNH (MOBILE FRIENDLY)
-----------------------------------------------------------------
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 230, 0, 250)
-MainFrame.Position = UDim2.new(0.5, -115, 0.3, -125) -- Căn giữa màn hình
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.Size = UDim2.new(0, 300, 0, 240)
+MainFrame.Position = UDim2.new(0, 50, 0, 150)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.Visible = true
 MainFrame.Parent = ScreenGui
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 
--- Tiêu đề
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 35)
-Title.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-Title.Text = "  MEB MOBILE MENU"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 14
-Title.Font = Enum.Font.SourceSansBold
-Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.Parent = MainFrame
-Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 10)
+local UICornerMain = Instance.new("UICorner") UICornerMain.CornerRadius = UDim.new(0, 12) UICornerMain.Parent = MainFrame
+local UIStroke = Instance.new("UIStroke") UIStroke.Thickness = 2 UIStroke.Color = Color3.fromRGB(255, 80, 80) UIStroke.Parent = MainFrame
 
--- Nút Aimbot
-local AimbotButton = Instance.new("TextButton")
-AimbotButton.Size = UDim2.new(0, 200, 0, 35)
-AimbotButton.Position = UDim2.new(0, 15, 0, 45)
-AimbotButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-AimbotButton.Text = "Aimbot: OFF"
-AimbotButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-AimbotButton.TextSize, AimbotButton.Font = 14, Enum.Font.SourceSansBold
-AimbotButton.Parent = MainFrame
-Instance.new("UICorner", AimbotButton).CornerRadius = UDim.new(0, 6)
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, -20, 0, 35)
+TitleLabel.Position = UDim2.new(0, 10, 0, 5)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "💀 Auto Respawn At Death Spot"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 11
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = MainFrame
 
--- Nút ESP
-local ESPButton = Instance.new("TextButton")
-ESPButton.Size = UDim2.new(0, 200, 0, 35)
-ESPButton.Position = UDim2.new(0, 15, 0, 90)
-ESPButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-ESPButton.Text = "ESP Highlight: OFF"
-ESPButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ESPButton.TextSize, ESPButton.Font = 14, Enum.Font.SourceSansBold
-ESPButton.Parent = MainFrame
-Instance.new("UICorner", ESPButton).CornerRadius = UDim.new(0, 6)
+-- Biến cấu hình
+local lastDeathCFrame = nil
+local autoRespawnActive = false
+local autoEscapeActive = false
 
--- Nút Fly
-local FlyButton = Instance.new("TextButton")
-FlyButton.Size = UDim2.new(0, 90, 0, 35)
-FlyButton.Position = UDim2.new(0, 15, 0, 135)
-FlyButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-FlyButton.Text = "Fly: OFF"
-FlyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-FlyButton.TextSize, FlyButton.Font = 14, Enum.Font.SourceSansBold
-FlyButton.Parent = MainFrame
-Instance.new("UICorner", FlyButton).CornerRadius = UDim.new(0, 6)
+-- Nút 1: Bật/Tắt Auto Respawn tại chỗ chết
+local ToggleRespawnBtn = Instance.new("TextButton")
+ToggleRespawnBtn.Size = UDim2.new(1, -20, 0, 45)
+ToggleRespawnBtn.Position = UDim2.new(0, 10, 0, 45)
+ToggleRespawnBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+ToggleRespawnBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
+ToggleRespawnBtn.TextSize = 11
+ToggleRespawnBtn.Font = Enum.Font.GothamBold
+ToggleRespawnBtn.Text = "⚙️ 1. Hồi sinh tại chỗ chết: [ OFF ]"
+ToggleRespawnBtn.Parent = MainFrame
+local UIC_1 = Instance.new("UICorner") UIC_1.CornerRadius = UDim.new(0, 6) UIC_1.Parent = ToggleRespawnBtn
 
--- Tăng/Giảm tốc độ Fly
-local SpeedMinus = Instance.new("TextButton")
-SpeedMinus.Size = UDim2.new(0, 30, 0, 35)
-SpeedMinus.Position = UDim2.new(0, 110, 0, 135)
-SpeedMinus.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-SpeedMinus.Text = "-"
-SpeedMinus.TextColor3 = Color3.fromRGB(255, 255, 255)
-SpeedMinus.TextSize, SpeedMinus.Font = 18, Enum.Font.SourceSansBold
-SpeedMinus.Parent = MainFrame
-Instance.new("UICorner", SpeedMinus).CornerRadius = UDim.new(0, 6)
+-- Nút 2: Auto-Escape khi máu thấp (<25%)
+local ToggleEscapeBtn = Instance.new("TextButton")
+ToggleEscapeBtn.Size = UDim2.new(1, -20, 0, 45)
+ToggleEscapeBtn.Position = UDim2.new(0, 10, 0, 100)
+ToggleEscapeBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+ToggleEscapeBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
+ToggleEscapeBtn.TextSize = 11
+ToggleEscapeBtn.Font = Enum.Font.GothamBold
+ToggleEscapeBtn.Text = "⚡ 2. Auto-Escape khi sắp chết (<25% HP): [ OFF ]"
+ToggleEscapeBtn.Parent = MainFrame
+local UIC_2 = Instance.new("UICorner") UIC_2.CornerRadius = UDim.new(0, 6) UIC_2.Parent = ToggleEscapeBtn
 
-local SpeedDisplay = Instance.new("TextLabel")
-SpeedDisplay.Size = UDim2.new(0, 35, 0, 35)
-SpeedDisplay.Position = UDim2.new(0, 142, 0, 135)
-SpeedDisplay.BackgroundTransparency = 1
-SpeedDisplay.Text = tostring(FlySpeed)
-SpeedDisplay.TextColor3 = Color3.fromRGB(255, 255, 255)
-SpeedDisplay.TextSize, SpeedDisplay.Font = 14, Enum.Font.SourceSansBold
-SpeedDisplay.Parent = MainFrame
+-- Nút 3: Tự sát thủ công
+local SuicideBtn = Instance.new("TextButton")
+SuicideBtn.Size = UDim2.new(1, -20, 0, 40)
+SuicideBtn.Position = UDim2.new(0, 10, 0, 155)
+SuicideBtn.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+SuicideBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SuicideBtn.TextSize = 11
+SuicideBtn.Font = Enum.Font.GothamBold
+SuicideBtn.Text = "💀 3. Tự sát ngay lập tức"
+SuicideBtn.Parent = MainFrame
+local UIC_3 = Instance.new("UICorner") UIC_3.CornerRadius = UDim.new(0, 6) UIC_3.Parent = SuicideBtn
 
-local SpeedPlus = Instance.new("TextButton")
-SpeedPlus.Size = UDim2.new(0, 30, 0, 35)
-SpeedPlus.Position = UDim2.new(0, 180, 0, 135)
-SpeedPlus.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-SpeedPlus.Text = "+"
-SpeedPlus.TextColor3 = Color3.fromRGB(255, 255, 255)
-SpeedPlus.TextSize, SpeedPlus.Font = 18, Enum.Font.SourceSansBold
-SpeedPlus.Parent = MainFrame
-Instance.new("UICorner", SpeedPlus).CornerRadius = UDim.new(0, 6)
-
--- Nhãn hướng dẫn
+-- Label Trạng thái
 local InfoLabel = Instance.new("TextLabel")
-InfoLabel.Size = UDim2.new(1, 0, 0, 40)
-InfoLabel.Position = UDim2.new(0, 0, 0, 195)
+InfoLabel.Size = UDim2.new(1, -20, 0, 20)
+InfoLabel.Position = UDim2.new(0, 10, 0, 205)
 InfoLabel.BackgroundTransparency = 1
-InfoLabel.Text = "Chạm nút [MENU] để Ẩn/Hiện\nFly dùng cần gạt + nút ▲ ▼"
-InfoLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-InfoLabel.TextSize = 11
-InfoLabel.Font = Enum.Font.Italic
+InfoLabel.Text = "Trạng thái: Sẵn sàng hoạt động."
+InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+InfoLabel.TextSize = 10
+InfoLabel.Font = Enum.Font.Gotham
 InfoLabel.Parent = MainFrame
 
-----------------------------------------------------------------
--- 3. NÚT NÂNG/HẠ ĐỘ CAO KHI BAY TRÊN MOBILE (UP/DOWN BUTTONS)
-----------------------------------------------------------------
-local FlyControlsFrame = Instance.new("Frame")
-FlyControlsFrame.Size = UDim2.new(0, 60, 0, 130)
-FlyControlsFrame.Position = UDim2.new(0.85, 0, 0.5, -65)
-FlyControlsFrame.BackgroundTransparency = 1
-FlyControlsFrame.Visible = false
-FlyControlsFrame.Parent = ScreenGui
+-- =================================================================
+-- XỬ LÝ LOGIC CHÍNH
+-- =================================================================
+local function setupCharacter(char)
+    local humanoid = char:WaitForChild("Humanoid", 5)
+    local hrp = char:WaitForChild("HumanoidRootPart", 5)
 
-local UpBtn = Instance.new("TextButton")
-UpBtn.Size = UDim2.new(0, 55, 0, 55)
-UpBtn.Position = UDim2.new(0, 0, 0, 0)
-UpBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-UpBtn.Text = "▲"
-UpBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-UpBtn.TextSize = 20
-UpBtn.Parent = FlyControlsFrame
-Instance.new("UICorner", UpBtn).CornerRadius = UDim.new(1, 0)
-
-local DownBtn = Instance.new("TextButton")
-DownBtn.Size = UDim2.new(0, 55, 0, 55)
-DownBtn.Position = UDim2.new(0, 0, 0, 65)
-DownBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-DownBtn.Text = "▼"
-DownBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-DownBtn.TextSize = 20
-DownBtn.Parent = FlyControlsFrame
-Instance.new("UICorner", DownBtn).CornerRadius = UDim.new(1, 0)
-
-----------------------------------------------------------------
--- 4. HỆ THỐNG FLY MOBILE (DÙNG THUMBSTICK & MOVER)
-----------------------------------------------------------------
-local FlyController = { bg = nil, bv = nil }
-
-local function StartFlying()
-    local character = LocalPlayer.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-    
-    local rootPart = character.HumanoidRootPart
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
-    
-    FlyController.bg = Instance.new("BodyGyro")
-    FlyController.bg.P = 9e4
-    FlyController.bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
-    FlyController.bg.cframe = rootPart.CFrame
-    FlyController.bg.Parent = rootPart
-
-    FlyController.bv = Instance.new("BodyVelocity")
-    FlyController.bv.velocity = Vector3.new(0, 0, 0)
-    FlyController.bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
-    FlyController.bv.Parent = rootPart
-
-    if humanoid then humanoid.PlatformStand = true end
-    FlyControlsFrame.Visible = true
-
-    task.spawn(function()
-        while FlyEnabled and character and character.Parent do
-            local hum = character:FindFirstChildOfClass("Humanoid")
-            local moveVector = hum and hum.MoveVector or Vector3.new(0, 0, 0) -- Nhận đầu vào từ Cần gạt Mobile
-            
-            local cameraCFrame = Camera.CFrame
-            local flyDir = (cameraCFrame.RightVector * moveVector.X) + (cameraCFrame.LookVector * -moveVector.Z)
-
-            if FlyUp then
-                flyDir = flyDir + Vector3.new(0, 1, 0)
-            elseif FlyDown then
-                flyDir = flyDir - Vector3.new(0, 1, 0)
+    -- 1. Nếu đã bật tính năng, thực hiện đè CFrame ngay khung hình đầu tiên khi hồi sinh
+    if autoRespawnActive and lastDeathCFrame and hrp then
+        local connection
+        local startTime = tick()
+        connection = RunService.Heartbeat:Connect(function()
+            if hrp and hrp.Parent then
+                hrp.CFrame = lastDeathCFrame
+                hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
             end
-
-            if FlyController.bv and FlyController.bg then
-                FlyController.bv.velocity = flyDir * FlySpeed
-                FlyController.bg.cframe = cameraCFrame
+            if tick() - startTime > 0.5 then
+                connection:Disconnect()
+                InfoLabel.Text = "Trạng thái: Đã hồi sinh tại chỗ chết thành công!"
             end
-            task.wait()
-        end
-    end)
+        end)
+    end
+
+    -- 2. Theo dõi nhân vật để ghi lại tọa độ ngay trước khi chết
+    if humanoid and hrp then
+        -- Liên tục cập nhật tọa độ an toàn khi nhân vật đang sống
+        local trackConn
+        trackConn = RunService.Heartbeat:Connect(function()
+            if humanoid.Health > 0 and hrp and hrp.Parent then
+                lastDeathCFrame = hrp.CFrame
+            else
+                if trackConn then trackConn:Disconnect() end
+            end
+        end)
+
+        -- Theo dõi máu thấp để Auto-Escape
+        humanoid.HealthChanged:Connect(function(health)
+            if autoEscapeActive and health > 0 and health < (humanoid.MaxHealth * 0.25) then
+                humanoid.Health = 0
+                InfoLabel.Text = "Trạng thái: Máu yếu! Đang tự sát để né giao tranh..."
+            end
+        end)
+
+        humanoid.Died:Connect(function()
+            if hrp and hrp.Parent then
+                lastDeathCFrame = hrp.CFrame
+                InfoLabel.Text = "Trạng thái: Đã lưu vị trí chết!"
+            end
+        end)
+    end
 end
 
-local function StopFlying()
-    if FlyController.bg then FlyController.bg:Destroy() end
-    if FlyController.bv then FlyController.bv:Destroy() end
-    FlyControlsFrame.Visible = false
+LocalPlayer.CharacterAdded:Connect(setupCharacter)
+if LocalPlayer.Character then
+    setupCharacter(LocalPlayer.Character)
+end
+
+-- UI Button Events
+ToggleRespawnBtn.MouseButton1Click:Connect(function()
+    autoRespawnActive = not autoRespawnActive
+    if autoRespawnActive then
+        ToggleRespawnBtn.Text = "⚙️ 1. Hồi sinh tại chỗ chết: [ ON ]"
+        ToggleRespawnBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+        InfoLabel.Text = "Trạng thái: Đã bật tự động hồi sinh tại chỗ chết."
+    else
+        ToggleRespawnBtn.Text = "⚙️ 1. Hồi sinh tại chỗ chết: [ OFF ]"
+        ToggleRespawnBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
+        InfoLabel.Text = "Trạng thái: Đã tắt."
+    end
+end)
+
+ToggleEscapeBtn.MouseButton1Click:Connect(function()
+    autoEscapeActive = not autoEscapeActive
+    if autoEscapeActive then
+        ToggleEscapeBtn.Text = "⚡ 2. Auto-Escape khi sắp chết (<25% HP): [ ON ]"
+        ToggleEscapeBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+        InfoLabel.Text = "Trạng thái: Sẽ tự động tự sát khi máu < 25%."
+    else
+        ToggleEscapeBtn.Text = "⚡ 2. Auto-Escape khi sắp chết (<25% HP): [ OFF ]"
+        ToggleEscapeBtn.TextColor3 = Color3.fromRGB(255, 170, 0)
+        InfoLabel.Text = "Trạng thái: Đã tắt Auto-Escape."
+    end
+end)
+
+SuicideBtn.MouseButton1Click:Connect(function()
     local char = LocalPlayer.Character
     if char and char:FindFirstChildOfClass("Humanoid") then
-        char:FindFirstChildOfClass("Humanoid").PlatformStand = false
-    end
-end
-
-----------------------------------------------------------------
--- 5. XỬ LÝ SỰ KIỆN NÚT CẢM ỨNG
-----------------------------------------------------------------
-OpenButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
-end)
-
-UpBtn.MouseButton1Down:Connect(function() FlyUp = true end)
-UpBtn.MouseButton1Up:Connect(function() FlyUp = false end)
-DownBtn.MouseButton1Down:Connect(function() FlyDown = true end)
-DownBtn.MouseButton1Up:Connect(function() FlyDown = false end)
-
-SpeedMinus.MouseButton1Click:Connect(function()
-    FlySpeed = math.max(10, FlySpeed - 10)
-    SpeedDisplay.Text = tostring(FlySpeed)
-end)
-
-SpeedPlus.MouseButton1Click:Connect(function()
-    FlySpeed = FlySpeed + 10
-    SpeedDisplay.Text = tostring(FlySpeed)
-end)
-
-FlyButton.MouseButton1Click:Connect(function()
-    FlyEnabled = not FlyEnabled
-    FlyButton.Text = FlyEnabled and "Fly: ON" or "Fly: OFF"
-    FlyButton.BackgroundColor3 = FlyEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
-    if FlyEnabled then StartFlying() else StopFlying() end
-end)
-
-AimbotButton.MouseButton1Click:Connect(function()
-    AimbotEnabled = not AimbotEnabled
-    AimbotButton.Text = AimbotEnabled and "Aimbot: ON" or "Aimbot: OFF"
-    AimbotButton.BackgroundColor3 = AimbotEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
-end)
-
-ESPButton.MouseButton1Click:Connect(function()
-    ESPEnabled = not ESPEnabled
-    ESPButton.Text = ESPEnabled and "ESP Highlight: ON" or "ESP Highlight: OFF"
-    ESPButton.BackgroundColor3 = ESPEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
-    
-    if not ESPEnabled then
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player.Character and player.Character:FindFirstChild("MEB_Highlight") then
-                player.Character.MEB_Highlight.Enabled = false
-            end
-        end
-    end
-end)
-
-----------------------------------------------------------------
--- 6. VÒNG LẶP RENDERSTEPPED (AUTO-LOCK AIMBOT & ESP)
-----------------------------------------------------------------
-local function GetClosestPlayer()
-    local closest, shortestDist = nil, math.huge
-    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            local root = player.Character:FindFirstChild(TargetPart) or player.Character:FindFirstChild("HumanoidRootPart")
-            local hum = player.Character:FindFirstChildOfClass("Humanoid")
-            if root and hum and hum.Health > 0 then
-                local screenPos, onScreen = Camera:WorldToViewportPoint(root.Position)
-                if onScreen then
-                    local dist = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
-                    if dist < shortestDist then
-                        shortestDist = dist
-                        closest = player
-                    end
-                end
-            end
-        end
-    end
-    return closest
-end
-
-RunService.RenderStepped:Connect(function()
-    -- Mobile Aimbot: Tự động nhắm vào kẻ địch gần tâm màn hình khi Aimbot bật
-    if AimbotEnabled then
-        local target = GetClosestPlayer()
-        if target and target.Character then
-            local targetPartObj = target.Character:FindFirstChild(TargetPart) or target.Character:FindFirstChild("HumanoidRootPart")
-            if targetPartObj then
-                local pos = targetPartObj.Position + Vector3.new(0, 0.5, 0)
-                Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, pos), 0.25)
-            end
-        end
-    end
-
-    -- ESP Highlight
-    if ESPEnabled then
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character then
-                local hl = player.Character:FindFirstChild("MEB_Highlight")
-                if not hl then
-                    hl = Instance.new("Highlight", player.Character)
-                    hl.Name = "MEB_Highlight"
-                    hl.FillColor = Color3.fromRGB(0, 255, 100)
-                    hl.FillTransparency = 0.5
-                end
-                hl.Enabled = true
-            end
-        end
+        char:FindFirstChildOfClass("Humanoid").Health = 0
+        InfoLabel.Text = "Trạng thái: Đang tự sát..."
     end
 end)
