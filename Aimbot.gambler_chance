@@ -15,11 +15,11 @@ local lastDeathCFrame = nil
 local isRespawning = false
 
 local AimbotEnabled = false
-local AimMode = "Normal"
+local AimMode = "Normal" -- "Normal" (Chỉ khóa thân) hoặc "Hard" (Khóa cả Camera & Thân)
 local FOVRadius = 250
 
 local ESPEnabled = false
-local FlingMode = "OFF" -- "OFF", "Spin" (Xoay), "Ghost" (Không xoay)
+local FlingMode = "OFF" -- "OFF", "Spin", "Ghost"
 
 -- Dọn dẹp UI cũ
 pcall(function() if CoreGui:FindFirstChild("KingTowerHub") then CoreGui.KingTowerHub:Destroy() end end)
@@ -49,7 +49,7 @@ Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 -- Top Title Bar
 local TitleLabel = Instance.new("TextLabel", MainFrame)
 TitleLabel.Size = UDim2.new(1, -35, 0, 35)
-TitleLabel.Text = "  KING TOWER - V8 (TAB SYSTEM)"
+TitleLabel.Text = "  KING TOWER - V10"
 TitleLabel.TextColor3 = Color3.new(1,1,1)
 TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.GothamBold
@@ -121,12 +121,10 @@ local CombatTab  = createTab("🎯 Combat")
 local VisualTab  = createTab("👁️ Visuals")
 local FlingTab   = createTab("🌀 Fling")
 
--- Bật Tab đầu tiên mặc định
 Tabs["📌 Main"].Visible = true
 TabButtons[1].TextColor3 = Color3.fromRGB(255, 255, 255)
 TabButtons[1].BackgroundColor3 = Color3.fromRGB(255, 80, 80)
 
--- Hàm hỗ trợ tạo Button trong Tab
 local function createBtnInTab(parent, text, y)
     local b = Instance.new("TextButton", parent)
     b.Size = UDim2.new(1, -10, 0, 35)
@@ -140,26 +138,20 @@ local function createBtnInTab(parent, text, y)
     return b
 end
 
-----------------------------------------------------------------
--- 2. NỘI DUNG TỪNG TAB
-----------------------------------------------------------------
--- [TAB MAIN]
-local BtnRespawn = createBtnInTab(MainTab, "⚙️ TP Chỗ Chết: [ OFF ]", 5)
-local BtnSuicide = createBtnInTab(MainTab, "💀 Tự Sát Ngay", 45)
+-- [TAB BUTTONS]
+local BtnRespawn    = createBtnInTab(MainTab, "⚙️ TP Chỗ Chết: [ OFF ]", 5)
+local BtnSuicide    = createBtnInTab(MainTab, "💀 Tự Sát Ngay", 45)
 
--- [TAB COMBAT]
-local BtnAimbot  = createBtnInTab(CombatTab, "🎯 Auto Aimbot: [ OFF ]", 5)
-local BtnMode    = createBtnInTab(CombatTab, "🔄 Aim Mode: [ Normal ]", 45)
+local BtnAimbot     = createBtnInTab(CombatTab, "🎯 Auto Aimbot: [ OFF ]", 5)
+local BtnMode       = createBtnInTab(CombatTab, "🔄 Aim Mode: [ Normal ]", 45)
 
--- [TAB VISUALS]
-local BtnESP     = createBtnInTab(VisualTab, "👁️ ESP Text: [ OFF ]", 5)
+local BtnESP        = createBtnInTab(VisualTab, "👁️ ESP Text: [ OFF ]", 5)
 
--- [TAB FLING]
 local BtnSpinFling  = createBtnInTab(FlingTab, "🌀 Spin Fling (Xoay): [ OFF ]", 5)
-local BtnGhostFling = createBtnInTab(FlingTab, "👻 Ghost Fling (Không Xoay): [ OFF ]", 45)
+local BtnGhostFling = createBtnInTab(FlingTab, "👻 Ghost Fling (Chạy): [ OFF ]", 45)
 
 ----------------------------------------------------------------
--- 3. HỆ THỐNG TELEPORT CHỖ CHẾT
+-- 2. HỆ THỐNG TELEPORT CHỖ CHẾT
 ----------------------------------------------------------------
 local function setupCharacter(char)
     local hrp = char:WaitForChild("HumanoidRootPart", 5)
@@ -184,12 +176,11 @@ local function setupCharacter(char)
     if hum then
         hum.Died:Connect(function()
             if hrp then lastDeathCFrame = hrp.CFrame end
-            -- Tắt Fling khi chết để tránh xung đột vật lý lúc hồi sinh
             if FlingMode ~= "OFF" then
                 FlingMode = "OFF"
                 BtnSpinFling.Text = "🌀 Spin Fling (Xoay): [ OFF ]"
                 BtnSpinFling.BackgroundColor3 = Color3.fromRGB(40,40,50)
-                BtnGhostFling.Text = "👻 Ghost Fling (Không Xoay): [ OFF ]"
+                BtnGhostFling.Text = "👻 Ghost Fling (Chạy): [ OFF ]"
                 BtnGhostFling.BackgroundColor3 = Color3.fromRGB(40,40,50)
             end
         end)
@@ -200,18 +191,18 @@ LocalPlayer.CharacterAdded:Connect(setupCharacter)
 if LocalPlayer.Character then setupCharacter(LocalPlayer.Character) end
 
 ----------------------------------------------------------------
--- 4. XỬ LÝ DUAL FLING (XOAY & KHÔNG XOAY)
+-- 3. XỬ LÝ DUAL FLING
 ----------------------------------------------------------------
 RunService.Stepped:Connect(function()
     if not isRespawning and LocalPlayer.Character then
         local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
         if hrp then
             if FlingMode == "Spin" then
-                -- Chế độ 1: Xoay tròn cực đại
-                hrp.AssemblyAngularVelocity = Vector3.new(0, 50000, 0)
+                hrp.AssemblyAngularVelocity = Vector3.new(0, 30000, 0)
+                hrp.AssemblyLinearVelocity = Vector3.new(0, 2, 0)
             elseif FlingMode == "Ghost" then
-                -- Chế độ 2: Đẩy tuyến tính trước khi tính va chạm
-                hrp.AssemblyLinearVelocity = Vector3.new(15000, 15000, 15000)
+                hrp.AssemblyLinearVelocity = Vector3.new(8000, 5000, 8000)
+                hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
             end
         end
     end
@@ -221,80 +212,104 @@ RunService.Heartbeat:Connect(function()
     if not isRespawning and LocalPlayer.Character then
         local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
         if hrp and FlingMode == "Ghost" then
-            -- Trả lực tuyến tính về 0 ngay sau va chạm để bản thân không bị bay
             hrp.AssemblyLinearVelocity = Vector3.zero
         end
     end
 end)
 
 ----------------------------------------------------------------
--- 5. AIMBOT & ESP (RENDERSTEPPED)
+-- 4. AIMBOT (NORMAL = KHÓA THÂN | HARD = KHÓA CAMERA + THÂN) & ESP
 ----------------------------------------------------------------
 RunService.RenderStepped:Connect(function()
-    -- Auto Aimbot
-    if AimbotEnabled then
-        local closest, dist = nil, 250
-        local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+    if AimbotEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local closest, dist = nil, FOVRadius
+        local mousePos = UserInputService:GetMouseLocation()
+        local myHrp = LocalPlayer.Character.HumanoidRootPart
         
         for _, p in pairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChildOfClass("Humanoid") and p.Character.Humanoid.Health > 0 then
-                local pos, on = Camera:WorldToViewportPoint(p.Character.Head.Position)
-                if on then
-                    local d = (Vector2.new(pos.X, pos.Y) - center).Magnitude
-                    if d < dist then closest = p.Character.Head dist = d end
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChild("HumanoidRootPart") then
+                local hum = p.Character:FindFirstChildOfClass("Humanoid")
+                if hum and hum.Health > 0 then
+                    local pos, on = Camera:WorldToViewportPoint(p.Character.Head.Position)
+                    if on then
+                        local d = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
+                        if d < dist then 
+                            closest = p.Character 
+                            dist = d 
+                        end
+                    end
                 end
             end
         end
         
-        if closest then
-            local targetCF = CFrame.new(Camera.CFrame.Position, closest.Position)
-            Camera.CFrame = (AimMode == "Hard") and targetCF or Camera.CFrame:Lerp(targetCF, 0.25)
+        if closest and closest:FindFirstChild("HumanoidRootPart") and closest:FindFirstChild("Head") then
+            local targetHrp = closest.HumanoidRootPart
+            local targetHead = closest.Head
+            
+            if AimMode == "Normal" then
+                -- Normal: Chỉ khóa Cơ thể (HumanoidRootPart) hướng vào mục tiêu, Camera tự do
+                local lookAtPos = Vector3.new(targetHrp.Position.X, myHrp.Position.Y, targetHrp.Position.Z)
+                myHrp.CFrame = CFrame.new(myHrp.Position, lookAtPos)
+            elseif AimMode == "Hard" then
+                -- Hard: Khóa cả Camera lẫn Cơ thể hướng vào mục tiêu
+                local lookAtPos = Vector3.new(targetHrp.Position.X, myHrp.Position.Y, targetHrp.Position.Z)
+                myHrp.CFrame = CFrame.new(myHrp.Position, lookAtPos)
+                
+                local camTargetCF = CFrame.new(Camera.CFrame.Position, targetHead.Position)
+                Camera.CFrame = Camera.CFrame:Lerp(camTargetCF, 0.3)
+            end
         end
     end
     
-    -- ESP Loop
+    -- ESP Text Loop
     if ESPEnabled then
         for _, p in pairs(Players:GetPlayers()) do
-            if p.Character then
+            if p ~= LocalPlayer and p.Character then
                 local char = p.Character
-                local h = char:FindFirstChild("Head")
-                if h then
-                    if not char:FindFirstChild("MEB_ESP") then
-                        local b = Instance.new("BillboardGui", h)
-                        b.Name = "MEB_ESP"
-                        b.AlwaysOnTop = true
-                        b.Size = UDim2.new(0, 100, 0, 50)
-                        b.StudsOffset = Vector3.new(0, 2, 0)
-                        local t = Instance.new("TextLabel", b)
+                local head = char:FindFirstChild("Head")
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                
+                if head and hum and hum.Health > 0 then
+                    local bGui = head:FindFirstChild("MEB_ESP")
+                    if not bGui then
+                        bGui = Instance.new("BillboardGui", head)
+                        bGui.Name = "MEB_ESP"
+                        bGui.AlwaysOnTop = true
+                        bGui.Size = UDim2.new(0, 120, 0, 50)
+                        bGui.StudsOffset = Vector3.new(0, 2.2, 0)
+                        
+                        local t = Instance.new("TextLabel", bGui)
+                        t.Name = "Text"
                         t.Size = UDim2.new(1,0,1,0)
                         t.BackgroundTransparency = 1
                         t.TextStrokeTransparency = 0.2
                         t.Font = Enum.Font.GothamBold
                         t.TextSize = 11
                     end
-                    local hum = char:FindFirstChildOfClass("Humanoid")
-                    if hum and hum.Health > 0 then
-                        local hp = math.floor(hum.Health)
-                        char.MEB_ESP.TextLabel.Text = p.Name.."\nHP: "..hp
-                        char.MEB_ESP.TextLabel.TextColor3 = (hp > (hum.MaxHealth/2)) and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(255, 80, 80)
-                        char.MEB_ESP.Enabled = true
-                    else
-                        char.MEB_ESP.Enabled = false
+                    
+                    local hp = math.floor(hum.Health)
+                    local maxHp = math.floor(hum.MaxHealth)
+                    bGui.Text.Text = string.format("%s\nHP: %d/%d", p.Name, hp, maxHp)
+                    bGui.Text.TextColor3 = (hp > (maxHp / 2)) and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(255, 80, 80)
+                    bGui.Enabled = true
+                else
+                    if head and head:FindFirstChild("MEB_ESP") then
+                        head.MEB_ESP.Enabled = false
                     end
                 end
             end
         end
     else
         for _, p in pairs(Players:GetPlayers()) do
-            if p.Character and p.Character:FindFirstChild("MEB_ESP") then
-                p.Character.MEB_ESP.Enabled = false
+            if p.Character and p.Character:FindFirstChild("Head") and p.Character.Head:FindFirstChild("MEB_ESP") then
+                p.Character.Head.MEB_ESP.Enabled = false
             end
         end
     end
 end)
 
 ----------------------------------------------------------------
--- 6. XỬ LÝ NÚT BẤM (BUTTON EVENTS)
+-- 5. XỬ LÝ NÚT BẤM (BUTTON EVENTS)
 ----------------------------------------------------------------
 MinimizeBtn.MouseButton1Click:Connect(function()
     MainFrame.Size = (MainFrame.Size.Y.Offset > 50) and UDim2.new(0, 320, 0, 35) or UDim2.new(0, 320, 0, 260)
@@ -324,7 +339,6 @@ BtnESP.MouseButton1Click:Connect(function()
     BtnESP.BackgroundColor3 = ESPEnabled and Color3.fromRGB(30,100,50) or Color3.fromRGB(40,40,50)
 end)
 
--- Xử lý bật/tắt 2 chế độ Fling chống đè nhau
 BtnSpinFling.MouseButton1Click:Connect(function()
     if FlingMode == "Spin" then
         FlingMode = "OFF"
@@ -334,8 +348,7 @@ BtnSpinFling.MouseButton1Click:Connect(function()
         FlingMode = "Spin"
         BtnSpinFling.Text = "🌀 Spin Fling (Xoay): [ ON ]"
         BtnSpinFling.BackgroundColor3 = Color3.fromRGB(30,100,50)
-        -- Tắt Ghost Fling nếu đang bật
-        BtnGhostFling.Text = "👻 Ghost Fling (Không Xoay): [ OFF ]"
+        BtnGhostFling.Text = "👻 Ghost Fling (Chạy): [ OFF ]"
         BtnGhostFling.BackgroundColor3 = Color3.fromRGB(40,40,50)
     end
 end)
@@ -343,13 +356,12 @@ end)
 BtnGhostFling.MouseButton1Click:Connect(function()
     if FlingMode == "Ghost" then
         FlingMode = "OFF"
-        BtnGhostFling.Text = "👻 Ghost Fling (Không Xoay): [ OFF ]"
+        BtnGhostFling.Text = "👻 Ghost Fling (Chạy): [ OFF ]"
         BtnGhostFling.BackgroundColor3 = Color3.fromRGB(40,40,50)
     else
         FlingMode = "Ghost"
-        BtnGhostFling.Text = "👻 Ghost Fling (Không Xoay): [ ON ]"
+        BtnGhostFling.Text = "👻 Ghost Fling (Chạy): [ ON ]"
         BtnGhostFling.BackgroundColor3 = Color3.fromRGB(30,100,50)
-        -- Tắt Spin Fling nếu đang bật
         BtnSpinFling.Text = "🌀 Spin Fling (Xoay): [ OFF ]"
         BtnSpinFling.BackgroundColor3 = Color3.fromRGB(40,40,50)
     end
@@ -365,4 +377,4 @@ UserInputService.InputBegan:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.Insert then MainFrame.Visible = not MainFrame.Visible end
 end)
 
-print("V8 Tab UI Loaded Successfully!")
+print("V10 Loaded Successfully - Custom AimModes Applied!")
